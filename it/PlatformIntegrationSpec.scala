@@ -17,12 +17,12 @@
 package it
 
 import com.github.tomakehurst.wiremock.client.WireMock._
-import controllers.DocumentationController
 import it.utils.{MicroserviceLocalRunSugar, WiremockServiceLocatorSugar}
 import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import play.api.test.FakeRequest
+import uk.gov.hmrc.api.controllers.DocumentationController
 import uk.gov.hmrc.play.test.UnitSpec
 
 /**
@@ -60,8 +60,8 @@ class PlatformIntegrationSpec extends UnitSpec with MockitoSugar with ScalaFutur
       override val additionalConfiguration: Map[String, Any] = Map(
         "appName" -> "application-name",
         "appUrl" -> "http://microservice-name.service",
-        "Test.microservice.services.service-locator.host" -> stubHost,
-        "Test.microservice.services.service-locator.port" -> stubPort)
+        "microservice.services.service-locator.host" -> stubHost,
+        "microservice.services.service-locator.port" -> stubPort)
       run {
         () => {
           verify(1,postRequestedFor(urlMatching("/registration")).
@@ -75,8 +75,8 @@ class PlatformIntegrationSpec extends UnitSpec with MockitoSugar with ScalaFutur
       override val additionalConfiguration: Map[String, Any] = Map(
         "appName" -> "application-name",
         "appUrl" -> "http://microservice-name.service",
-        "Test.microservice.services.service-locator.host" -> stubHost,
-        "Test.microservice.services.service-locator.port" -> stubPort)
+        "microservice.services.service-locator.host" -> stubHost,
+        "microservice.services.service-locator.port" -> stubPort)
       run {
         () => {
           def normalizeEndpointName(endpointName: String): String = endpointName.replaceAll(" ", "-")
