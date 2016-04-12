@@ -1,0 +1,3 @@
+# microservice specific routes
+
+GET         /messages                                       uk.gov.hmrc.mobilemessages.controllers.LiveCustomerProfileController.ping()
