@@ -14,7 +14,7 @@
  * limitations under the License.
  */
  
-package uk.gov.hmrc.customerprofile.services
+package uk.gov.hmrc.mobilemessages.services
 
 import uk.gov.hmrc.play.config.AppName
 
