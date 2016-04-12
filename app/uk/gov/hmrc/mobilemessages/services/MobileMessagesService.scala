@@ -30,22 +30,8 @@ trait MobileMessagesService {
   def ping()(implicit hc:HeaderCarrier): Future[Boolean]
 }
 
-trait LiveMobileMessagesService extends MobileMessagesService {
+trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
   def authConnector: AuthConnector
-
-  def audit(service:String, details:Map[String, String])(implicit hc:HeaderCarrier) = {
-    def auditResponse(): Unit = {
-      MicroserviceAuditConnector.sendEvent(
-        DataEvent("mobile-messages", "ServiceResponseSent",
-          tags = Map("transactionName" -> service),
-          detail = details))
-    }
-  }
-
-  def withAudit[T](service: String, details: Map[String, String])(func:Future[T])(implicit hc:HeaderCarrier) = {
-    audit(service, details) // No need to wait!
-    func
-  }
 
   def ping()(implicit hc:HeaderCarrier): Future[Boolean]
 
@@ -59,6 +45,8 @@ object SandboxMobileMessagesService extends MobileMessagesService with FileResou
 
 object LiveMobileMessagesService extends LiveMobileMessagesService {
   override val authConnector: AuthConnector = AuthConnector
+
+  val auditConnector: AuditConnector = MicroserviceAuditConnector
 
   def ping()(implicit hc:HeaderCarrier): Future[Boolean] = Future.successful(true)
 }
