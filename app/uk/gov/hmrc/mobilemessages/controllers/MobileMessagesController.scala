@@ -16,21 +16,20 @@
 
 package uk.gov.hmrc.mobilemessages.controllers
 
-import play.api.mvc.{Action, BodyParsers}
-import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControlForSandbox, AccountAccessControlWithHeaderCheck}
-import uk.gov.hmrc.mobilemessages.services.{MobileMessagesService, LiveMobileMessagesService, SandboxMobileMessagesService}
-import uk.gov.hmrc.domain.Nino
+import play.api.libs.json._
 import play.api.{Logger, mvc}
+import uk.gov.hmrc.api.controllers._
+import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControlForSandbox, AccountAccessControlWithHeaderCheck}
+import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
 import uk.gov.hmrc.play.http.{ForbiddenException, HeaderCarrier, NotFoundException, UnauthorizedException}
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import play.api.libs.json._
-import uk.gov.hmrc.api.controllers._
 
 trait ErrorHandling {
   self:BaseController =>
+
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   def errorWrapper(func: => Future[mvc.Result])(implicit hc:HeaderCarrier) = {
     func.recover {
@@ -47,9 +46,9 @@ trait ErrorHandling {
   }
 }
 
-trait CustomerProfileController extends BaseController with HeaderValidator with ErrorHandling {
+trait MobileMessagesController extends BaseController with HeaderValidator with ErrorHandling {
 
-  import ErrorResponse.writes
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   val service: MobileMessagesService
   val accessControl:AccountAccessControlWithHeaderCheck
@@ -61,12 +60,12 @@ trait CustomerProfileController extends BaseController with HeaderValidator with
   }
 }
 
-object SandboxCustomerProfileController extends CustomerProfileController {
+object SandboxMobileMessagesController extends MobileMessagesController {
   override val service = SandboxMobileMessagesService
   override val accessControl = AccountAccessControlForSandbox
 }
 
-object LiveCustomerProfileController extends CustomerProfileController {
+object LiveMobileMessagesController extends MobileMessagesController {
   override val service = LiveMobileMessagesService
   override val accessControl = AccountAccessControlWithHeaderCheck
 }

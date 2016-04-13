@@ -17,29 +17,29 @@
 package uk.gov.hmrc.mobilemessages.services
 
 import uk.gov.hmrc.api.sandbox.FileResource
+import uk.gov.hmrc.api.service.Auditor
 import uk.gov.hmrc.mobilemessages.config.MicroserviceAuditConnector
 import uk.gov.hmrc.mobilemessages.connector._
-import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.http.HeaderCarrier
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 
 trait MobileMessagesService {
-  def ping()(implicit hc:HeaderCarrier): Future[Boolean]
+  def ping()(implicit hc:HeaderCarrier, ec : ExecutionContext): Future[Boolean]
 }
 
 trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
   def authConnector: AuthConnector
 
-  def ping()(implicit hc:HeaderCarrier): Future[Boolean]
+  def ping()(implicit hc:HeaderCarrier, ec : ExecutionContext): Future[Boolean]
 
 }
 
 object SandboxMobileMessagesService extends MobileMessagesService with FileResource {
 
-  def ping()(implicit hc:HeaderCarrier): Future[Boolean] = Future.successful(true)
+  def ping()(implicit hc:HeaderCarrier, ec : ExecutionContext): Future[Boolean] = Future.successful(true)
 
 }
 
@@ -48,5 +48,5 @@ object LiveMobileMessagesService extends LiveMobileMessagesService {
 
   val auditConnector: AuditConnector = MicroserviceAuditConnector
 
-  def ping()(implicit hc:HeaderCarrier): Future[Boolean] = Future.successful(true)
+  def ping()(implicit hc:HeaderCarrier, ec : ExecutionContext): Future[Boolean] = Future.successful(true)
 }
