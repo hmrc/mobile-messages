@@ -1,7 +1,6 @@
 package uk.gov.hmrc.mobilemessages.domain
 
 import org.joda.time.{DateTime, LocalDate}
-import uk.gov.hmrc.play.controllers.RestFormats
 
 case class MessageHeader(id: String,
                          subject: String,
@@ -14,6 +13,7 @@ object MessageHeader {
 
   import play.api.libs.functional.syntax._
   import play.api.libs.json.{Json, Reads, _}
+  import uk.gov.hmrc.play.controllers.RestFormats
 
   implicit val reads = {
     implicit val dateTimeForm = RestFormats.dateTimeFormats
@@ -26,15 +26,15 @@ object MessageHeader {
         (__ \ "readTimeUrl").read[String] and
         (__ \ "detail" \ "linkType").read[String] and
         (__ \ "sentInError").read[Boolean]
-      )(convertFromLegacy _)
+      ) (convertFromLegacy _)
     read orElse legacyRead
   }
 
-  def convertFromLegacy(id: String,
-                        subject: String,
-                        validFrom: LocalDate,
-                        readTime: Option[DateTime],
-                        readTimeUrl: String,
-                        linkType: String,
-                        sentInError: Boolean) = new MessageHeader(id, subject, validFrom, readTime, readTimeUrl, sentInError)
+  private def convertFromLegacy(id: String,
+                                subject: String,
+                                validFrom: LocalDate,
+                                readTime: Option[DateTime],
+                                readTimeUrl: String,
+                                linkType: String,
+                                sentInError: Boolean) = new MessageHeader(id, subject, validFrom, readTime, readTimeUrl, sentInError)
 }
