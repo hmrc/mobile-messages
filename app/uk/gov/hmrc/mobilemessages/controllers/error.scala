@@ -17,7 +17,36 @@
 package uk.gov.hmrc.mobilemessages.controllers
 
 import uk.gov.hmrc.api.controllers.ErrorResponse
+import uk.gov.hmrc.play.microservice.controller.BaseController
+
+import scala.concurrent.{ExecutionContext, Future}
 
 case object ErrorNinoInvalid extends ErrorResponse(400, "NINO_INVALID", "The provided NINO is invalid")
 
 case object ErrorUnauthorizedNoNino extends ErrorResponse(401, "UNAUTHORIZED", "NINO does not exist on account")
+
+
+trait ErrorHandling {
+  self:BaseController =>
+
+  import play.api.libs.json.Json
+  import play.api.{Logger, mvc}
+  import uk.gov.hmrc.api.controllers.{ErrorInternalServerError, ErrorNotFound, ErrorUnauthorizedLowCL}
+  import uk.gov.hmrc.play.http.{ForbiddenException, HeaderCarrier, NotFoundException, UnauthorizedException}
+
+  implicit val ec : ExecutionContext
+
+  def errorWrapper(func: => Future[mvc.Result])(implicit hc:HeaderCarrier) = {
+    func.recover {
+      case ex:NotFoundException => Status(ErrorNotFound.httpStatusCode)(Json.toJson(ErrorNotFound))
+
+      case ex:UnauthorizedException => Unauthorized(Json.toJson(ErrorUnauthorizedNoNino))
+
+      case ex:ForbiddenException => Unauthorized(Json.toJson(ErrorUnauthorizedLowCL))
+
+      case e: Throwable =>
+        Logger.error(s"Internal server error: ${e.getMessage}", e)
+        Status(ErrorInternalServerError.httpStatusCode)(Json.toJson(ErrorInternalServerError))
+    }
+  }
+}

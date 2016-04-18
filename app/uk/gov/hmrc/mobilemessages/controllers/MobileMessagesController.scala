@@ -17,34 +17,14 @@
 package uk.gov.hmrc.mobilemessages.controllers
 
 import play.api.libs.json._
-import play.api.{Logger, mvc}
 import uk.gov.hmrc.api.controllers._
 import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControlForSandbox, AccountAccessControlWithHeaderCheck}
 import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
-import uk.gov.hmrc.play.http.{ForbiddenException, HeaderCarrier, NotFoundException, UnauthorizedException}
+import uk.gov.hmrc.play.http.HeaderCarrier
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
-import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
 
-trait ErrorHandling {
-  self:BaseController =>
-
-  import scala.concurrent.ExecutionContext.Implicits.global
-
-  def errorWrapper(func: => Future[mvc.Result])(implicit hc:HeaderCarrier) = {
-    func.recover {
-      case ex:NotFoundException => Status(ErrorNotFound.httpStatusCode)(Json.toJson(ErrorNotFound))
-
-      case ex:UnauthorizedException => Unauthorized(Json.toJson(ErrorUnauthorizedNoNino))
-
-      case ex:ForbiddenException => Unauthorized(Json.toJson(ErrorUnauthorizedLowCL))
-
-      case e: Throwable =>
-        Logger.error(s"Internal server error: ${e.getMessage}", e)
-        Status(ErrorInternalServerError.httpStatusCode)(Json.toJson(ErrorInternalServerError))
-    }
-  }
-}
 
 trait MobileMessagesController extends BaseController with HeaderValidator with ErrorHandling {
 
@@ -63,9 +43,11 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
 object SandboxMobileMessagesController extends MobileMessagesController {
   override val service = SandboxMobileMessagesService
   override val accessControl = AccountAccessControlForSandbox
+  override implicit val ec: ExecutionContext = ExecutionContext.global
 }
 
 object LiveMobileMessagesController extends MobileMessagesController {
   override val service = LiveMobileMessagesService
   override val accessControl = AccountAccessControlWithHeaderCheck
+  override implicit val ec: ExecutionContext = ExecutionContext.global
 }
