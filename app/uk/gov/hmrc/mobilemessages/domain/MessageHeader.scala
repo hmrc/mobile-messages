@@ -31,7 +31,7 @@ object MessageHeader {
   import play.api.libs.json.{Json, Reads, _}
   import uk.gov.hmrc.play.controllers.RestFormats
 
-  implicit val reads = {
+  private val reads = {
     implicit val dateTimeForm = RestFormats.dateTimeFormats
     val read = Json.reads[MessageHeader]
     val legacyRead: Reads[MessageHeader] = (
@@ -45,6 +45,10 @@ object MessageHeader {
       ) (convertFromLegacy _)
     read orElse legacyRead
   }
+
+  private val writes = Json.writes[MessageHeader]
+
+  implicit val formats = Format(reads, writes)
 
   private def convertFromLegacy(id: String,
                                 subject: String,
