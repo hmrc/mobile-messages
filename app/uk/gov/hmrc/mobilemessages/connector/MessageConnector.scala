@@ -16,36 +16,49 @@
 
 package uk.gov.hmrc.mobilemessages.connector
 
+import org.joda.time.DateTime
 import uk.gov.hmrc.play.config.ServicesConfig
 
-import scala.concurrent.Future
 
 trait MessageConnector {
 
+  import play.api.libs.json.{JsObject, Json}
   import uk.gov.hmrc.domain.SaUtr
-  import uk.gov.hmrc.mobilemessages.domain.MessageHeader
+  import uk.gov.hmrc.mobilemessages.domain.{MessageHeader, RenderMessageLocation}
+  import RenderMessageLocation.{formats, toUrl}
+  import play.twirl.api.Html
+  import uk.gov.hmrc.play.controllers.RestFormats
   import uk.gov.hmrc.play.http._
+
+  import scala.concurrent.{ExecutionContext, Future}
 
   def http: HttpGet with HttpPost
 
   val messageBaseUrl: String
 
-  def messages(utr: SaUtr)(implicit hc: HeaderCarrier): Future[Seq[MessageHeader]] =
-    http.GET[Seq[MessageHeader]](s"$messageBaseUrl/message/sa/$utr?read=Both") //TODO confirm querystring is needed
+  def now : DateTime
 
+  private val returnReadAndUnreadMessages = "Both"
 
-  //I believe these will be passed in the readTimeUrl
-//  def message(utr: String, messageId: String)(implicit hc: HeaderCarrier): Future[Message] =
-//    message(s"sa/$utr/$messageId")
-//
-//  private [connector] def message(url: String)(implicit hc: HeaderCarrier): Future[Message] =
-//    http.GET[Message](s"$messageBaseUrl/message/$url")
+  def messages(utr: SaUtr)(implicit hc: HeaderCarrier, ec : ExecutionContext): Future[Seq[MessageHeader]] =
+    http.GET[Seq[MessageHeader]](s"$messageBaseUrl/message/sa/$utr?read=$returnReadAndUnreadMessages")
+
+  def readMessage(url : String)(implicit hc: HeaderCarrier, ec : ExecutionContext) : Future[Html] = {
+    import RestFormats.dateTimeWrite
+    http.POST[JsObject, RenderMessageLocation](s"$messageBaseUrl/$url", Json.obj("readTime" -> now)).flatMap{
+      renderMessageLocation =>
+        http.GET[Html](renderMessageLocation) //TODO is this the correct response?
+    }
+  }
 }
 
 object MessageConnector extends MessageConnector with ServicesConfig {
   import uk.gov.hmrc.mobilemessages.config.WSHttp
+  import uk.gov.hmrc.time.DateTimeUtils
 
   override def http = WSHttp
 
   override lazy val messageBaseUrl: String = baseUrl("message")
+
+  override def now: DateTime = DateTimeUtils.now
 }
