@@ -1,9 +1,9 @@
 <endpoint>
-  <name>Get Profile</name>
-  <description>This endpoint retrieves the tax summary.</description>
+  <name>Get Messages</name>
+  <description>This endpoint retrieves the messages.</description>
   <section id="resource">
     <title>Resource</title>
-    <resource>GET /:nino/tax-summary/:year</resource>
+    <resource>GET /messages</resource>
   </section>
   <section id="path-parameters">
     <title>Path Parameters</title>
