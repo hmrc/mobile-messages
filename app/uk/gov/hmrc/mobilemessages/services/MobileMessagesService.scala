@@ -18,6 +18,7 @@ package uk.gov.hmrc.mobilemessages.services
 
 import uk.gov.hmrc.api.sandbox.FileResource
 import uk.gov.hmrc.api.service.Auditor
+import uk.gov.hmrc.domain.SaUtr
 import uk.gov.hmrc.mobilemessages.config.MicroserviceAuditConnector
 import uk.gov.hmrc.mobilemessages.connector._
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
@@ -28,31 +29,43 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 trait MobileMessagesService {
-  def ping()(implicit hc:HeaderCarrier, ec : ExecutionContext): Future[Boolean]
-
-//  def readAndUnreadMessages()(implicit hc:HeaderCarrier, ec : ExecutionContext): Future[Seq[MessageHeader]]
+  def readAndUnreadMessages()(implicit hc:HeaderCarrier, ec : ExecutionContext): Future[Seq[MessageHeader]]
 }
 
 trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
   def authConnector: AuthConnector
 
-  def ping()(implicit hc:HeaderCarrier, ec : ExecutionContext): Future[Boolean]
+  def messageConnector : MessageConnector
 
+  override def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] ={
+    withAudit("readAndUnreadMessages", Map.empty) {
+      for {
+        accounts <- authConnector.accounts()
+        msghrs <- messages(accounts.saUtr)
+      } yield msghrs
+    }
+  }
+
+  private def messages(maybeSaUtr : Option[SaUtr])(implicit hc: HeaderCarrier, ec: ExecutionContext) : Future[Seq[MessageHeader]] =
+    maybeSaUtr match {
+      case Some(utr) => messageConnector.messages(utr)
+      case _ => Future.successful(Seq.empty)
+    }
 }
 
 object SandboxMobileMessagesService extends MobileMessagesService with FileResource {
 
-  def ping()(implicit hc:HeaderCarrier, ec : ExecutionContext): Future[Boolean] = Future.successful(true)
+  import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator._
 
-//  def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = {
-//
-//  }
+  def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
+    Future.successful(Seq(readMessageHeader(), unreadMessageHeader()))
+
 }
 
 object LiveMobileMessagesService extends LiveMobileMessagesService {
   override val authConnector: AuthConnector = AuthConnector
 
-  val auditConnector: AuditConnector = MicroserviceAuditConnector
+  override val messageConnector: MessageConnector = MessageConnector
 
-  def ping()(implicit hc:HeaderCarrier, ec : ExecutionContext): Future[Boolean] = Future.successful(true)
+  val auditConnector: AuditConnector = MicroserviceAuditConnector
 }

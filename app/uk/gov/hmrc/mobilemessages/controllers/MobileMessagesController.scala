@@ -33,10 +33,10 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
   val service: MobileMessagesService
   val accessControl: AccountAccessControlWithHeaderCheck
 
-  final def ping() = accessControl.validateAccept(acceptHeaderValidationRules).async {
+  final def getMessages = accessControl.validateAccept(acceptHeaderValidationRules).async {
     implicit request =>
       implicit val hc = HeaderCarrier.fromHeadersAndSession(request.headers, None)
-      errorWrapper(service.ping().map(as => Ok(Json.toJson(as))))
+      errorWrapper(service.readAndUnreadMessages().map(as => Ok(Json.toJson(as))))
   }
 }
 
