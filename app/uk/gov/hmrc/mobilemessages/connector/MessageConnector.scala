@@ -45,7 +45,7 @@ trait MessageConnector {
 
   def readMessage(url : String)(implicit hc: HeaderCarrier, ec : ExecutionContext) : Future[Html] = {
     import RestFormats.dateTimeWrite
-    http.POST[JsObject, RenderMessageLocation](s"$messageBaseUrl/$url", Json.obj("readTime" -> now)).flatMap{
+    http.POST[JsObject, RenderMessageLocation](s"$messageBaseUrl$url", Json.obj("readTime" -> now)).flatMap{
       renderMessageLocation =>
         http.GET[Html](renderMessageLocation) //TODO is this the correct response?
     }
