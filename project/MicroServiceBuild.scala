@@ -50,7 +50,8 @@ private object AppDependencies {
     "uk.gov.hmrc" %% "play-json-logger" % playJsonLoggerVersion,
     "uk.gov.hmrc" %% "domain" % domainVersion,
     "uk.gov.hmrc" %% "reactive-circuit-breaker" % "1.7.0",
-    "uk.gov.hmrc" %% "emailaddress" % "1.1.0"
+    "uk.gov.hmrc" %% "emailaddress" % "1.1.0",
+    "uk.gov.hmrc" %% "reactivemongo-bson" % "0.11.7" //NOTE: this is included purely for sandbox object creation
   )
 
   trait TestDependencies {

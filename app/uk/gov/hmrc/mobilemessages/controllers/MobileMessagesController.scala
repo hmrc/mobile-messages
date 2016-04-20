@@ -31,12 +31,12 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
   import scala.concurrent.ExecutionContext.Implicits.global
 
   val service: MobileMessagesService
-  val accessControl:AccountAccessControlWithHeaderCheck
+  val accessControl: AccountAccessControlWithHeaderCheck
 
   final def ping() = accessControl.validateAccept(acceptHeaderValidationRules).async {
-  implicit request =>
-    implicit val hc = HeaderCarrier.fromHeadersAndSession(request.headers, None)
-    errorWrapper(service.ping().map(as => Ok(Json.toJson(as))))
+    implicit request =>
+      implicit val hc = HeaderCarrier.fromHeadersAndSession(request.headers, None)
+      errorWrapper(service.ping().map(as => Ok(Json.toJson(as))))
   }
 }
 

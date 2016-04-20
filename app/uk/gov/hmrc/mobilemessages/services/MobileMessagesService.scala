@@ -20,6 +20,7 @@ import uk.gov.hmrc.api.sandbox.FileResource
 import uk.gov.hmrc.api.service.Auditor
 import uk.gov.hmrc.mobilemessages.config.MicroserviceAuditConnector
 import uk.gov.hmrc.mobilemessages.connector._
+import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.http.HeaderCarrier
 
@@ -28,6 +29,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait MobileMessagesService {
   def ping()(implicit hc:HeaderCarrier, ec : ExecutionContext): Future[Boolean]
+
+//  def readAndUnreadMessages()(implicit hc:HeaderCarrier, ec : ExecutionContext): Future[Seq[MessageHeader]]
 }
 
 trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
@@ -41,6 +44,9 @@ object SandboxMobileMessagesService extends MobileMessagesService with FileResou
 
   def ping()(implicit hc:HeaderCarrier, ec : ExecutionContext): Future[Boolean] = Future.successful(true)
 
+//  def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = {
+//
+//  }
 }
 
 object LiveMobileMessagesService extends LiveMobileMessagesService {
