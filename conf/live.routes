@@ -1,3 +1,5 @@
 # microservice specific routes
 
 GET        /messages        uk.gov.hmrc.mobilemessages.controllers.LiveMobileMessagesController.getMessages
+
+POST       /messages/read   uk.gov.hmrc.mobilemessages.controllers.LiveMobileMessagesController.read

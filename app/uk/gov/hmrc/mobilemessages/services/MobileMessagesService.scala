@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilemessages.services
 
+import play.twirl.api.Html
 import uk.gov.hmrc.api.sandbox.FileResource
 import uk.gov.hmrc.api.service.Auditor
 import uk.gov.hmrc.domain.SaUtr
@@ -30,6 +31,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait MobileMessagesService {
   def readAndUnreadMessages()(implicit hc:HeaderCarrier, ec : ExecutionContext): Future[Seq[MessageHeader]]
+  def readMessage(readTimeUrl : String)(implicit hc:HeaderCarrier, ec : ExecutionContext): Future[Html]
 }
 
 trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
@@ -51,6 +53,8 @@ trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
       case Some(utr) => messageConnector.messages(utr)
       case _ => Future.successful(Seq.empty)
     }
+
+  override def readMessage(readTimeUrl: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Html] = ???
 }
 
 object SandboxMobileMessagesService extends MobileMessagesService with FileResource {
@@ -60,6 +64,7 @@ object SandboxMobileMessagesService extends MobileMessagesService with FileResou
   def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
     Future.successful(Seq(readMessageHeader(), unreadMessageHeader()))
 
+  override def readMessage(readTimeUrl: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Html] = ???
 }
 
 object LiveMobileMessagesService extends LiveMobileMessagesService {
