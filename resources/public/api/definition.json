@@ -22,6 +22,14 @@
             "authType":"USER",
             "throttlingTier":"UNLIMITED",
             "scope":"read:messages"
+          },
+          {
+            "uriPattern":"/messages/read",
+            "endpointName":"Read message",
+            "method":"POST",
+            "authType":"USER",
+            "throttlingTier":"UNLIMITED",
+            "scope":"read:messages"
           }
         ]
       }

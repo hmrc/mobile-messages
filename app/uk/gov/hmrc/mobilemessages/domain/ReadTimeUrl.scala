@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.connector
+package uk.gov.hmrc.mobilemessages.domain
 
-trait MessageRendererConnector {
+import play.api.libs.json.Json
 
+case class ReadTimeUrl(url : String)
+
+object ReadTimeUrl {
+  implicit val formats = Json.format[ReadTimeUrl]
 }

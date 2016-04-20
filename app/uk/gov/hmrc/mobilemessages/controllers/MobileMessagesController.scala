@@ -16,14 +16,17 @@
 
 package uk.gov.hmrc.mobilemessages.controllers
 
+import play.api.Logger
 import play.api.libs.json._
+import play.api.mvc.BodyParsers
 import uk.gov.hmrc.api.controllers._
 import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControlForSandbox, AccountAccessControlWithHeaderCheck}
+import uk.gov.hmrc.mobilemessages.domain.ReadTimeUrl
 import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
 import uk.gov.hmrc.play.http.HeaderCarrier
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 
 trait MobileMessagesController extends BaseController with HeaderValidator with ErrorHandling {
@@ -37,6 +40,21 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
     implicit request =>
       implicit val hc = HeaderCarrier.fromHeadersAndSession(request.headers, None)
       errorWrapper(service.readAndUnreadMessages().map(as => Ok(Json.toJson(as))))
+  }
+
+  final def read = accessControl.validateAccept(acceptHeaderValidationRules).async(BodyParsers.parse.json) {
+    implicit request =>
+      implicit val hc = HeaderCarrier.fromHeadersAndSession(request.headers, None)
+
+      request.body.validate[ReadTimeUrl].fold (
+        errors => {
+          Logger.warn("Received error with read endpoint: " + errors)
+          Future.successful(BadRequest(Json.toJson(ErrorGenericBadRequest(errors))))
+        },
+        readMessage => {
+          errorWrapper(service.readMessage(readMessage.url).map(as => Ok(as)))
+        }
+      )
   }
 }
 
