@@ -36,23 +36,24 @@ trait MessageConnector {
 
   val messageBaseUrl: String
 
-  def now : DateTime
+  def now: DateTime
 
   private val returnReadAndUnreadMessages = "Both"
 
-  def messages(utr: SaUtr)(implicit hc: HeaderCarrier, ec : ExecutionContext): Future[Seq[MessageHeader]] =
+  def messages(utr: SaUtr)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
     http.GET[Seq[MessageHeader]](s"$messageBaseUrl/message/sa/$utr?read=$returnReadAndUnreadMessages")
 
-  def readMessage(url : String)(implicit hc: HeaderCarrier, ec : ExecutionContext) : Future[Html] = {
+  def readMessageContent(url: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Html] = {
     import RestFormats.dateTimeWrite
     http.POST[JsObject, RenderMessageLocation](s"$messageBaseUrl$url", Json.obj("readTime" -> now)).flatMap {
       renderMessageLocation =>
-        http.GET[Html](renderMessageLocation) //TODO is this the correct response?
+        http.GET[Html](renderMessageLocation)
     }
   }
 }
 
 object MessageConnector extends MessageConnector with ServicesConfig {
+
   import uk.gov.hmrc.mobilemessages.config.WSHttp
   import uk.gov.hmrc.time.DateTimeUtils
 
