@@ -64,11 +64,13 @@ trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
 object SandboxMobileMessagesService extends MobileMessagesService with FileResource {
 
   import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator._
+  import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
 
   def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
     Future.successful(Seq(readMessageHeader(), unreadMessageHeader()))
 
-  override def readMessageContent(readTimeUrl: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Html] = ???
+  override def readMessageContent(readTimeUrl: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Html] =
+    Future.successful(stoppingSA)
 }
 
 object LiveMobileMessagesService extends LiveMobileMessagesService {
