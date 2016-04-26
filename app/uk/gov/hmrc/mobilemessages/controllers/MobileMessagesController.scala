@@ -50,7 +50,7 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
           Future.successful(BadRequest(Json.toJson(ErrorGenericBadRequest(errors))))
         },
         readMessage => {
-          errorWrapper(service.readMessage(readMessage.url).map(as => Ok(as)))
+          errorWrapper(service.readMessageContent(readMessage.url).map(as => Ok(as)))
         }
       )
   }
