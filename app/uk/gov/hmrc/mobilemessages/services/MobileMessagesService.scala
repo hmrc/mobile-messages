@@ -69,8 +69,13 @@ object SandboxMobileMessagesService extends MobileMessagesService with FileResou
   def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
     Future.successful(Seq(readMessageHeader(), unreadMessageHeader()))
 
-  override def readMessageContent(readTimeUrl: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Html] =
-    Future.successful(stoppingSA)
+  override def readMessageContent(readTimeUrl: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Html] = {
+    val partial = readTimeUrl.contains(readMessageId) match {
+      case true => newTaxStatement
+      case false => stoppingSA
+    }
+    Future.successful(partial)
+  }
 }
 
 object LiveMobileMessagesService extends LiveMobileMessagesService {
