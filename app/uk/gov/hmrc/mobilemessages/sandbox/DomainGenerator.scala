@@ -40,7 +40,7 @@ object DomainGenerator {
   val readMessageId = BSONObjectID.generate.toString()
   def readMessageHeader(saUtr : SaUtr = nextSaUtr) = {
     MessageHeader(readMessageId,
-      "Your Tax Return",
+      "You have a new tax statement",
       DateTimeUtils.now.minusDays(3).toLocalDate,
       Some(DateTimeUtils.now.minusDays(1)),
       s"/message/sa/$saUtr/$readMessageId/read-time",
@@ -50,7 +50,7 @@ object DomainGenerator {
 
   val unreadMessageId = BSONObjectID.generate.toString()
   def unreadMessageHeader(saUtr: SaUtr = nextSaUtr) = MessageHeader(unreadMessageId,
-    "Your Tax Return",
+    "Stopping Self Assessment",
     DateTimeUtils.now.toLocalDate,
     None,
     s"/message/sa/$saUtr/$unreadMessageId/read-time",
@@ -68,3 +68,5 @@ sealed class SaUtrGenerator(random: Random = new Random) {
 
   def nextSaUtr: SaUtr = SaUtr(randomNext.toString)
 }
+
+
