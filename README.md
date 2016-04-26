@@ -19,12 +19,13 @@ API
 | *Task* | *Supported Methods* | *Description* |
 |--------|----|----|
 | ```/messages``` | GET | Returns all the user's digital messages. [More...](docs/messages.md)  |
+| ```/messages/read``` | POST | Returns a specific user message as an HTML partial. [More...](docs/read-message.md)  |
 
 
 # Sandbox
 All the above endpoints are accessible on sandbox with `/sandbox` prefix on each endpoint, e.g.
 ```
-    GET /sandbox/profile/accounts
+    GET /sandbox/messages
 ```
 
 # Version
