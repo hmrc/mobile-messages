@@ -26,7 +26,7 @@
           },
           {
             "uriPattern":"/messages/read",
-            "endpointName":"Read message",
+            "endpointName":"Read Message",
             "method":"POST",
             "authType":"USER",
             "throttlingTier":"UNLIMITED",
