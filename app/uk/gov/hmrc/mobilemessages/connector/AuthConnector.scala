@@ -19,6 +19,7 @@ package uk.gov.hmrc.mobilemessages.connector
 import play.api.{Logger, Play}
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.mobilemessages.config.WSHttp
+import uk.gov.hmrc.mobilemessages.domain.Accounts
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.{ForbiddenException, HeaderCarrier, HttpGet, UnauthorizedException}
@@ -27,7 +28,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait AuthConnector {
 
-  import uk.gov.hmrc.mobilemessages.domain.Accounts
   import uk.gov.hmrc.domain.{Nino, SaUtr}
   import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
 
@@ -61,11 +61,15 @@ trait AuthConnector {
     }
   }
 
-  def hasNino()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Unit] = {
+  def grantAccess()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Unit] = {
     http.GET(s"$serviceUrl/auth/authority") map {
-      resp =>
-        if((resp.json \ "accounts" \ "paye" \ "nino").asOpt[String].isEmpty)
+      resp => {
+        val json = resp.json
+        confirmConfiendenceLevel(json)
+
+        if((json \ "accounts" \ "paye" \ "nino").asOpt[String].isEmpty)
           throw new UnauthorizedException("The user must have a National Insurance Number to access this service")
+      }
     }
   }
 

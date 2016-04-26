@@ -10,6 +10,7 @@
     "name":"messages",
     "description":"The API is used to retrieve messages.",
     "context":"messages",
+    "requiresTrust": true,
     "versions":[
       {
         "version":"1.0",
