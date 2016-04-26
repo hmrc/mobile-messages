@@ -31,8 +31,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait MobileMessagesController extends BaseController with HeaderValidator with ErrorHandling {
 
-  import scala.concurrent.ExecutionContext.Implicits.global
-
   val service: MobileMessagesService
   val accessControl: AccountAccessControlWithHeaderCheck
 
