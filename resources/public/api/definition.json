@@ -7,7 +7,7 @@
     }
   ],
   "api":{
-    "name":"messages",
+    "name":"Mobile Messages",
     "description":"The API is used to retrieve messages.",
     "context":"messages",
     "requiresTrust": true,
