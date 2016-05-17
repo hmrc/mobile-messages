@@ -27,7 +27,7 @@ object MessageContentPartialStubs {
                                 |<p>This is a summary of how Government spends your tax and National Insurance contributions.</p>
                                 |<p>See your <a href="/annual-tax-summary">Annual Tax Summary</a>.</p>
                                 |<p>Tax summaries are for information only so you don't need to contact HMRC. But you can <a href="https://www.gov.uk/annual-tax-summary">comment on tax summaries</a>.</p>
-                                |""".mkString)
+                                |""".mkString.stripMargin)
 
   val newTaxStatement = Html("""<h2>You have a new tax statement</h2>
                                |<p class="message_time faded-text--small">This message was sent to you on 13 April 2016</p>
@@ -38,7 +38,7 @@ object MessageContentPartialStubs {
                                |<ul>
                                |<li><a id="view-your-statement-href" href="https://ibt.hmrc.gov.uk/self-assessment/ind/1150863353/statements" target="_self" data-sso="client">Check if your statement is ready to view</a></li>
                                |</ul>
-                               |""".mkString)
+                               |""".mkString.stripMargin)
 
   val stoppingSA = Html("""<h2>Stopping Self Assessment</h2>
                           |<p class="message_time faded-text--small">This message was sent to you on 18 December 2015</p>
@@ -65,7 +65,7 @@ object MessageContentPartialStubs {
                           |<li><a id="sa-payment-href" href="/pay-online/self-assessment/make-a-payment" target="_self" data-sso="false">Pay a tax bill</a></li>
                           |<li><a id="deadline-and-penalties-href" href="https://www.gov.uk/self-assessment-tax-returns/deadlines" target="_blank" data-sso="false" rel="external">Deadlines and penalties<span class="visuallyhidden">link opens in a new window</span></a></li>
                           |</ul>
-                          |""".mkString)
+                          |""".mkString.stripMargin)
 
   val overduePayment = Html("""<h2>Pay your 2012 to 2013 tax bill now - it's overdue</h2>
                           |<p class="message_time faded-text--small">This message was sent to you on 17 February 2016</p>
@@ -89,5 +89,5 @@ object MessageContentPartialStubs {
                           |<li><a id="difficulties-paying-href" href="https://www.gov.uk/difficulties-paying-hmrc" target="_blank" data-sso="false" rel="external">Problems paying your tax bill<span class="visuallyhidden">link opens in a new window</span></a></li>
                           |<li><a id="contact-hmrc-href" href="https://www.gov.uk/government/organisations/hm-revenue-customs/contact/self-assessment" target="_blank" data-sso="false" rel="external">Contact HMRC<span class="visuallyhidden">link opens in a new window</span></a></li>
                           |</ul>
-                          |""".mkString)
+                          |""".mkString.stripMargin)
 }
