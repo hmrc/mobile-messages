@@ -22,12 +22,16 @@ import uk.gov.hmrc.mobilemessages.config.WSHttp
 import uk.gov.hmrc.mobilemessages.domain.Accounts
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
 import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.play.http.{ForbiddenException, HeaderCarrier, HttpGet, UnauthorizedException}
+import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait AuthConnector {
 
+class NinoNotFoundOnAccount(message:String) extends uk.gov.hmrc.play.http.HttpException(message, 401)
+class AccountWithLowCL(message:String) extends uk.gov.hmrc.play.http.HttpException(message, 401)
+
+
+trait AuthConnector {
   import uk.gov.hmrc.domain.{Nino, SaUtr}
   import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
 
@@ -41,7 +45,6 @@ trait AuthConnector {
     http.GET(s"$serviceUrl/auth/authority") map {
       resp =>
         val json = resp.json
-        confirmConfiendenceLevel(json)
 
         val accounts = json \ "accounts"
 
@@ -52,9 +55,8 @@ trait AuthConnector {
         val acc = Accounts(nino.map(Nino(_)), utr.map(SaUtr(_)))
         acc match {
           case Accounts(None, _) => {
-            //TODO add a metric for this ????
-            Logger.warn("User without a NINO has accessed the service this should not be possible")
-            throw new UnauthorizedException("The user must have a National Insurance Number")
+            Logger.warn("User without a NINO has accessed the service.")
+            throw new NinoNotFoundOnAccount("The user must have a National Insurance Number")
           }
           case _ => acc
         }
@@ -68,16 +70,19 @@ trait AuthConnector {
         confirmConfiendenceLevel(json)
 
         if((json \ "accounts" \ "paye" \ "nino").asOpt[String].isEmpty)
-          throw new UnauthorizedException("The user must have a National Insurance Number to access this service")
+          throw new NinoNotFoundOnAccount("The user must have a National Insurance Number")
       }
     }
   }
 
-  private def confirmConfiendenceLevel(jsValue : JsValue) = {
-    val usersCL = (jsValue \ "confidenceLevel").as[Int]
-    if (serviceConfidenceLevel.level > usersCL) {
-      throw new ForbiddenException("The user does not have sufficient permissions to access this service")
+  private def confirmConfiendenceLevel(jsValue : JsValue) =
+    if (upliftRequired(jsValue)) {
+      throw new AccountWithLowCL("The user does not have sufficient permissions to access this service")
     }
+
+  private def upliftRequired(jsValue : JsValue): Boolean = {
+    val usersCL = (jsValue \ "confidenceLevel").as[Int]
+    serviceConfidenceLevel.level > usersCL
   }
 }
 

@@ -16,11 +16,10 @@
 
 package uk.gov.hmrc.mobilemessages.sandbox
 
+import org.joda.time.DateTime
 import play.api.libs.json.Json
-import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.domain.SaUtr
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
-import uk.gov.hmrc.time.DateTimeUtils
 
 import scala.util.Random
 
@@ -38,24 +37,24 @@ object DomainGenerator {
   val saUtr = nextSaUtr
 
   val readMessageId = "543e8c6001000001003e4a9e"
-  def readMessageHeader(saUtr : SaUtr = nextSaUtr) = {
+  def readMessageHeader(saUtr : SaUtr = nextSaUtr)(implicit dateTime:DateTime) = {
     MessageHeader(readMessageId,
       "You have a new tax statement",
-      DateTimeUtils.now.minusDays(3).toLocalDate,
-      Some(DateTimeUtils.now.minusDays(1)),
+      dateTime.minusDays(3).toLocalDate,
+      Some(dateTime.minusDays(1)),
       s"/message/sa/$saUtr/$readMessageId/read-time",
       false)
   }
-  val readMessageHeaderJson = Json.toJson(readMessageHeader())
+  def readMessageHeaderJson(implicit dateTime:DateTime) = Json.toJson(readMessageHeader())
 
   val unreadMessageId = "643e8c5f01000001003e4a8f"
-  def unreadMessageHeader(saUtr: SaUtr = nextSaUtr) = MessageHeader(unreadMessageId,
+  def unreadMessageHeader(saUtr: SaUtr = nextSaUtr)(implicit dateTime:DateTime) = MessageHeader(unreadMessageId,
     "Stopping Self Assessment",
-    DateTimeUtils.now.toLocalDate,
+    dateTime.toLocalDate,
     None,
     s"/message/sa/$saUtr/$unreadMessageId/read-time",
     false)
-  val unreadMessageHeaderJson = Json.toJson(unreadMessageHeader())
+  def unreadMessageHeaderJson(implicit dateTime:DateTime) = Json.toJson(unreadMessageHeader())
 
 }
 

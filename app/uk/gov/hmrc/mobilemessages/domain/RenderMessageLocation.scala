@@ -23,8 +23,9 @@ case class RenderMessageLocation(serviceKey : String, url : String)
 object RenderMessageLocation extends ServicesConfig {
   import play.api.libs.json.Json
 
-  implicit def toUrl(renderMessageLocation: RenderMessageLocation) : String =
+  implicit def toUrl(renderMessageLocation: RenderMessageLocation) : String = {
     s"${baseUrl(renderMessageLocation.serviceKey)}${renderMessageLocation.url}"
+  }
 
   implicit val formats = Json.format[RenderMessageLocation]
 }
