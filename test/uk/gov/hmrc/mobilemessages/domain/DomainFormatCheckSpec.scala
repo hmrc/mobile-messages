@@ -18,20 +18,17 @@ package uk.gov.hmrc.mobilemessages.domain
 
 import play.api.Logger
 import play.api.libs.json.Json
-import uk.gov.hmrc.domain.SaUtr
 import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.time.DateTimeUtils
-
-import scala.util.Random
-
 
 class DomainFormatCheckSpec extends UnitSpec {
 
   import DomainGenerator._
 
   "MessageHeader" should {
-    import MessageHeader.formats
+
+    implicit val dateTime = DateTimeUtils.now
 
     "be set to READ" in {
       Logger.debug("READ message header response : " + Json.prettyPrint(readMessageHeaderJson))

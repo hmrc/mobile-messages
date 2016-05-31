@@ -45,10 +45,20 @@ trait MessageConnector {
 
   def readMessageContent(url: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Html] = {
     import RestFormats.dateTimeWrite
-    http.POST[JsObject, RenderMessageLocation](s"$messageBaseUrl$url", Json.obj("readTime" -> now)).flatMap {
-      renderMessageLocation =>
-        http.GET[Html](renderMessageLocation)
-    }
+
+    def post: Future[RenderMessageLocation] = http.POST[JsObject, RenderMessageLocation](s"$messageBaseUrl$url", Json.obj("readTime" -> now))
+      .recover {
+        case ex@uk.gov.hmrc.play.http.Upstream4xxResponse(message,409,_,_)  =>
+          val index = message.indexOf("{")
+          if (index == -1) throw ex
+          Json.parse(message.substring(index, message.length-1)).as[RenderMessageLocation]
+      }
+
+    for {
+        renderMessageLocation <- post
+        resp <- http.GET[Html](renderMessageLocation)
+    } yield(resp)
+
   }
 }
 

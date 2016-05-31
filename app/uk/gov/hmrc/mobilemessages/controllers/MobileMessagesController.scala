@@ -20,7 +20,7 @@ import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc.BodyParsers
 import uk.gov.hmrc.api.controllers._
-import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControlForSandbox, AccountAccessControlWithHeaderCheck}
+import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck}
 import uk.gov.hmrc.mobilemessages.domain.ReadTimeUrl
 import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
 import uk.gov.hmrc.play.http.HeaderCarrier
@@ -58,7 +58,7 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
 
 object SandboxMobileMessagesController extends MobileMessagesController {
   override val service = SandboxMobileMessagesService
-  override val accessControl = AccountAccessControlForSandbox
+  override val accessControl = AccountAccessControlCheckAccessOff
   override implicit val ec: ExecutionContext = ExecutionContext.global
 }
 

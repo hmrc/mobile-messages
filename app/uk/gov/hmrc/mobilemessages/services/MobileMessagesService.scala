@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilemessages.services
 
+import org.joda.time.DateTime
 import play.twirl.api.Html
 import uk.gov.hmrc.api.sandbox.FileResource
 import uk.gov.hmrc.api.service.Auditor
@@ -23,8 +24,11 @@ import uk.gov.hmrc.domain.SaUtr
 import uk.gov.hmrc.mobilemessages.config.MicroserviceAuditConnector
 import uk.gov.hmrc.mobilemessages.connector._
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
+import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator._
+import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.http.HeaderCarrier
+import uk.gov.hmrc.time.DateTimeUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -60,14 +64,13 @@ trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
     }
 }
 
+trait SandboxMobileMessagesService extends MobileMessagesService with FileResource {
 
-object SandboxMobileMessagesService extends MobileMessagesService with FileResource {
-
-  import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator._
-  import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
+  implicit val dateTime:DateTime
+  val saUtr : SaUtr
 
   def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
-    Future.successful(Seq(readMessageHeader(), unreadMessageHeader()))
+    Future.successful(Seq(readMessageHeader(saUtr), unreadMessageHeader(saUtr)))
 
   override def readMessageContent(readTimeUrl: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Html] = {
     val partial = readTimeUrl.contains(readMessageId) match {
@@ -76,6 +79,15 @@ object SandboxMobileMessagesService extends MobileMessagesService with FileResou
     }
     Future.successful(partial)
   }
+
+}
+
+object SandboxMobileMessagesService extends SandboxMobileMessagesService {
+
+  import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator._
+
+  implicit val dateTime: DateTime = DateTimeUtils.now
+  val saUtr = nextSaUtr
 }
 
 object LiveMobileMessagesService extends LiveMobileMessagesService {

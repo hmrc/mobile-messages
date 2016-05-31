@@ -16,9 +16,12 @@
 
 package uk.gov.hmrc.mobilemessages.controllers.action
 
+import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc.{ActionBuilder, Request, Result, Results}
-import uk.gov.hmrc.api.controllers.{ErrorAcceptHeaderInvalid, HeaderValidator}
+import uk.gov.hmrc.api.controllers.{ErrorUnauthorizedLowCL, ErrorAcceptHeaderInvalid, HeaderValidator}
+import uk.gov.hmrc.mobilemessages.connector.AccountWithLowCL
+import uk.gov.hmrc.mobilemessages.connector.NinoNotFoundOnAccount
 import uk.gov.hmrc.mobilemessages.connector.AuthConnector
 import uk.gov.hmrc.mobilemessages.controllers.ErrorUnauthorizedNoNino
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
@@ -42,7 +45,15 @@ trait AccountAccessControl extends ActionBuilder[Request] with Results {
         block(request)
     }.recover {
       case ex:uk.gov.hmrc.play.http.Upstream4xxResponse => Unauthorized(Json.toJson(ErrorUnauthorizedNoNino))
-    }
+
+      case ex:NinoNotFoundOnAccount =>
+        Logger.info("Unauthorized! NINO not found on account!")
+        Unauthorized(Json.toJson(ErrorUnauthorizedNoNino))
+
+      case ex:AccountWithLowCL =>
+        Logger.info("Unauthorized! Account with low CL!")
+        Unauthorized(Json.toJson(ErrorUnauthorizedLowCL))
+   }
   }
 
 }
@@ -88,7 +99,7 @@ object AccountAccessControlSandbox extends AccountAccessControl {
     }
 }
 
-object AccountAccessControlForSandbox extends AccountAccessControlWithHeaderCheck {
+object AccountAccessControlCheckAccessOff extends AccountAccessControlWithHeaderCheck {
   override val checkAccess=false
 
   val accessControl: AccountAccessControl = AccountAccessControlSandbox
