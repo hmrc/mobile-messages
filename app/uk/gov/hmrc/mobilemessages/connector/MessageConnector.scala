@@ -17,6 +17,7 @@
 package uk.gov.hmrc.mobilemessages.connector
 
 import org.joda.time.DateTime
+import play.api.Logger
 import uk.gov.hmrc.play.config.ServicesConfig
 
 
@@ -49,9 +50,14 @@ trait MessageConnector {
     def post: Future[RenderMessageLocation] = http.POST[JsObject, RenderMessageLocation](s"$messageBaseUrl$url", Json.obj("readTime" -> now))
       .recover {
         case ex@uk.gov.hmrc.play.http.Upstream4xxResponse(message,409,_,_)  =>
+          Logger.info("409 response message " + message)
           val index = message.indexOf("{")
           if (index == -1) throw ex
           Json.parse(message.substring(index, message.length-1)).as[RenderMessageLocation]
+
+        case ex:Throwable =>
+          Logger.info("Unknown exception " + ex)
+          throw ex
       }
 
     for {
