@@ -32,10 +32,9 @@ import uk.gov.hmrc.time.DateTimeUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
-
 trait MobileMessagesService {
   def readAndUnreadMessages()(implicit hc:HeaderCarrier, ec : ExecutionContext): Future[Seq[MessageHeader]]
-  def readMessageContent(readTimeUrl : String)(implicit hc:HeaderCarrier, ec : ExecutionContext): Future[Html]
+  def readMessageContent(readTimeUrl : String)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html]
 }
 
 trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
@@ -58,7 +57,7 @@ trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
       case _ => Future.successful(Seq.empty)
     }
 
-  override def readMessageContent(readTimeUrl: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Html] =
+  override def readMessageContent(readTimeUrl: String)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] =
     withAudit("readMessageContent", Map.empty) {
       messageConnector.readMessageContent(readTimeUrl)
     }
@@ -72,7 +71,7 @@ trait SandboxMobileMessagesService extends MobileMessagesService with FileResour
   def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
     Future.successful(Seq(readMessageHeader(saUtr), unreadMessageHeader(saUtr)))
 
-  override def readMessageContent(readTimeUrl: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Html] = {
+  override def readMessageContent(readTimeUrl: String)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
     val partial = readTimeUrl.contains(readMessageId) match {
       case true => newTaxStatement
       case false => stoppingSA

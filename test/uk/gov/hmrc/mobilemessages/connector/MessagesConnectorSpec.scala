@@ -21,11 +21,13 @@ import org.scalatest.concurrent.ScalaFutures
 import play.api.libs.json.{Json, Writes}
 import play.api.test.FakeApplication
 import play.twirl.api.Html
-import uk.gov.hmrc.domain.SaUtr
+import uk.gov.hmrc.domain.{Nino, SaUtr}
 import uk.gov.hmrc.mobilemessages.controller.StubApplicationConfiguration
 import uk.gov.hmrc.mobilemessages.domain.{RenderMessageLocation, MessageHeader}
+import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
 import uk.gov.hmrc.play.http.hooks.HttpHook
 import uk.gov.hmrc.play.http._
+import uk.gov.hmrc.play.http.logging.Authorization
 import uk.gov.hmrc.play.test.{WithFakeApplication, UnitSpec}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -39,9 +41,11 @@ class MessagesConnectorSpec
   override lazy val fakeApplication = FakeApplication(additionalConfiguration = config)
 
   private trait Setup {
-    implicit lazy val hc = HeaderCarrier()
+    implicit lazy val hc = HeaderCarrier(Some(Authorization("some value")))
+
     lazy val html = Html.apply("<div>some snippet</div>")
     val saUtr = SaUtr("1234567890")
+    val nino = Nino("CS700100A")
     val responseRenderer = RenderMessageLocation("sa-message-renderer","http://somelocation")
     val messageHeader = MessageHeader("someId",
                           subject="someSubject",
@@ -62,6 +66,8 @@ class MessagesConnectorSpec
     lazy val responseGet: Future[HttpResponse] = http400Response
     lazy val responsePost: Future[HttpResponse] = PostSuccessResult
 
+    implicit val authUser : Option[Authority] = Some(Authority(nino, ConfidenceLevel.L200, "someId"))
+
     val connector = new MessageConnector {
 
       override def http =  new HttpGet with HttpPost {
@@ -81,6 +87,9 @@ class MessagesConnectorSpec
       override def now: DateTime = DateTime.now()
 
       override val messageBaseUrl: String = "somebase-url"
+      override val provider: String = "some provider"
+      override val token: String = "token"
+      override val id: String = "id"
     }
 
   }
