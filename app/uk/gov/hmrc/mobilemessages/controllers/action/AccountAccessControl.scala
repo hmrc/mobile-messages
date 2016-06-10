@@ -18,11 +18,9 @@ package uk.gov.hmrc.mobilemessages.controllers.action
 
 import play.api.Logger
 import play.api.libs.json.Json
-import play.api.mvc.{ActionBuilder, Request, Result, Results}
+import play.api.mvc._
 import uk.gov.hmrc.api.controllers.{ErrorUnauthorizedLowCL, ErrorAcceptHeaderInvalid, HeaderValidator}
-import uk.gov.hmrc.mobilemessages.connector.AccountWithLowCL
-import uk.gov.hmrc.mobilemessages.connector.NinoNotFoundOnAccount
-import uk.gov.hmrc.mobilemessages.connector.AuthConnector
+import uk.gov.hmrc.mobilemessages.connector.{Authority, AccountWithLowCL, NinoNotFoundOnAccount, AuthConnector}
 import uk.gov.hmrc.mobilemessages.controllers.ErrorUnauthorizedNoNino
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
 import uk.gov.hmrc.play.http._
@@ -31,18 +29,21 @@ import uk.gov.hmrc.play.http.hooks.HttpHook
 import scala.concurrent.Future
 
 
-trait AccountAccessControl extends ActionBuilder[Request] with Results {
+case class AuthenticatedRequest[A](authority: Option[Authority], request: Request[A]) extends WrappedRequest(request)
+
+trait AccountAccessControl extends ActionBuilder[AuthenticatedRequest] with Results {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
   val authConnector: AuthConnector
 
-  def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = {
+  def invokeBlock[A](request: Request[A], block: AuthenticatedRequest[A] => Future[Result]) = {
     implicit val hc = HeaderCarrier.fromHeadersAndSession(request.headers, None)
 
     authConnector.grantAccess().flatMap {
-      _ =>
-        block(request)
+      authority => {
+        block(AuthenticatedRequest(Some(authority),request))
+      }
     }.recover {
       case ex:uk.gov.hmrc.play.http.Upstream4xxResponse => Unauthorized(Json.toJson(ErrorUnauthorizedNoNino))
 
@@ -53,7 +54,7 @@ trait AccountAccessControl extends ActionBuilder[Request] with Results {
       case ex:AccountWithLowCL =>
         Logger.info("Unauthorized! Account with low CL!")
         Unauthorized(Json.toJson(ErrorUnauthorizedLowCL))
-   }
+    }
   }
 
 }
@@ -62,12 +63,12 @@ trait AccountAccessControlWithHeaderCheck extends HeaderValidator {
   val checkAccess=true
   val accessControl:AccountAccessControl
 
-  override def validateAccept(rules: Option[String] => Boolean) = new ActionBuilder[Request] {
+  override def validateAccept(rules: Option[String] => Boolean) = new ActionBuilder[AuthenticatedRequest] {
 
-    def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = {
+    def invokeBlock[A](request: Request[A], block: AuthenticatedRequest[A] => Future[Result]) = {
       if (rules(request.headers.get("Accept"))) {
         if (checkAccess) accessControl.invokeBlock(request, block)
-        else block(request)
+        else block(AuthenticatedRequest(None,request))
       }
       else Future.successful(Status(ErrorAcceptHeaderInvalid.httpStatusCode)(Json.toJson(ErrorAcceptHeaderInvalid)))
     }

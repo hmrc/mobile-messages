@@ -154,18 +154,6 @@ class AuthConnectorSpec extends UnitSpec with ScalaFutures {
       }
     }
 
-    "find Nino only accounts" in {
-
-      val serviceConfidenceLevel = ConfidenceLevel.L200
-      val authorityConfidenceLevel = ConfidenceLevel.L200
-
-      val saUtr = None
-
-      val nino = Some(Nino("CS100700A"))
-      val response = HttpResponse(200, Some(authorityJson(authorityConfidenceLevel, saUtr, nino)))
-
-      authConnector(response, serviceConfidenceLevel).grantAccess().futureValue
-    }
   }
 
   def authorityJson(confidenceLevel: ConfidenceLevel, saUtr: Option[SaUtr], nino : Option[Nino]): JsValue = {

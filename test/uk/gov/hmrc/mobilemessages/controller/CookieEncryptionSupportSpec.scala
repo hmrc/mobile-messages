@@ -1,0 +1,63 @@
+/*
+ * Copyright 2016 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.gov.hmrc.mobilemessages.controller
+
+import org.scalatest.concurrent.ScalaFutures
+import play.api.libs.json.Json
+import play.api.mvc.Result
+import play.api.test.FakeApplication
+import play.api.test.Helpers._
+import uk.gov.hmrc.mobilemessages.connector.SessionCookieEncryptionSupport
+import uk.gov.hmrc.mobilemessages.domain.MessageHeader
+import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs
+import uk.gov.hmrc.play.test.{WithFakeApplication, UnitSpec}
+
+
+class CookieEncryptionSupportSpec extends UnitSpec with WithFakeApplication with ScalaFutures with StubApplicationConfiguration {
+
+  override lazy val fakeApplication = FakeApplication(additionalConfiguration = config)
+
+
+  "encrypt/decrypt cookie" should {
+
+    "successfully encrypt and decrypt" in new Success {
+
+      val crypto = new SessionCookieEncryptionSupport {}
+
+      val data = Map(("some key1" , "some value1"),("some key2" , "some value2"))
+      val result: (String, String) = crypto.withSession(data.toList: _ *)
+      val len=s"${crypto.mtdpSessionCookie}=".length
+      val encryptedResult = result._2.substring(len+1,result._2.length-1)
+
+      val decryptedMap: Map[String, String] = crypto.sessionOf(encryptedResult)
+      decryptedMap shouldBe data
+    }
+
+    "fail to decrypt when an invalid payload is supplied for decryption" in new Success {
+
+      val crypto = new SessionCookieEncryptionSupport {}
+
+      val data = Map(("some key1" , "some value1"),("some key2" , "some value2"))
+      val result: (String, String) = crypto.withSession(data.toList: _ *)
+
+      intercept[SecurityException] {
+        crypto.sessionOf(result._2)
+      }
+    }
+
+  }
+}
