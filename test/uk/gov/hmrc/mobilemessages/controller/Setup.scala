@@ -22,7 +22,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.twirl.api.Html
 import uk.gov.hmrc.mobilemessages.config.MicroserviceAuditConnector
-import uk.gov.hmrc.mobilemessages.connector.{MessageConnector, AuthConnector}
+import uk.gov.hmrc.mobilemessages.connector.{Authority, MessageConnector, AuthConnector}
 import uk.gov.hmrc.mobilemessages.controllers.MobileMessagesController
 import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck, AccountAccessControl}
 import uk.gov.hmrc.mobilemessages.domain.{ReadTimeUrl, MessageHeader, Accounts}
@@ -45,7 +45,7 @@ class TestAuthConnector(nino: Option[Nino], saUtr:Option[SaUtr]) extends AuthCon
 
   override def accounts()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Accounts] = Future(Accounts(nino, saUtr))
 
-  override def grantAccess()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Unit] = Future(Unit)
+  override def grantAccess()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Authority] = Future(Authority(nino.getOrElse(throw new Exception("Invalid nino")), ConfidenceLevel.L200, "some-auth-id"))
 }
 
 class TestMessageConnector(result:Seq[MessageHeader], html:Html) extends MessageConnector {
@@ -58,7 +58,11 @@ class TestMessageConnector(result:Seq[MessageHeader], html:Html) extends Message
 
   override def messages(utr: SaUtr)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = Future.successful(result)
 
-  override def readMessageContent(url: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Html] = Future.successful(html)
+  override def readMessageContent(url: String)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[uk.gov.hmrc.mobilemessages.connector.Authority]): Future[Html] = Future.successful(html)
+
+  override val provider: String = "provider"
+  override val token: String = "token"
+  override val id: String = "id"
 }
 
 class TestMobileMessagesService(testAuthConnector:TestAuthConnector, mobileMessageConnector:MessageConnector) extends LiveMobileMessagesService {
@@ -156,7 +160,7 @@ trait SuccessWithMessages extends Setup {
 trait AuthWithoutNino extends Setup {
 
   override val authConnector =  new TestAuthConnector(None, None) {
-    override def grantAccess()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Unit] = Future.failed(new Upstream4xxResponse("Error", 401, 401))
+    override def grantAccess()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Authority] = Future.failed(new Upstream4xxResponse("Error", 401, 401))
   }
 
   override val testAccess = new TestAccessCheck(authConnector)

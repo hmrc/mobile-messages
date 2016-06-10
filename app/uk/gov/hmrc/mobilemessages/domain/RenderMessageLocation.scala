@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilemessages.domain
 
+import play.api.Logger
 import uk.gov.hmrc.play.config.ServicesConfig
 
 case class RenderMessageLocation(service : String, url : String)
@@ -24,7 +25,9 @@ object RenderMessageLocation extends ServicesConfig {
   import play.api.libs.json.Json
 
   implicit def toUrl(renderMessageLocation: RenderMessageLocation) : String = {
-    s"${baseUrl(renderMessageLocation.service)}${renderMessageLocation.url}"
+    val url = s"${baseUrl(renderMessageLocation.service)}${renderMessageLocation.url}"
+    Logger.info(s"Sending request to $url")
+    url
   }
 
   implicit val formats = Json.format[RenderMessageLocation]

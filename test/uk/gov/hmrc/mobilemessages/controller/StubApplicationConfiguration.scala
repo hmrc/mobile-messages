@@ -33,6 +33,8 @@ trait StubApplicationConfiguration {
     "microservice.services.ntc.port" -> "4567",
     "router.regex" -> ".*",
     "router.prefix" -> "/sandbox",
-    "router.regex" -> "X-MOBILE-USER-ID"
+    "router.regex" -> "X-MOBILE-USER-ID" ,
+    "application.secret"->"yNhI04vHs9<_HWbC`]20u`37=NGLGYY5:0Tg5?y`W<NoJnXWqmjcgZBec@rOxb^G",
+    "cookie.encryption.key"->"gvBoGdgzqG1AarzF1LY0zQ=="
   )
 }
