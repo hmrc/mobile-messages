@@ -35,21 +35,22 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
   val accessControl: AccountAccessControlWithHeaderCheck
 
   final def getMessages = accessControl.validateAccept(acceptHeaderValidationRules).async {
-    implicit request =>
-      implicit val hc = HeaderCarrier.fromHeadersAndSession(request.headers, None)
+    implicit authenticated =>
+      implicit val hc = HeaderCarrier.fromHeadersAndSession(authenticated.request.headers, None)
       errorWrapper(service.readAndUnreadMessages().map(as => Ok(Json.toJson(as))))
   }
 
   final def read = accessControl.validateAccept(acceptHeaderValidationRules).async(BodyParsers.parse.json) {
-    implicit request =>
-      implicit val hc = HeaderCarrier.fromHeadersAndSession(request.headers, None)
+    implicit authenticated =>
+      implicit val hc = HeaderCarrier.fromHeadersAndSession(authenticated.request.headers, None)
 
-      request.body.validate[ReadTimeUrl].fold (
+      authenticated.request.body.validate[ReadTimeUrl].fold (
         errors => {
-          Logger.warn("Received error with read endpoint: " + errors)
+          Logger.warn("Received JSON error with read endpoint: " + errors)
           Future.successful(BadRequest(Json.toJson(ErrorGenericBadRequest(errors))))
         },
         readMessage => {
+          implicit val auth = authenticated.authority
           errorWrapper(service.readMessageContent(readMessage.url).map(as => Ok(as)))
         }
       )
