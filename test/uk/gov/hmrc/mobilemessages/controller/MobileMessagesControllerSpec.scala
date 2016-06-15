@@ -88,6 +88,12 @@ class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication wit
       contentAsJson(result).as[Seq[MessageHeader]] shouldBe messageHeaderList
     }
 
+    "return forbidden when authority record does not have correct confidence level" in new AuthWithLowCL {
+      val result = await(controller.getMessages(emptyRequestWithAcceptHeader))
+
+      status(result) shouldBe 403
+    }
+
     "return unauthorized when authority record does not contain a NINO" in new AuthWithoutNino {
       val result = await(controller.getMessages(emptyRequestWithAcceptHeader))
 
