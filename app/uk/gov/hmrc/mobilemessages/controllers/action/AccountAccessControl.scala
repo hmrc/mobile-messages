@@ -21,7 +21,7 @@ import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.api.controllers.{ErrorUnauthorizedLowCL, ErrorAcceptHeaderInvalid, HeaderValidator}
 import uk.gov.hmrc.mobilemessages.connector.{Authority, AccountWithLowCL, NinoNotFoundOnAccount, AuthConnector}
-import uk.gov.hmrc.mobilemessages.controllers.ErrorUnauthorizedNoNino
+import uk.gov.hmrc.mobilemessages.controllers.{ErrorUnauthorizedNoNino, ForbiddenAccess}
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
 import uk.gov.hmrc.play.http._
 import uk.gov.hmrc.play.http.hooks.HttpHook
@@ -46,6 +46,10 @@ trait AccountAccessControl extends ActionBuilder[AuthenticatedRequest] with Resu
       }
     }.recover {
       case ex:uk.gov.hmrc.play.http.Upstream4xxResponse => Unauthorized(Json.toJson(ErrorUnauthorizedNoNino))
+
+      case ex:ForbiddenException =>
+        Logger.info("Unauthorized! ForbiddenException caught and returning 403 status!")
+        Forbidden(Json.toJson(ForbiddenAccess))
 
       case ex:NinoNotFoundOnAccount =>
         Logger.info("Unauthorized! NINO not found on account!")

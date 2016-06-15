@@ -31,7 +31,7 @@ import uk.gov.hmrc.time.DateTimeUtils
 import uk.gov.hmrc.domain.{SaUtr, Nino}
 import uk.gov.hmrc.play.audit.http.connector.{AuditResult, AuditConnector}
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
-import uk.gov.hmrc.play.http.{Upstream4xxResponse, HeaderCarrier, HttpPost, HttpGet}
+import uk.gov.hmrc.play.http._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -173,6 +173,25 @@ trait AuthWithoutNino extends Setup {
   }
 
 }
+
+
+trait AuthWithLowCL extends Setup {
+
+  override val authConnector =  new TestAuthConnector(None, None) {
+    override def grantAccess()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Authority] = Future.failed(new ForbiddenException("Error"))
+  }
+
+  override val testAccess = new TestAccessCheck(authConnector)
+  override val testCompositeAction = new TestAccountAccessControlWithAccept(testAccess)
+
+  val controller = new MobileMessagesController {
+    override val service: MobileMessagesService = testMMService
+    override val accessControl: AccountAccessControlWithHeaderCheck = testCompositeAction
+    override implicit val ec: ExecutionContext = ExecutionContext.global
+  }
+
+}
+
 
 trait SandboxSuccess extends Setup {
 
