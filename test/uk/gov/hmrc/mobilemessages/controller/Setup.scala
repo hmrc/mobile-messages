@@ -16,20 +16,22 @@
 
 package uk.gov.hmrc.mobilemessages.controller
 
-import org.joda.time.{LocalDate, DateTime}
-import play.api.libs.json.{Json, JsValue}
+import java.util.UUID
+
+import org.joda.time.{DateTime, LocalDate}
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.twirl.api.Html
 import uk.gov.hmrc.mobilemessages.config.MicroserviceAuditConnector
-import uk.gov.hmrc.mobilemessages.connector.{Authority, MessageConnector, AuthConnector}
+import uk.gov.hmrc.mobilemessages.connector.{AuthConnector, Authority, MessageConnector}
 import uk.gov.hmrc.mobilemessages.controllers.MobileMessagesController
-import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck, AccountAccessControl}
-import uk.gov.hmrc.mobilemessages.domain.{ReadTimeUrl, MessageHeader, Accounts}
-import uk.gov.hmrc.mobilemessages.services.{MobileMessagesService, SandboxMobileMessagesService, LiveMobileMessagesService}
+import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControl, AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck}
+import uk.gov.hmrc.mobilemessages.domain.{Accounts, MessageHeader, ReadTimeUrl}
+import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
 import uk.gov.hmrc.time.DateTimeUtils
-import uk.gov.hmrc.domain.{SaUtr, Nino}
-import uk.gov.hmrc.play.audit.http.connector.{AuditResult, AuditConnector}
+import uk.gov.hmrc.domain.{Nino, SaUtr}
+import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
 import uk.gov.hmrc.play.http._
 
@@ -89,6 +91,8 @@ class TestAccountAccessControlWithAccept(testAccessCheck:AccountAccessControl) e
 
 trait Setup {
   implicit val hc = HeaderCarrier()
+
+  val journeyId = Option(UUID.randomUUID().toString)
 
   val nino = Nino("CS700100A")
   val saUtrVal = SaUtr("1234567890")

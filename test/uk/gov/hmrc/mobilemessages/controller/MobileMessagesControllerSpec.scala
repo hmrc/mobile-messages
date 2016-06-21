@@ -33,20 +33,27 @@ class MobileMessagesReadControllerSpec extends UnitSpec with WithFakeApplication
   "messages Live read" should {
 
     "read a valid html response from the read service" in new Success {
-      val result: Result = await(controller.read(readTimeRequest))
+      val result: Result = await(controller.read()(readTimeRequest))
+
+      status(result) shouldBe 200
+      contentAsString(result) shouldBe html.toString()
+    }
+
+    "read a valid html response from the read service when a journeyId is supplied" in new Success {
+      val result: Result = await(controller.read(journeyId)(readTimeRequest))
 
       status(result) shouldBe 200
       contentAsString(result) shouldBe html.toString()
     }
 
     "return unauthorized when authority record does not contain a NINO" in new AuthWithoutNino {
-      val result = await(controller.read(readTimeRequest))
+      val result = await(controller.read()(readTimeRequest))
 
       status(result) shouldBe 401
     }
 
     "return status code 406 when the headers are invalid" in new Success {
-      val result = await(controller.read(readTimeRequestNoHeaders))
+      val result = await(controller.read()(readTimeRequestNoHeaders))
 
       status(result) shouldBe 406
     }
@@ -56,7 +63,7 @@ class MobileMessagesReadControllerSpec extends UnitSpec with WithFakeApplication
   "messages Sandbox read" should {
 
     "return the messages" in new SandboxSuccess {
-      val result = await(controller.read(readTimeRequest))
+      val result = await(controller.read()(readTimeRequest))
 
       status(result) shouldBe 200
 
@@ -74,7 +81,16 @@ class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication wit
 
     "return an empty list of messages successfully" in new Success {
 
-      val result: Result = await(controller.getMessages(emptyRequestWithAcceptHeader))
+      val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
+
+      status(result) shouldBe 200
+      contentAsJson(result).as[Seq[MessageHeader]] shouldBe Seq.empty[MessageHeader]
+    }
+
+
+    "return an empty list of messages successfully when journeyId is supplied" in new Success {
+
+      val result: Result = await(controller.getMessages(journeyId)(emptyRequestWithAcceptHeader))
 
       status(result) shouldBe 200
       contentAsJson(result).as[Seq[MessageHeader]] shouldBe Seq.empty[MessageHeader]
@@ -82,26 +98,26 @@ class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication wit
 
     "return a list of messages successfully" in new SuccessWithMessages {
 
-      val result: Result = await(controller.getMessages(emptyRequestWithAcceptHeader))
+      val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
 
       status(result) shouldBe 200
       contentAsJson(result).as[Seq[MessageHeader]] shouldBe messageHeaderList
     }
 
     "return forbidden when authority record does not have correct confidence level" in new AuthWithLowCL {
-      val result = await(controller.getMessages(emptyRequestWithAcceptHeader))
+      val result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
 
       status(result) shouldBe 403
     }
 
     "return unauthorized when authority record does not contain a NINO" in new AuthWithoutNino {
-      val result = await(controller.getMessages(emptyRequestWithAcceptHeader))
+      val result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
 
       status(result) shouldBe 401
     }
 
     "return status code 406 when the headers are invalid" in new Success {
-      val result = await(controller.getMessages(emptyRequest))
+      val result = await(controller.getMessages()(emptyRequest))
 
       status(result) shouldBe 406
     }
@@ -110,7 +126,7 @@ class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication wit
   "messages Sandbox" should {
 
     "return the messages" in new SandboxSuccess {
-      val result = await(controller.getMessages(emptyRequestWithAcceptHeader))
+      val result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
 
       status(result) shouldBe 200
 
