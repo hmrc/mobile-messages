@@ -34,13 +34,13 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
   val service: MobileMessagesService
   val accessControl: AccountAccessControlWithHeaderCheck
 
-  final def getMessages = accessControl.validateAccept(acceptHeaderValidationRules).async {
+  final def getMessages(journeyId: Option[String] = None) = accessControl.validateAccept(acceptHeaderValidationRules).async {
     implicit authenticated =>
       implicit val hc = HeaderCarrier.fromHeadersAndSession(authenticated.request.headers, None)
       errorWrapper(service.readAndUnreadMessages().map(as => Ok(Json.toJson(as))))
   }
 
-  final def read = accessControl.validateAccept(acceptHeaderValidationRules).async(BodyParsers.parse.json) {
+  final def read(journeyId: Option[String] = None) = accessControl.validateAccept(acceptHeaderValidationRules).async(BodyParsers.parse.json) {
     implicit authenticated =>
       implicit val hc = HeaderCarrier.fromHeadersAndSession(authenticated.request.headers, None)
 
