@@ -22,13 +22,7 @@
             "method":"GET",
             "authType":"USER",
             "throttlingTier":"UNLIMITED",
-            "scope":"read:messages",
-            "queryParameters": [
-              {
-                "name": "journeyId",
-                "required": false
-              }
-            ]
+            "scope":"read:messages"
           },
           {
             "uriPattern":"/messages/read",
@@ -36,13 +30,7 @@
             "method":"POST",
             "authType":"USER",
             "throttlingTier":"UNLIMITED",
-            "scope":"read:messages",
-            "queryParameters": [
-              {
-                "name": "journeyId",
-                "required": false
-              }
-            ]
+            "scope":"read:messages"
           }
         ]
       }
