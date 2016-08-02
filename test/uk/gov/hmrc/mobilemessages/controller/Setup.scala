@@ -24,7 +24,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.twirl.api.Html
 import uk.gov.hmrc.mobilemessages.config.MicroserviceAuditConnector
-import uk.gov.hmrc.mobilemessages.connector.{AuthConnector, Authority, MessageConnector}
+import uk.gov.hmrc.mobilemessages.connector.{AuthConnector, Authority, EntityResolverConnector, MessageConnector}
 import uk.gov.hmrc.mobilemessages.controllers.MobileMessagesController
 import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControl, AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck}
 import uk.gov.hmrc.mobilemessages.domain.{Accounts, MessageHeader, ReadTimeUrl}
@@ -58,7 +58,7 @@ class TestMessageConnector(result:Seq[MessageHeader], html:Html) extends Message
 
   override val messageBaseUrl: String = "someUrl"
 
-  override def messages(utr: SaUtr)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = Future.successful(result)
+  override def messages(utr: SaUtr)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = throw new Exception("Should call entity resolver for the messages")
 
   override def readMessageContent(url: String)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[uk.gov.hmrc.mobilemessages.connector.Authority]): Future[Html] = Future.successful(html)
 
@@ -67,16 +67,37 @@ class TestMessageConnector(result:Seq[MessageHeader], html:Html) extends Message
   override val id: String = "id"
 }
 
-class TestMobileMessagesService(testAuthConnector:TestAuthConnector, mobileMessageConnector:MessageConnector) extends LiveMobileMessagesService {
+class TestEntityResolverConnector(result:Seq[MessageHeader]) extends EntityResolverConnector {
+
+  override def http: HttpGet with HttpPost = ???
+
+  override val entityResolverBaseUrl: String = "someUrl"
+
+  private var lastUtr = SaUtr("utr not established")
+  def lastUtrPassed = lastUtr
+
+  override def messages(utr: SaUtr)
+                       (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = {
+    lastUtr = utr
+    Future.successful(result)
+  }
+}
+
+class TestMobileMessagesService(testAuthConnector:TestAuthConnector,
+                                mobileMessageConnector:MessageConnector,
+                                mobileEntityResolverConnector:EntityResolverConnector)
+  extends LiveMobileMessagesService {
   var saveDetails:Map[String, String]=Map.empty
 
-  override def audit(service: String, details: Map[String, String])(implicit hc: HeaderCarrier, ec : ExecutionContext) = {
+  override def audit(service: String, details: Map[String, String])
+                    (implicit hc: HeaderCarrier, ec : ExecutionContext) = {
     saveDetails=details
     Future.successful(AuditResult.Success)
   }
 
   override val authConnector = testAuthConnector
   override val messageConnector = mobileMessageConnector
+  override val entityResolverConnector = mobileEntityResolverConnector
   override val auditConnector: AuditConnector = MicroserviceAuditConnector
 }
 
@@ -126,9 +147,10 @@ trait Setup {
 
   val authConnector = new TestAuthConnector(Some(nino), Some(saUtrVal))
   val messageConnector = new TestMessageConnector(Seq.empty[MessageHeader], html)
+  val entityResolverConnector = new TestEntityResolverConnector(Seq.empty[MessageHeader])
   val testAccess = new TestAccessCheck(authConnector)
   val testCompositeAction = new TestAccountAccessControlWithAccept(testAccess)
-  val testMMService = new TestMobileMessagesService(authConnector, messageConnector)
+  val testMMService = new TestMobileMessagesService(authConnector, messageConnector, entityResolverConnector)
 
   object sandbox extends SandboxMobileMessagesService {
       implicit val dateTime = now
@@ -151,7 +173,12 @@ trait Success extends Setup {
 
 trait SuccessWithMessages extends Setup {
 
-  override val testMMService = new TestMobileMessagesService(authConnector, new TestMessageConnector(messageHeaderList, html))
+  val testEntityResolverConnector = new TestEntityResolverConnector(messageHeaderList)
+  override val testMMService = new TestMobileMessagesService(
+    authConnector,
+    new TestMessageConnector(Seq.empty, html),
+    testEntityResolverConnector
+  )
 
   val controller = new MobileMessagesController {
     override val service: MobileMessagesService = testMMService

@@ -41,6 +41,7 @@ trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
   def authConnector: AuthConnector
 
   def messageConnector : MessageConnector
+  def entityResolverConnector : EntityResolverConnector
 
   override def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] ={
     withAudit("readAndUnreadMessages", Map.empty) {
@@ -53,7 +54,7 @@ trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
 
   private def messages(maybeSaUtr : Option[SaUtr])(implicit hc: HeaderCarrier, ec: ExecutionContext) : Future[Seq[MessageHeader]] =
     maybeSaUtr match {
-      case Some(utr) => messageConnector.messages(utr)
+      case Some(utr) => entityResolverConnector.messages(utr)
       case _ => Future.successful(Seq.empty)
     }
 
@@ -93,6 +94,8 @@ object LiveMobileMessagesService extends LiveMobileMessagesService {
   override val authConnector: AuthConnector = AuthConnector
 
   override val messageConnector: MessageConnector = MessageConnector
+
+  override val entityResolverConnector: EntityResolverConnector = EntityResolverConnector
 
   val auditConnector: AuditConnector = MicroserviceAuditConnector
 }
