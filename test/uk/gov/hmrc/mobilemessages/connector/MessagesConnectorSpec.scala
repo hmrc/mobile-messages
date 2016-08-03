@@ -94,34 +94,6 @@ class MessagesConnectorSpec
 
   }
 
-  "messagesConnector messages" should {
-
-    "throw BadRequestException when a 400 response is returned" in new Setup {
-      override lazy val responseGet = http400Response
-        intercept[BadRequestException] {
-          await(connector.messages(saUtr))
-      }
-    }
-
-    "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
-      override lazy val responseGet = http500Response
-      intercept[Upstream5xxResponse] {
-        await(connector.messages(saUtr))
-      }
-    }
-
-    "return empty response when a 200 response is received with an empty payload" in new Setup {
-      override lazy val responseGet = http200ResponseEmpty
-      await(connector.messages(saUtr)) shouldBe Seq.empty
-    }
-
-    "return a list of items when a 200 response is received with a payload" in new Setup {
-      override lazy val responseGet = http200Response
-      await(connector.messages(saUtr)) shouldBe Seq(messageHeader,messageHeader,messageHeader)
-    }
-
-  }
-
   "messagesConnector readMessageContent" should {
 
     "return successfully with html partial" in new Setup {

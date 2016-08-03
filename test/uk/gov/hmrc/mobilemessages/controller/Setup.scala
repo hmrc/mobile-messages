@@ -58,8 +58,6 @@ class TestMessageConnector(result:Seq[MessageHeader], html:Html) extends Message
 
   override val messageBaseUrl: String = "someUrl"
 
-  override def messages(utr: SaUtr)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = throw new Exception("Should call entity resolver for the messages")
-
   override def readMessageContent(url: String)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[uk.gov.hmrc.mobilemessages.connector.Authority]): Future[Html] = Future.successful(html)
 
   override val provider: String = "provider"
