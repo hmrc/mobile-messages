@@ -71,12 +71,7 @@ class TestEntityResolverConnector(result:Seq[MessageHeader]) extends EntityResol
 
   override val entityResolverBaseUrl: String = "someUrl"
 
-  private var lastUtr = SaUtr("utr not established")
-  def lastUtrPassed = lastUtr
-
-  override def messages(utr: SaUtr)
-                       (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = {
-    lastUtr = utr
+  override def messages(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = {
     Future.successful(result)
   }
 }
@@ -118,8 +113,8 @@ trait Setup {
 
   val now = DateTimeUtils.now
   val messages =
-    s"""[{"id":"543e8c6001000001003e4a9e","subject":"You have a new tax statement","validFrom":"${now.minusDays(3).toLocalDate}","readTime":${now.minusDays(1).getMillis},"readTimeUrl":"/message/sa/${saUtrVal.value}/543e8c6001000001003e4a9e/read-time","sentInError":false},
-       |{"id":"643e8c5f01000001003e4a8f","subject":"Stopping Self Assessment","validFrom":"${now.toLocalDate}","readTimeUrl":"/message/sa/${saUtrVal.value}/643e8c5f01000001003e4a8f/read-time","sentInError":false}]""".stripMargin
+    s"""[{"id":"543e8c6001000001003e4a9e","subject":"You have a new tax statement","validFrom":"${now.minusDays(3).toLocalDate}","readTime":${now.minusDays(1).getMillis},"readTimeUrl":"/entities/some-entityId/messages/543e8c6001000001003e4a9e/read-time","sentInError":false},
+       |{"id":"643e8c5f01000001003e4a8f","subject":"Stopping Self Assessment","validFrom":"${now.toLocalDate}","readTimeUrl":"/entities/some-entityId/messages/643e8c5f01000001003e4a8f/read-time","sentInError":false}]""".stripMargin
 
   lazy val html = Html.apply("<div>some snippet</div>")
 

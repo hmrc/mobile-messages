@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.mobilemessages.connector
 
-import uk.gov.hmrc.domain.SaUtr
 import uk.gov.hmrc.mobilemessages.config.WSHttp
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 import uk.gov.hmrc.play.config.ServicesConfig
@@ -32,9 +31,8 @@ trait EntityResolverConnector extends SessionCookieEncryptionSupport {
 
   private val returnReadAndUnreadMessages = "Both"
 
-  def messages(utr: SaUtr)
-              (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = {
-    http.GET[Seq[MessageHeader]](s"$entityResolverBaseUrl/message/sa/$utr?read=$returnReadAndUnreadMessages")
+  def messages(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = {
+    http.GET[Seq[MessageHeader]](s"$entityResolverBaseUrl/messages?read=$returnReadAndUnreadMessages")
   }
 }
 

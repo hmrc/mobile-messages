@@ -42,7 +42,7 @@ object DomainGenerator {
       "You have a new tax statement",
       dateTime.minusDays(3).toLocalDate,
       Some(dateTime.minusDays(1)),
-      s"/message/sa/$saUtr/$readMessageId/read-time",
+      s"/entities/some-entityId/messages/$readMessageId/read-time",
       false)
   }
   def readMessageHeaderJson(implicit dateTime:DateTime) = Json.toJson(readMessageHeader())
@@ -52,7 +52,7 @@ object DomainGenerator {
     "Stopping Self Assessment",
     dateTime.toLocalDate,
     None,
-    s"/message/sa/$saUtr/$unreadMessageId/read-time",
+    s"/entities/some-entityId/messages/$unreadMessageId/read-time",
     false)
   def unreadMessageHeaderJson(implicit dateTime:DateTime) = Json.toJson(unreadMessageHeader())
 
