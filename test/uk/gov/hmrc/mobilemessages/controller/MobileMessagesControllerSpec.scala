@@ -87,7 +87,6 @@ class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication wit
       contentAsJson(result).as[Seq[MessageHeader]] shouldBe Seq.empty[MessageHeader]
     }
 
-
     "return an empty list of messages successfully when journeyId is supplied" in new Success {
 
       val result: Result = await(controller.getMessages(journeyId)(emptyRequestWithAcceptHeader))

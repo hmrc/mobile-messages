@@ -47,11 +47,6 @@ trait MessageConnector extends SessionCookieEncryptionSupport {
 
   def now: DateTime
 
-  private val returnReadAndUnreadMessages = "Both"
-
-  def messages(utr: SaUtr)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
-    http.GET[Seq[MessageHeader]](s"$messageBaseUrl/message/sa/$utr?read=$returnReadAndUnreadMessages")
-
   def readMessageContent(url: String)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
     import RestFormats.dateTimeWrite
 

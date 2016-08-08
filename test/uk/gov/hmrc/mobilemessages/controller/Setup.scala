@@ -24,7 +24,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.twirl.api.Html
 import uk.gov.hmrc.mobilemessages.config.MicroserviceAuditConnector
-import uk.gov.hmrc.mobilemessages.connector.{AuthConnector, Authority, MessageConnector}
+import uk.gov.hmrc.mobilemessages.connector.{AuthConnector, Authority, EntityResolverConnector, MessageConnector}
 import uk.gov.hmrc.mobilemessages.controllers.MobileMessagesController
 import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControl, AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck}
 import uk.gov.hmrc.mobilemessages.domain.{Accounts, MessageHeader, ReadTimeUrl}
@@ -58,8 +58,6 @@ class TestMessageConnector(result:Seq[MessageHeader], html:Html) extends Message
 
   override val messageBaseUrl: String = "someUrl"
 
-  override def messages(utr: SaUtr)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = Future.successful(result)
-
   override def readMessageContent(url: String)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[uk.gov.hmrc.mobilemessages.connector.Authority]): Future[Html] = Future.successful(html)
 
   override val provider: String = "provider"
@@ -67,16 +65,32 @@ class TestMessageConnector(result:Seq[MessageHeader], html:Html) extends Message
   override val id: String = "id"
 }
 
-class TestMobileMessagesService(testAuthConnector:TestAuthConnector, mobileMessageConnector:MessageConnector) extends LiveMobileMessagesService {
+class TestEntityResolverConnector(result:Seq[MessageHeader]) extends EntityResolverConnector {
+
+  override def http: HttpGet with HttpPost = ???
+
+  override val entityResolverBaseUrl: String = "someUrl"
+
+  override def messages(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = {
+    Future.successful(result)
+  }
+}
+
+class TestMobileMessagesService(testAuthConnector:TestAuthConnector,
+                                mobileMessageConnector:MessageConnector,
+                                mobileEntityResolverConnector:EntityResolverConnector)
+  extends LiveMobileMessagesService {
   var saveDetails:Map[String, String]=Map.empty
 
-  override def audit(service: String, details: Map[String, String])(implicit hc: HeaderCarrier, ec : ExecutionContext) = {
+  override def audit(service: String, details: Map[String, String])
+                    (implicit hc: HeaderCarrier, ec : ExecutionContext) = {
     saveDetails=details
     Future.successful(AuditResult.Success)
   }
 
   override val authConnector = testAuthConnector
   override val messageConnector = mobileMessageConnector
+  override val entityResolverConnector = mobileEntityResolverConnector
   override val auditConnector: AuditConnector = MicroserviceAuditConnector
 }
 
@@ -99,8 +113,8 @@ trait Setup {
 
   val now = DateTimeUtils.now
   val messages =
-    s"""[{"id":"543e8c6001000001003e4a9e","subject":"You have a new tax statement","validFrom":"${now.minusDays(3).toLocalDate}","readTime":${now.minusDays(1).getMillis},"readTimeUrl":"/message/sa/${saUtrVal.value}/543e8c6001000001003e4a9e/read-time","sentInError":false},
-       |{"id":"643e8c5f01000001003e4a8f","subject":"Stopping Self Assessment","validFrom":"${now.toLocalDate}","readTimeUrl":"/message/sa/${saUtrVal.value}/643e8c5f01000001003e4a8f/read-time","sentInError":false}]""".stripMargin
+    s"""[{"id":"543e8c6001000001003e4a9e","subject":"You have a new tax statement","validFrom":"${now.minusDays(3).toLocalDate}","readTime":${now.minusDays(1).getMillis},"readTimeUrl":"/entities/some-entityId/messages/543e8c6001000001003e4a9e/read-time","sentInError":false},
+       |{"id":"643e8c5f01000001003e4a8f","subject":"Stopping Self Assessment","validFrom":"${now.toLocalDate}","readTimeUrl":"/entities/some-entityId/messages/643e8c5f01000001003e4a8f/read-time","sentInError":false}]""".stripMargin
 
   lazy val html = Html.apply("<div>some snippet</div>")
 
@@ -126,9 +140,10 @@ trait Setup {
 
   val authConnector = new TestAuthConnector(Some(nino), Some(saUtrVal))
   val messageConnector = new TestMessageConnector(Seq.empty[MessageHeader], html)
+  val entityResolverConnector = new TestEntityResolverConnector(Seq.empty[MessageHeader])
   val testAccess = new TestAccessCheck(authConnector)
   val testCompositeAction = new TestAccountAccessControlWithAccept(testAccess)
-  val testMMService = new TestMobileMessagesService(authConnector, messageConnector)
+  val testMMService = new TestMobileMessagesService(authConnector, messageConnector, entityResolverConnector)
 
   object sandbox extends SandboxMobileMessagesService {
       implicit val dateTime = now
@@ -151,7 +166,12 @@ trait Success extends Setup {
 
 trait SuccessWithMessages extends Setup {
 
-  override val testMMService = new TestMobileMessagesService(authConnector, new TestMessageConnector(messageHeaderList, html))
+  val testEntityResolverConnector = new TestEntityResolverConnector(messageHeaderList)
+  override val testMMService = new TestMobileMessagesService(
+    authConnector,
+    new TestMessageConnector(Seq.empty, html),
+    testEntityResolverConnector
+  )
 
   val controller = new MobileMessagesController {
     override val service: MobileMessagesService = testMMService
