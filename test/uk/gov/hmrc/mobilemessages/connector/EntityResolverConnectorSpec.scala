@@ -118,31 +118,31 @@ class EntityResolverConnectorSpec extends UnitSpec
     "throw BadRequestException when a 400 response is returned" in new Setup {
       override lazy val responseGet = http400Response
         intercept[BadRequestException] {
-          await(connector.messages(saUtr))
+          await(connector.messages)
       }
     }
 
     "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
       override lazy val responseGet = http500Response
       intercept[Upstream5xxResponse] {
-        await(connector.messages(saUtr))
+        await(connector.messages)
       }
     }
 
     "return empty response when a 200 response is received with an empty payload" in new Setup {
       override lazy val responseGet = http200ResponseEmpty
-      connector.messages(saUtr).futureValue shouldBe Seq.empty
+      connector.messages.futureValue shouldBe Seq.empty
     }
 
     "return a list of items when a 200 response is received with a payload" in new Setup {
       override lazy val responseGet = http200Response
-      connector.messages(saUtr).futureValue shouldBe Seq(messageHeader,messageHeader,messageHeader)
+      connector.messages.futureValue shouldBe Seq(messageHeader,messageHeader,messageHeader)
     }
 
     "be calling entity resolver with the correct url" in new Setup {
       override lazy val responseGet = http200Response
-      await(connector.messages(saUtr))
-      httpStub.lastUrlCalled shouldBe s"$entityResolverUrl/message/sa/${saUtr.utr}?read=Both"
+      await(connector.messages)
+      httpStub.lastUrlCalled shouldBe s"$entityResolverUrl/messages?read=Both"
     }
   }
 }

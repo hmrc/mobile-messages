@@ -54,7 +54,7 @@ trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
 
   private def messages(maybeSaUtr : Option[SaUtr])(implicit hc: HeaderCarrier, ec: ExecutionContext) : Future[Seq[MessageHeader]] =
     maybeSaUtr match {
-      case Some(utr) => entityResolverConnector.messages(utr)
+      case Some(utr) => entityResolverConnector.messages
       case _ => Future.successful(Seq.empty)
     }
 

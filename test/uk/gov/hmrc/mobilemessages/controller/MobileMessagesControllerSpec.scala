@@ -87,7 +87,6 @@ class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication wit
       contentAsJson(result).as[Seq[MessageHeader]] shouldBe Seq.empty[MessageHeader]
     }
 
-
     "return an empty list of messages successfully when journeyId is supplied" in new Success {
 
       val result: Result = await(controller.getMessages(journeyId)(emptyRequestWithAcceptHeader))
@@ -102,14 +101,6 @@ class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication wit
 
       status(result) shouldBe 200
       contentAsJson(result).as[Seq[MessageHeader]] shouldBe messageHeaderList
-    }
-
-    "call the EntityResolverConnector with the right utr" in new SuccessWithMessages {
-
-      val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
-
-      status(result) shouldBe 200
-      testEntityResolverConnector.lastUtrPassed shouldBe saUtrVal
     }
 
     "return forbidden when authority record does not have correct confidence level" in new AuthWithLowCL {

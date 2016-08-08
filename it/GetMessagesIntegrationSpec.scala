@@ -115,7 +115,7 @@ class GetMessagesIntegrationSpec extends UnitSpec with MockitoSugar with ScalaFu
       withHeaders(("Accept", "application/vnd.hmrc.1.0+json"))
 
     def entityResolverGetMessagesReturns(messageResponseBody: String) {
-      givenThat(get(urlPathMatching(s"/message/sa/$utr")).
+      givenThat(get(urlPathMatching(s"/messages")).
         withQueryParam("read", equalTo("Both")).
         willReturn(aResponse().
           withBody(
