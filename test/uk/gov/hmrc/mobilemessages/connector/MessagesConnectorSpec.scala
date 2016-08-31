@@ -16,27 +16,27 @@
 
 package uk.gov.hmrc.mobilemessages.connector
 
-import org.joda.time.{LocalDate, DateTime}
+import org.joda.time.DateTime
 import org.scalatest.concurrent.ScalaFutures
 import play.api.libs.json.{Json, Writes}
 import play.api.test.FakeApplication
 import play.twirl.api.Html
 import uk.gov.hmrc.domain.{Nino, SaUtr}
+import uk.gov.hmrc.mobilemessages.acceptance.microservices.MessageService
 import uk.gov.hmrc.mobilemessages.controller.StubApplicationConfiguration
-import uk.gov.hmrc.mobilemessages.domain.{RenderMessageLocation, MessageHeader}
+import uk.gov.hmrc.mobilemessages.domain.RenderMessageLocation
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
-import uk.gov.hmrc.play.http.hooks.HttpHook
 import uk.gov.hmrc.play.http._
+import uk.gov.hmrc.play.http.hooks.HttpHook
 import uk.gov.hmrc.play.http.logging.Authorization
-import uk.gov.hmrc.play.test.{WithFakeApplication, UnitSpec}
+import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import scala.concurrent.Future
 
 class MessagesConnectorSpec
   extends UnitSpec
-          with WithFakeApplication with ScalaFutures with StubApplicationConfiguration {
+    with WithFakeApplication with ScalaFutures with StubApplicationConfiguration {
 
   override lazy val fakeApplication = FakeApplication(additionalConfiguration = config)
 
@@ -46,18 +46,29 @@ class MessagesConnectorSpec
     lazy val html = Html.apply("<div>some snippet</div>")
     val saUtr = SaUtr("1234567890")
     val nino = Nino("CS700100A")
-    val responseRenderer = RenderMessageLocation("sa-message-renderer","http://somelocation")
-    val messageHeader = MessageHeader("someId",
-                          subject="someSubject",
-                         validFrom =  LocalDate.now(),
-                         readTime= None,
-                         readTimeUrl="someUrl",
-                         sentInError=false)
+    val responseRenderer = RenderMessageLocation("sa-message-renderer", "http://somelocation")
+
+
+    val message = new MessageService("authToken")
 
     lazy val http500Response = Future.failed(new Upstream5xxResponse("Error", 500, 500))
     lazy val http400Response = Future.failed(new BadRequestException("bad request"))
-    lazy val http200ResponseEmpty = Future.successful(HttpResponse(200, Some(Json.toJson(Seq.empty[MessageHeader]))))
-    lazy val http200Response = Future.successful(HttpResponse(200, Some(Json.toJson(Seq(messageHeader,messageHeader,messageHeader)))))
+    lazy val http200ResponseEmpty = Future.successful(
+      HttpResponse(200, Some(Json.parse(message.jsonRepresentationOf(Seq.empty))))
+    )
+
+    lazy val http200Response = Future.successful(
+      HttpResponse(
+        200,
+        Some(Json.parse(
+          message.jsonRepresentationOf(
+            Seq(
+              message.headerWith(id = "someId1"),
+              message.headerWith(id = "someId2"),
+              message.headerWith(id = "someId3")
+            )
+          ))))
+    )
 
     lazy val ReadSuccessResult = Future.successful(HttpResponse(200, None, Map.empty, Some(html.toString())))
     lazy val PostSuccessResult = Future.successful(HttpResponse(200, Some(Json.toJson(responseRenderer))))
@@ -66,11 +77,11 @@ class MessagesConnectorSpec
     lazy val responseGet: Future[HttpResponse] = http400Response
     lazy val responsePost: Future[HttpResponse] = PostSuccessResult
 
-    implicit val authUser : Option[Authority] = Some(Authority(nino, ConfidenceLevel.L200, "someId"))
+    implicit val authUser: Option[Authority] = Some(Authority(nino, ConfidenceLevel.L200, "someId"))
 
     val connector = new MessageConnector {
 
-      override def http =  new HttpGet with HttpPost {
+      override def http = new HttpGet with HttpPost {
         override val hooks: Seq[HttpHook] = NoneRequired
 
         override protected def doGet(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = responseGet
@@ -98,8 +109,8 @@ class MessagesConnectorSpec
 
     "throw BadRequestException when a 400 response is returned" in new Setup {
       override lazy val responseGet = http400Response
-        intercept[BadRequestException] {
-          await(connector.messages(saUtr))
+      intercept[BadRequestException] {
+        await(connector.messages(saUtr))
       }
     }
 
@@ -117,7 +128,11 @@ class MessagesConnectorSpec
 
     "return a list of items when a 200 response is received with a payload" in new Setup {
       override lazy val responseGet = http200Response
-      await(connector.messages(saUtr)) shouldBe Seq(messageHeader,messageHeader,messageHeader)
+      await(connector.messages(saUtr)) shouldBe Seq(
+        message.headerWith(id = "someId1"),
+        message.headerWith(id = "someId2"),
+        message.headerWith(id = "someId3")
+      )
     }
 
   }
