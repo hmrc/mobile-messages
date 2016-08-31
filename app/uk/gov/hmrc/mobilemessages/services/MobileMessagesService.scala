@@ -46,8 +46,8 @@ trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
     withAudit("readAndUnreadMessages", Map.empty) {
       for {
         accounts <- authConnector.accounts()
-        msghrs <- messages(accounts.saUtr)
-      } yield msghrs
+        messageHeaders <- messages(accounts.saUtr)
+      } yield messageHeaders
     }
   }
 

@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.domain
+package uk.gov.hmrc.mobilemessages.utils
 
-import org.joda.time.{DateTime, LocalDate}
+import com.ning.http.util.Base64
+import uk.gov.hmrc.crypto.{AesCrypto, Encrypter, PlainText}
 
-case class MessageHeader(id: String,
-                         subject: String,
-                         validFrom: LocalDate,
-                         readTime: Option[DateTime],
-                         sentInError: Boolean)
+class UnitTestCryptor extends AesCrypto {
+  override protected val encryptionKey: String = "hwdODU8hulPkolIryPRkVW=="
+}
+
+object EncryptionUtils {
+  def encrypted(value: String, encrypter: Encrypter = new UnitTestCryptor) = {
+    Base64.encode(encrypter.encrypt(PlainText(value)).value.getBytes)
+  }
+}

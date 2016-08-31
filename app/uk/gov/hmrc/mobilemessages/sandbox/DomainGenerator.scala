@@ -42,22 +42,16 @@ object DomainGenerator {
       "You have a new tax statement",
       dateTime.minusDays(3).toLocalDate,
       Some(dateTime.minusDays(1)),
-      s"/message/sa/$saUtr/$readMessageId/read-time",
-      false)
+      sentInError = false)
   }
-  def readMessageHeaderJson(implicit dateTime:DateTime) = Json.toJson(readMessageHeader())
 
   val unreadMessageId = "643e8c5f01000001003e4a8f"
   def unreadMessageHeader(saUtr: SaUtr = nextSaUtr)(implicit dateTime:DateTime) = MessageHeader(unreadMessageId,
     "Stopping Self Assessment",
     dateTime.toLocalDate,
     None,
-    s"/message/sa/$saUtr/$unreadMessageId/read-time",
-    false)
-  def unreadMessageHeaderJson(implicit dateTime:DateTime) = Json.toJson(unreadMessageHeader())
-
+    sentInError = false)
 }
-
 
 //TODO add this to domain
 sealed class SaUtrGenerator(random: Random = new Random) {

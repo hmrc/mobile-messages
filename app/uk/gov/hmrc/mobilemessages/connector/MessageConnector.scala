@@ -18,10 +18,13 @@ package uk.gov.hmrc.mobilemessages.connector
 
 import java.net.URLEncoder
 import java.util.UUID
+
 import org.apache.commons.codec.CharEncoding
 import org.joda.time.DateTime
 import play.api.Logger
 import play.api.Play._
+import uk.gov.hmrc.mobilemessages.connector.model.{MessageServiceGetMessagesResponse, MessageServiceGetMessagesResponse$}
+import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.{Authorization, SessionId}
 
@@ -30,7 +33,7 @@ trait MessageConnector extends SessionCookieEncryptionSupport {
 
   import play.api.libs.json.{JsObject, Json}
   import uk.gov.hmrc.domain.SaUtr
-  import uk.gov.hmrc.mobilemessages.domain.{MessageHeader, RenderMessageLocation}
+  import uk.gov.hmrc.mobilemessages.domain.RenderMessageLocation
   import RenderMessageLocation.{formats, toUrl}
   import play.twirl.api.Html
   import uk.gov.hmrc.play.controllers.RestFormats
@@ -41,16 +44,16 @@ trait MessageConnector extends SessionCookieEncryptionSupport {
   def http: HttpGet with HttpPost
 
   val messageBaseUrl: String
-  val provider :String
-  val token:String
-  val id:String
+  val provider: String
+  val token: String
+  val id: String
 
   def now: DateTime
 
-  private val returnReadAndUnreadMessages = "Both"
-
-  def messages(utr: SaUtr)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
-    http.GET[Seq[MessageHeader]](s"$messageBaseUrl/message/sa/$utr?read=$returnReadAndUnreadMessages")
+  def messages(utr: SaUtr)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = {
+    http.GET[MessageServiceGetMessagesResponse](s"$messageBaseUrl/messages").
+      map(messageHeaders => messageHeaders.items)
+  }
 
   def readMessageContent(url: String)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
     import RestFormats.dateTimeWrite
