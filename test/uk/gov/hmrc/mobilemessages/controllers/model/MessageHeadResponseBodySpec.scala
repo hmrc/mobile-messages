@@ -33,13 +33,13 @@ class MessageHeadResponseBodySpec extends UnitSpec {
       val messageHeader2 = message.headerWith(id = "id2", readTime = Some(DateTime.now(DateTimeZone.UTC)))
 
       MessageHeadResponseBody.fromAll(Seq(messageHeader1, messageHeader2))(new UnitTestCryptor) shouldBe Seq(
-        getMessageResponseItemFor(messageHeader1),
-        getMessageResponseItemFor(messageHeader2)
+        expectedMessageResponseItemFor(messageHeader1),
+        expectedMessageResponseItemFor(messageHeader2)
       )
     }
   }
 
-  def getMessageResponseItemFor(messageHeader: MessageHeader): MessageHeadResponseBody = {
+  def expectedMessageResponseItemFor(messageHeader: MessageHeader): MessageHeadResponseBody = {
     MessageHeadResponseBody(
       messageHeader.id,
       messageHeader.subject,

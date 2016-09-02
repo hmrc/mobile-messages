@@ -30,9 +30,7 @@ case class MessageHeadResponseBody(id: String,
 
 object MessageHeadResponseBody {
 
-  import play.api.libs.functional.syntax._
-  import play.api.libs.json.{Json, Reads, _}
-  import uk.gov.hmrc.play.controllers.RestFormats
+  import play.api.libs.json.{Json, _}
 
   implicit val writes: Writes[MessageHeadResponseBody] = Json.writes[MessageHeadResponseBody]
 

@@ -25,6 +25,8 @@ import uk.gov.hmrc.mobilemessages.controllers.model.MessageHeadResponseBody
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
+import scala.concurrent.Future
+
 
 class MobileMessagesReadControllerSpec extends UnitSpec with WithFakeApplication with ScalaFutures with StubApplicationConfiguration {
 
@@ -40,7 +42,8 @@ class MobileMessagesReadControllerSpec extends UnitSpec with WithFakeApplication
     }
 
     "read a valid html response from the read service when a journeyId is supplied" in new Success {
-      val result: Result = await(controller.read(journeyId)(readTimeRequest))
+      private val read: Future[Result] = controller.read(journeyId)(readTimeRequest)
+      val result: Result = await(read)
 
       status(result) shouldBe 200
       contentAsString(result) shouldBe html.toString()
@@ -57,7 +60,6 @@ class MobileMessagesReadControllerSpec extends UnitSpec with WithFakeApplication
 
       status(result) shouldBe 406
     }
-
   }
 
   "messages Sandbox read" should {

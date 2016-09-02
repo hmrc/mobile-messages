@@ -65,6 +65,7 @@ private object AppDependencies {
         "uk.gov.hmrc" %% "hmrctest" % hmrcTestVersion % scope,
         "org.scalatest" %% "scalatest" % scalaTestVersion % scope,
         "org.pegdown" % "pegdown" % pegdownVersion % scope,
+        "org.scalamock"     %% "scalamock-scalatest-support" % "3.2.2" % scope,
         "com.github.tomakehurst" % "wiremock" % wireMockVersion % scope
       )
     }.test
