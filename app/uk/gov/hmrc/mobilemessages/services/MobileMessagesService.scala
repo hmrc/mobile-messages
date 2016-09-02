@@ -45,18 +45,9 @@ trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
 
   override def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = {
     withAudit("readAndUnreadMessages", Map.empty) {
-      for {
-        accounts <- authConnector.accounts()
-        messageHeaders <- messages(accounts.saUtr)
-      } yield messageHeaders
+      messageConnector.messages()
     }
   }
-
-  private def messages(maybeSaUtr: Option[SaUtr])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
-    maybeSaUtr match {
-      case Some(utr) => messageConnector.messages(utr)
-      case _ => Future.successful(Seq.empty)
-    }
 
   override def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] =
     withAudit("readMessageContent", Map.empty) {

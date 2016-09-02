@@ -50,7 +50,7 @@ trait MessageConnector extends SessionCookieEncryptionSupport {
 
   def now: DateTime
 
-  def messages(utr: SaUtr)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = {
+  def messages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = {
     http.GET[MessageServiceGetMessagesResponse](s"$messageBaseUrl/messages").
       map(messageHeaders => messageHeaders.items)
   }
