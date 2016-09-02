@@ -18,7 +18,7 @@ package uk.gov.hmrc.mobilemessages.connector.model
 
 
 import play.api.libs.json.Reads
-import uk.gov.hmrc.mobilemessages.domain.{Message, MessageId}
+import uk.gov.hmrc.mobilemessages.domain.{Message, MessageId, ReadMessage, UnreadMessage}
 import uk.gov.hmrc.play.config.ServicesConfig
 
 case class ResourceActionLocation(service: String, url: String) {
@@ -33,17 +33,30 @@ case class GetMessageResponseBody(id: String,
                                   renderUrl: ResourceActionLocation,
                                   markAsReadUrl: Option[ResourceActionLocation]) {
   def toMessageUsing(servicesConfig: ServicesConfig): Message = {
-    Message(MessageId(id), renderUrl.toUrlUsing(servicesConfig), None)
+    markAsReadUrl.fold[Message](
+      ReadMessage(
+        MessageId(id),
+        renderUrl.toUrlUsing(servicesConfig)
+      )
+    )(res =>
+      UnreadMessage(
+        MessageId(id),
+        renderUrl.toUrlUsing(servicesConfig),
+        res.toUrlUsing(servicesConfig)
+      )
+    )
   }
 }
 
 object ResourceActionLocation {
+
   import play.api.libs.json.Json
 
   implicit val reads: Reads[ResourceActionLocation] = Json.reads[ResourceActionLocation]
 }
 
 object GetMessageResponseBody {
+
   import play.api.libs.json.Json
 
   implicit val reads: Reads[GetMessageResponseBody] = Json.reads[GetMessageResponseBody]

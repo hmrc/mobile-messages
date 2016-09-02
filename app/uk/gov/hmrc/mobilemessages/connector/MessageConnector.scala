@@ -24,7 +24,7 @@ import org.joda.time.DateTime
 import play.api.Logger
 import play.api.Play._
 import uk.gov.hmrc.mobilemessages.connector.model.{GetMessageResponseBody, MessageServiceGetMessagesResponse}
-import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId}
+import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.{Authorization, SessionId}
 
@@ -76,6 +76,10 @@ trait MessageConnector extends SessionCookieEncryptionSupport {
     val session: (String, String) = withSession(keys: _ *)
     implicit val updatedHc = hc.withExtraHeaders(session)
     http.GET[Html](message.renderUrl)
+  }
+
+  def markAsRead(message: UnreadMessage)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
+    http.POSTEmpty(message.markAsReadUrl)
   }
 
   @deprecated("This should no longer be used. Will be deleted at the end of the card.", "DC-541")
