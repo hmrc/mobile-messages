@@ -20,11 +20,10 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
+import org.apache.http.HttpHeaders
 import uk.gov.hmrc.mobilemessages.domain.Message
 
-class SaMessageRendererService(authToken: String) {
-
-  private val servicePort = 8089
+class SaMessageRendererService(authToken: String, servicePort: Int = 8089) {
 
   private lazy val wireMockServer = new WireMockServer(wireMockConfig().port(servicePort))
   private val service = new WireMock(servicePort)
@@ -47,10 +46,19 @@ class SaMessageRendererService(authToken: String) {
     "microservice.services.sa-message-renderer.port" -> servicePort
   )
 
-  def successfullyRenders(message: Message, path: String): Unit = {
+  def successfullyRenders(message: Message, path: String, overrideBody: Option[String] = None): Unit = {
     service.register(get(urlEqualTo(path)).
+      withHeader(HttpHeaders.AUTHORIZATION, equalTo(authToken)).
       willReturn(aResponse().
-        withBody(rendered(message))))
+        withBody(if (overrideBody.isDefined) overrideBody.get else rendered(message))))
+  }
+
+  def failsWith(status: Int, body: String = "", path: String): Unit = {
+    service.register(get(urlEqualTo(path)).
+      withHeader(HttpHeaders.AUTHORIZATION, equalTo(authToken)).
+      willReturn(aResponse().
+        withStatus(status).
+        withBody(body)))
   }
 
   def rendered(message: Message) = {
