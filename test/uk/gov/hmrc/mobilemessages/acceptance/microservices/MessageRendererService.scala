@@ -23,7 +23,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import org.apache.http.HttpHeaders
 import uk.gov.hmrc.mobilemessages.domain.Message
 
-class MessageRendererService(authToken: String, servicePort: Int) {
+class MessageRendererService(authToken: String, servicePort: Int, serviceName: String) {
 
   private lazy val wireMockServer = new WireMockServer(wireMockConfig().port(servicePort))
   private val service = new WireMock(servicePort)
@@ -40,11 +40,6 @@ class MessageRendererService(authToken: String, servicePort: Int) {
     wireMockServer.resetMappings()
     wireMockServer.resetRequests()
   }
-
-  def config = Map(
-    "microservice.services.sa-message-renderer.host" -> "localhost",
-    "microservice.services.sa-message-renderer.port" -> servicePort
-  )
 
   def successfullyRenders(message: Message, path: String, overrideBody: Option[String] = None): Unit = {
     service.register(get(urlEqualTo(path)).
@@ -63,7 +58,7 @@ class MessageRendererService(authToken: String, servicePort: Int) {
 
   def rendered(message: Message) = {
     s"""
-       |<div>This is a rendered message with id: ${message.id.value}</div>
+       |<div>This is a message with id: ${message.id.value} rendered by $serviceName</div>
      """.stripMargin
   }
 }

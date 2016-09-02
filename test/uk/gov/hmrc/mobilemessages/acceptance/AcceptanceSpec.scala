@@ -70,9 +70,9 @@ trait AcceptanceSpec extends UnitSpec
 
   val auth = new AuthService
   val message = new MessageService(auth.token)
-  val saMessageRenderer = new MessageRendererService(auth.token, servicePort = 8089)
-  val atsMessageRenderer = new MessageRendererService(auth.token, servicePort = 8093)
-  val secureMessageRenderer = new MessageRendererService(auth.token, servicePort = 9847)
+  val saMessageRenderer = new MessageRendererService(auth.token, servicePort = 8089, "sa-message-renderer")
+  val atsMessageRenderer = new MessageRendererService(auth.token, servicePort = 8093, "ats-message-renderer")
+  val secureMessageRenderer = new MessageRendererService(auth.token, servicePort = 9847, "secure-message-renderer")
 
   lazy val configBasedCryptor = CryptoWithKeysFromConfig(baseConfigKey = "queryParameter.encryption")
 

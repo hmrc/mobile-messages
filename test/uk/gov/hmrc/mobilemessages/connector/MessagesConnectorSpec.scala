@@ -94,7 +94,7 @@ class MessagesConnectorSpec
 
 
     val message = new MessageService(authToken)
-    val testMessageRenderer = new MessageRendererService(authToken, stubPort)
+    val testMessageRenderer = new MessageRendererService(authToken, stubPort, "testService")
 
     lazy val successfulEmptyResponse = HttpResponse(200, responseString = Some(""))
 
