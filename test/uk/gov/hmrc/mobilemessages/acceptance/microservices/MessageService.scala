@@ -21,7 +21,7 @@ import org.joda.time.{DateTime, LocalDate}
 import play.api.Play
 import play.api.http.HeaderNames
 import uk.gov.hmrc.mobilemessages.connector.model.{GetMessageResponseBody, ResourceActionLocation}
-import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId}
+import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.mobilemessages.utils.ConfigHelper.microserviceConfigPathFor
 
 class MessageService(authToken: String) {
@@ -33,11 +33,18 @@ class MessageService(authToken: String) {
   }
 
   def convertedFrom(messageBody: GetMessageResponseBody): Message = {
-    Message(
-      MessageId(messageBody.id),
-      fullUrlFor(messageBody.renderUrl.service, messageBody.renderUrl.url),
-      None
-    )
+
+    messageBody.markAsReadUrl match {
+      case Some(location) => UnreadMessage(
+        MessageId(messageBody.id),
+        fullUrlFor(messageBody.renderUrl.service, messageBody.renderUrl.url),
+        fullUrlFor(location.service, location.url)
+      )
+      case _ => ReadMessage(
+        MessageId(messageBody.id),
+        fullUrlFor(messageBody.renderUrl.service, messageBody.renderUrl.url)
+      )
+    }
   }
 
   def getByIdReturns(message: GetMessageResponseBody): Unit = {
@@ -78,10 +85,35 @@ class MessageService(authToken: String) {
         )))
   }
 
+  def markAsReadSucceedsFor(messageBody: GetMessageResponseBody): Unit = {
+    givenThat(post(urlEqualTo(messageBody.markAsReadUrl.get.url)).
+      withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)).
+      willReturn(aResponse().withStatus(200)))
+  }
+
+  def markAsReaFailsWith(status: Int, messageBody: GetMessageResponseBody): Unit = {
+    givenThat(post(urlEqualTo(messageBody.markAsReadUrl.get.url)).
+      withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)).
+      willReturn(aResponse().withStatus(status)))
+  }
+
+  def assertMarkAsReadHasBeenCalledFor(messageBody: GetMessageResponseBody): Unit = {
+    verify(postRequestedFor(urlEqualTo(messageBody.markAsReadUrl.get.url))
+      .withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)))
+  }
+
+  def assertMarkAsReadHasNeverBeenCalled(): Unit = {
+    verify(0, postRequestedFor(urlMatching("/*")))
+  }
+
   def bodyWith(id: String,
                renderUrl: ResourceActionLocation = ResourceActionLocation("sa-message-renderer", "/utr/render"),
                markAsReadUrl: Option[ResourceActionLocation] = None) = {
     GetMessageResponseBody(id, renderUrl, markAsReadUrl)
+  }
+
+  def bodyToBeMarkedAsReadWith(id: String) = {
+    bodyWith(id = id, markAsReadUrl = Some(ResourceActionLocation("message", s"/messages/$id/read-time")))
   }
 
   def headerWith(id: String,
@@ -156,5 +188,5 @@ class MessageService(authToken: String) {
          | "sentInError": ${messageHeader.sentInError}
          | }
       """.stripMargin
-    }
   }
+}

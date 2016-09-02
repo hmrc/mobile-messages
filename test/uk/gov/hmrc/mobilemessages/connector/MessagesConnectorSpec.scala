@@ -27,7 +27,7 @@ import play.twirl.api.Html
 import uk.gov.hmrc.domain.{Nino, SaUtr}
 import uk.gov.hmrc.mobilemessages.acceptance.microservices.{MessageRendererService, MessageService}
 import uk.gov.hmrc.mobilemessages.controller.StubApplicationConfiguration
-import uk.gov.hmrc.mobilemessages.domain.{Message, MessageId, RenderMessageLocation}
+import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
 import uk.gov.hmrc.play.http._
 import uk.gov.hmrc.play.http.logging.Authorization
@@ -110,8 +110,9 @@ class MessagesConnectorSpec
     )
 
     val renderPath = "/some/render/path"
-    val messageToRender = Message(MessageId("id1"), s"http://$stubHost:$stubPort$renderPath", None)
-
+    val messageToRender = ReadMessage(MessageId("id1"), s"http://$stubHost:$stubPort$renderPath")
+    val messageToBeMarkedAsReadBody = message.bodyToBeMarkedAsReadWith(id = "id48")
+    val messageToBeMarkedAsRead = message.convertedFrom(messageToBeMarkedAsReadBody).asInstanceOf[UnreadMessage]
     lazy val ReadSuccessResult = Future.successful(HttpResponse(200, None, Map.empty, Some(html.toString())))
     lazy val PostSuccessResult = Future.successful(HttpResponse(200, Some(Json.toJson(responseRenderer))))
     lazy val PostConflictResult = Future.successful(HttpResponse(409, Some(Json.toJson(responseRenderer))))
@@ -215,6 +216,28 @@ class MessagesConnectorSpec
       await(connector.getMessageBy(messageId)) shouldBe message.convertedFrom(
         message.bodyWith(id = messageId.value)
       )
+    }
+  }
+
+  "messagesConnector mark message as read" should {
+
+    "throw BadRequestException when a 400 response is returned" in new Setup {
+      message.markAsReaFailsWith(status = 400, messageToBeMarkedAsReadBody)
+      intercept[BadRequestException] {
+        await(connector.markAsRead(messageToBeMarkedAsRead))
+      }
+    }
+
+    "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
+      message.markAsReaFailsWith(status = 500, messageToBeMarkedAsReadBody)
+      intercept[Upstream5xxResponse] {
+        await(connector.markAsRead(messageToBeMarkedAsRead))
+      }
+    }
+
+    "return a message when a 200 response is received with a payload" in new Setup {
+      message.markAsReadSucceedsFor(messageToBeMarkedAsReadBody)
+      connector.markAsRead(messageToBeMarkedAsRead).futureValue.status shouldBe 200
     }
   }
 }

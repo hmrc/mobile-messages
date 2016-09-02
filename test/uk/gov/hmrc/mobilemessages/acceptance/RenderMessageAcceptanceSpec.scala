@@ -17,7 +17,7 @@
 package uk.gov.hmrc.mobilemessages.acceptance
 
 import play.api.libs.json.Json
-import uk.gov.hmrc.mobilemessages.connector.model.ResourceActionLocation
+import uk.gov.hmrc.mobilemessages.connector.model.{GetMessageResponseBody, ResourceActionLocation}
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 
 class RenderMessageAcceptanceSpec extends AcceptanceSpec {
@@ -25,8 +25,6 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
   "microservice render message" should {
 
     "return a rendered message after calling get message and sa renderer" in new Setup {
-      auth.containsUserWith(utr)
-
       private val messageBody = message.bodyWith(id = messageId1)
 
       message.getByIdReturns(messageBody)
@@ -44,8 +42,6 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
     }
 
     "return a rendered message after calling get message and ats renderer" in new Setup {
-      auth.containsUserWith(utr)
-
       private val messageBody = message.bodyWith(
         id = messageId1,
         renderUrl = ResourceActionLocation("ats-message-renderer", "/ats/render/url/path")
@@ -62,12 +58,10 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
         mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCryptor)}" } """))
       ).futureValue
 
-      bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(message.convertedFrom(messageBody))
+      bodyOf(readMessageResponse) shouldBe atsMessageRenderer.rendered(message.convertedFrom(messageBody))
     }
 
     "return a rendered message after calling get message and secure message renderer" in new Setup {
-      auth.containsUserWith(utr)
-
       private val messageBody = message.bodyWith(
         id = messageId1,
         renderUrl = ResourceActionLocation("secure-message-renderer", "/secure/render/url/path")
@@ -84,11 +78,61 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
         mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCryptor)}" } """))
       ).futureValue
 
+      bodyOf(readMessageResponse) shouldBe secureMessageRenderer.rendered(message.convertedFrom(messageBody))
+    }
+
+    "mark message as read if the markAsRead url is present in the message body" in new Setup {
+      private val messageBody = successfulSetupFor(message.bodyToBeMarkedAsReadWith(id = messageId1))
+      message.markAsReadSucceedsFor(messageBody)
+
+      // when
+      val readMessageResponse = messageController.read(None)(
+        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCryptor)}" } """))
+      ).futureValue
+
       bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(message.convertedFrom(messageBody))
+
+      message.assertMarkAsReadHasBeenCalledFor(messageBody)
+    }
+
+    "do not mark message as read if the markAsRead url is not present in the message body" in new Setup {
+      private val messageBody = successfulSetupFor(message.bodyWith(id = messageId1))
+
+      // when
+      val readMessageResponse = messageController.read(None)(
+        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCryptor)}" } """))
+      ).futureValue
+
+      bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(message.convertedFrom(messageBody))
+
+      message.assertMarkAsReadHasNeverBeenCalled()
+    }
+
+    "still return successful response even if mark as read fails" in new Setup {
+      private val messageBody = successfulSetupFor(message.bodyToBeMarkedAsReadWith(id = messageId1))
+      message.markAsReaFailsWith(status = 500, messageBody)
+
+      // when
+      val readMessageResponse = messageController.read(None)(
+        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCryptor)}" } """))
+      ).futureValue
+
+      bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(message.convertedFrom(messageBody))
+
+      message.assertMarkAsReadHasBeenCalledFor(messageBody)
     }
   }
 
   trait Setup {
     val messageId1 = "messageId90342"
+    auth.containsUserWith(utr)
+    def successfulSetupFor(messageBody: GetMessageResponseBody): GetMessageResponseBody = {
+      message.getByIdReturns(messageBody)
+      saMessageRenderer.successfullyRenders(
+        message.convertedFrom(messageBody),
+        messageBody.renderUrl.url
+      )
+      messageBody
+    }
   }
 }
