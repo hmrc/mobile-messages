@@ -24,7 +24,7 @@ import play.twirl.api.Html
 import uk.gov.hmrc.domain.{Nino, SaUtr}
 import uk.gov.hmrc.mobilemessages.acceptance.microservices.MessageService
 import uk.gov.hmrc.mobilemessages.controller.StubApplicationConfiguration
-import uk.gov.hmrc.mobilemessages.domain.RenderMessageLocation
+import uk.gov.hmrc.mobilemessages.domain.{MessageId, RenderMessageLocation}
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
 import uk.gov.hmrc.play.http._
 import uk.gov.hmrc.play.http.hooks.HttpHook
@@ -53,11 +53,16 @@ class MessagesConnectorSpec
 
     lazy val http500Response = Future.failed(new Upstream5xxResponse("Error", 500, 500))
     lazy val http400Response = Future.failed(new BadRequestException("bad request"))
-    lazy val http200ResponseEmpty = Future.successful(
+
+    lazy val successfulEmptyResponse = Future.successful(
+      HttpResponse(200, responseString = Some(""))
+    )
+
+    lazy val successfulEmptyMessageHeadersResposne = Future.successful(
       HttpResponse(200, Some(Json.parse(message.jsonRepresentationOf(Seq.empty))))
     )
 
-    lazy val http200Response = Future.successful(
+    lazy val successfulMessageHeadersResponse = Future.successful(
       HttpResponse(
         200,
         Some(Json.parse(
@@ -69,6 +74,18 @@ class MessagesConnectorSpec
             )
           ))))
     )
+
+    val messageId = MessageId("id123")
+    lazy val successfulSingleMessageResponse = Future.successful(
+      HttpResponse(
+        200,
+        Some(Json.parse(
+          message.jsonRepresentationOf(
+            message.bodyWith(id = "id123")
+          ))))
+    )
+
+    val sampleMessage = message.convertedFrom(message.bodyWith("id1"))
 
     lazy val ReadSuccessResult = Future.successful(HttpResponse(200, None, Map.empty, Some(html.toString())))
     lazy val PostSuccessResult = Future.successful(HttpResponse(200, Some(Json.toJson(responseRenderer))))
@@ -93,7 +110,10 @@ class MessagesConnectorSpec
         override protected def doFormPost(url: String, body: Map[String, Seq[String]])(implicit hc: HeaderCarrier): Future[HttpResponse] = responsePost
 
         override protected def doEmptyPost[A](url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = responsePost
+
       }
+
+      val hc = new HeaderCarrier()
 
       override def now: DateTime = DateTime.now()
 
@@ -122,12 +142,12 @@ class MessagesConnectorSpec
     }
 
     "return empty response when a 200 response is received with an empty payload" in new Setup {
-      override lazy val responseGet = http200ResponseEmpty
+      override lazy val responseGet = successfulEmptyMessageHeadersResposne
       await(connector.messages(saUtr)) shouldBe Seq.empty
     }
 
     "return a list of items when a 200 response is received with a payload" in new Setup {
-      override lazy val responseGet = http200Response
+      override lazy val responseGet = successfulMessageHeadersResponse
       await(connector.messages(saUtr)) shouldBe Seq(
         message.headerWith(id = "someId1"),
         message.headerWith(id = "someId2"),
@@ -137,40 +157,62 @@ class MessagesConnectorSpec
 
   }
 
-  "messagesConnector readMessageContent" should {
+  "messagesConnector render message" should {
 
-    "return successfully with html partial" in new Setup {
-      override lazy val responseGet = ReadSuccessResult
-      override lazy val responsePost = PostSuccessResult
-
-      await(connector.readMessageContent("someUrl")).body shouldBe html.body
-    }
-
-    "return successfully with html partial when POST returns 409 response" in new Setup {
-      override lazy val responseGet = ReadSuccessResult
-      override lazy val responsePost = PostConflictResult
-
-      await(connector.readMessageContent("someUrl")).body shouldBe html.body
-    }
-
-    "throw BadRequestException when a 400 response is returned from POST" in new Setup {
-      override lazy val responseGet = ReadSuccessResult
-      override lazy val responsePost = http400Response
-
-      intercept[BadRequestException] {
-        await(connector.readMessageContent("someUrl"))
-      }
-    }
-
-    "throw BadRequestException when a 400 response is returned from GET" in new Setup {
+    "throw BadRequestException when a 400 response is returned" in new Setup {
       override lazy val responseGet = http400Response
-      override lazy val responsePost = PostSuccessResult
-
       intercept[BadRequestException] {
-        await(connector.readMessageContent("someUrl"))
+        await(connector.render(sampleMessage, hc))
       }
     }
 
+    "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
+      override lazy val responseGet = http500Response
+      intercept[Upstream5xxResponse] {
+        await(connector.render(sampleMessage, hc))
+      }
+    }
+
+    s"return empty response when a 200 response is received with an empty payload" in new Setup {
+      override lazy val responseGet = successfulEmptyResponse
+      await(connector.render(sampleMessage, hc)).body shouldBe ""
+    }
+
+    "return a rendered message when a 200 response is received with a payload" in new Setup {
+      override lazy val responseGet = ReadSuccessResult
+      await(connector.render(sampleMessage, hc)).body shouldBe html.body
+    }
   }
 
+  "messagesConnector get message by id" should {
+
+    "throw BadRequestException when a 400 response is returned" in new Setup {
+      override lazy val responseGet = http400Response
+      intercept[BadRequestException] {
+        await(connector.getMessageBy(messageId))
+      }
+    }
+
+    "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
+      override lazy val responseGet = http500Response
+      intercept[Upstream5xxResponse] {
+        await(connector.getMessageBy(messageId))
+      }
+    }
+
+    "throw NullPointerException when a 200 response is received with an empty payload" in new Setup {
+      override lazy val responseGet = successfulEmptyResponse
+
+      intercept[NullPointerException] {
+        await(connector.getMessageBy(messageId))
+      }
+    }
+
+    "return a message when a 200 response is received with a payload" in new Setup {
+      override lazy val responseGet = successfulSingleMessageResponse
+      await(connector.getMessageBy(messageId)) shouldBe message.convertedFrom(
+        message.bodyWith(id = messageId.value)
+      )
+    }
+  }
 }

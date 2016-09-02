@@ -14,12 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.domain
+  package uk.gov.hmrc.mobilemessages.controllers.model
 
-import play.api.libs.json.Json
 
-case class ReadTimeUrl(url : String)
 
-object ReadTimeUrl {
-  implicit val formats = Json.format[ReadTimeUrl]
-}
+  import com.ning.http.util.Base64
+  import play.api.libs.json.Json
+  import uk.gov.hmrc.crypto.{Crypted, Decrypter}
+  import uk.gov.hmrc.mobilemessages.domain.MessageId
+
+  final case class MessageIdHiddenInUrl(url : String) {
+    def toMessageIdUsing(decrypter: Decrypter) = {
+      MessageId(decrypter.decrypt(Crypted.fromBase64(url)).value)
+    }
+  }
+
+  object MessageIdHiddenInUrl {
+    implicit val formats = Json.format[MessageIdHiddenInUrl]
+  }

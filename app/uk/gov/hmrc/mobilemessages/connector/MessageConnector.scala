@@ -23,8 +23,8 @@ import org.apache.commons.codec.CharEncoding
 import org.joda.time.DateTime
 import play.api.Logger
 import play.api.Play._
-import uk.gov.hmrc.mobilemessages.connector.model.{MessageServiceGetMessagesResponse, MessageServiceGetMessagesResponse$}
-import uk.gov.hmrc.mobilemessages.domain.MessageHeader
+import uk.gov.hmrc.mobilemessages.connector.model.{GetMessageResponseBody, MessageServiceGetMessagesResponse}
+import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId}
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.{Authorization, SessionId}
 
@@ -55,6 +55,30 @@ trait MessageConnector extends SessionCookieEncryptionSupport {
       map(messageHeaders => messageHeaders.items)
   }
 
+  def getMessageBy(id: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Message] = {
+    http.GET[GetMessageResponseBody](s"$messageBaseUrl/messages/${id.value}").
+      map(_.toMessageUsing(MessageConnector))
+  }
+
+  def render(message: Message, hc: HeaderCarrier)(implicit ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
+    val authToken: Authorization = hc.authorization.getOrElse(throw new IllegalArgumentException("Failed to find auth header!"))
+    val userId = auth.getOrElse(throw new IllegalArgumentException("Failed to find the user!"))
+
+    val keys = Seq(
+      SessionKeys.sessionId -> SessionId(s"session-${UUID.randomUUID}").value,
+      SessionKeys.authProvider -> provider,
+      SessionKeys.name -> id,
+      SessionKeys.authToken -> URLEncoder.encode(authToken.value, CharEncoding.UTF_8),
+      SessionKeys.userId -> userId.authId,
+      SessionKeys.token -> token,
+      SessionKeys.lastRequestTimestamp -> now.getMillis.toString)
+
+    val session: (String, String) = withSession(keys: _ *)
+    implicit val updatedHc = hc.withExtraHeaders(session)
+    http.GET[Html](message.renderUrl)
+  }
+
+  @deprecated("This should no longer be used. Will be deleted at the end of the card.", "DC-541")
   def readMessageContent(url: String)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
     import RestFormats.dateTimeWrite
 

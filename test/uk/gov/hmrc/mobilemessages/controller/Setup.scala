@@ -30,11 +30,11 @@ import uk.gov.hmrc.mobilemessages.config.MicroserviceAuditConnector
 import uk.gov.hmrc.mobilemessages.connector.{AuthConnector, Authority, MessageConnector}
 import uk.gov.hmrc.mobilemessages.controllers.MobileMessagesController
 import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControl, AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck}
-import uk.gov.hmrc.mobilemessages.controllers.model.MessageHeadResponseBody
-import uk.gov.hmrc.mobilemessages.domain.{Accounts, MessageHeader, ReadTimeUrl}
+import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeadResponseBody, MessageIdHiddenInUrl}
+import uk.gov.hmrc.mobilemessages.domain.{Accounts, Message, MessageHeader, MessageId}
 import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
-import uk.gov.hmrc.mobilemessages.utils.UnitTestCryptor
+import uk.gov.hmrc.mobilemessages.utils.{EncryptionUtils, UnitTestCryptor}
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
 import uk.gov.hmrc.play.http._
@@ -55,7 +55,7 @@ class TestAuthConnector(nino: Option[Nino], saUtr: Option[SaUtr]) extends AuthCo
   override def grantAccess()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Authority] = Future(Authority(nino.getOrElse(throw new Exception("Invalid nino")), ConfidenceLevel.L200, "some-auth-id"))
 }
 
-class TestMessageConnector(result: Seq[MessageHeader], html: Html) extends MessageConnector {
+class TestMessageConnector(result: Seq[MessageHeader], html: Html, message: Message) extends MessageConnector {
 
   override def http: HttpGet with HttpPost = ???
 
@@ -66,6 +66,10 @@ class TestMessageConnector(result: Seq[MessageHeader], html: Html) extends Messa
   override def messages(utr: SaUtr)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = Future.successful(result)
 
   override def readMessageContent(url: String)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[uk.gov.hmrc.mobilemessages.connector.Authority]): Future[Html] = Future.successful(html)
+
+  override def getMessageBy(id: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Message] = Future.successful(message)
+
+  override def render(message: Message, hc: HeaderCarrier)(implicit ec: ExecutionContext, auth: Option[Authority]): Future[Html] = Future.successful(html)
 
   override val provider: String = "provider"
   override val token: String = "token"
@@ -113,7 +117,7 @@ trait Setup {
     s"""[{"id":"$msgId1","subject":"You have a new tax statement","validFrom":"${now.minusDays(3).toLocalDate}","readTime":${now.minusDays(1).getMillis},"readTimeUrl":"${encrypted(msgId1)}","sentInError":false},
         |{"id":"$msgId2","subject":"Stopping Self Assessment","validFrom":"${now.toLocalDate}","readTimeUrl":"${encrypted(msgId2)}","sentInError":false}]""".stripMargin
 
-  def getMessagesResponseItemFrom(messageHeader: MessageHeader) = MessageHeadResponseBody(
+  def messageHeadResponseItemFrom(messageHeader: MessageHeader) = MessageHeadResponseBody(
     messageHeader.id,
     messageHeader.subject,
     messageHeader.validFrom,
@@ -128,7 +132,9 @@ trait Setup {
     message.headerWith(id = "id3")
   )
   val getMessagesResponseItemsList = messageServiceHeadersResponse.
-    map(getMessagesResponseItemFrom)
+    map(messageHeadResponseItemFrom)
+
+  val sampleMessage = message.convertedFrom(message.bodyWith(id = "id1"))
 
   val acceptHeader = "Accept" -> "application/vnd.hmrc.1.0+json"
   val emptyRequest = FakeRequest()
@@ -139,11 +145,11 @@ trait Setup {
 
   val emptyRequestWithAcceptHeader = FakeRequest().withHeaders(acceptHeader)
 
-  lazy val readTimeRequest = fakeRequest(Json.toJson(ReadTimeUrl("/somewhere/543e8c6001000001003e4a9e"))).withHeaders(acceptHeader)
-  lazy val readTimeRequestNoHeaders = fakeRequest(Json.toJson(ReadTimeUrl("/somewhere/543e8c6001000001003e4a9e")))
+  lazy val readTimeRequest = fakeRequest(Json.toJson(MessageIdHiddenInUrl(encrypted("543e8c6001000001003e4a9e")))).withHeaders(acceptHeader)
+  lazy val readTimeRequestNoHeaders = fakeRequest(Json.toJson(MessageIdHiddenInUrl(encrypted("543e8c6001000001003e4a9e"))))
 
   val authConnector = new TestAuthConnector(Some(nino), Some(saUtrVal))
-  val messageConnector = new TestMessageConnector(Seq.empty[MessageHeader], html)
+  val messageConnector = new TestMessageConnector(Seq.empty[MessageHeader], html, sampleMessage)
   val testAccess = new TestAccessCheck(authConnector)
   val testCompositeAction = new TestAccountAccessControlWithAccept(testAccess)
   val testMMService = new TestMobileMessagesService(authConnector, messageConnector)
@@ -170,7 +176,7 @@ trait Success extends Setup {
 
 trait SuccessWithMessages extends Setup {
 
-  override val testMMService = new TestMobileMessagesService(authConnector, new TestMessageConnector(messageServiceHeadersResponse, html))
+  override val testMMService = new TestMobileMessagesService(authConnector, new TestMessageConnector(messageServiceHeadersResponse, html, sampleMessage))
 
   val controller = new MobileMessagesController {
     override val service: MobileMessagesService = testMMService
