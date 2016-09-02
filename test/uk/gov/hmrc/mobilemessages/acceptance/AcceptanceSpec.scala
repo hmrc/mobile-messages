@@ -24,7 +24,7 @@ import play.api.test.{FakeApplication, FakeRequest}
 import play.api.{GlobalSettings, Play}
 import uk.gov.hmrc.crypto.CryptoWithKeysFromConfig
 import uk.gov.hmrc.domain.SaUtr
-import uk.gov.hmrc.mobilemessages.acceptance.microservices.{AuthService, MessageService, SaMessageRendererService}
+import uk.gov.hmrc.mobilemessages.acceptance.microservices.{AuthService, MessageService, MessageRendererService}
 import uk.gov.hmrc.mobilemessages.acceptance.utils.WiremockServiceLocatorSugar
 import uk.gov.hmrc.mobilemessages.controllers.{LiveMobileMessagesController, MobileMessagesController}
 import uk.gov.hmrc.mobilemessages.utils.ConfigHelper.microserviceConfigPathFor
@@ -43,6 +43,8 @@ trait AcceptanceSpec extends UnitSpec
     Play.start(app)
     startMockServer()
     saMessageRenderer.start()
+    atsMessageRenderer.start()
+    secureMessageRenderer.start()
   }
 
   override def afterAll() = {
@@ -50,11 +52,15 @@ trait AcceptanceSpec extends UnitSpec
     Play.stop()
     stopMockServer()
     saMessageRenderer.stop()
+    atsMessageRenderer.stop()
+    secureMessageRenderer.stop()
   }
 
   override protected def afterEach() = {
     super.afterEach()
     saMessageRenderer.reset()
+    atsMessageRenderer.reset()
+    secureMessageRenderer.reset()
     WireMock.reset()
   }
 
@@ -64,7 +70,10 @@ trait AcceptanceSpec extends UnitSpec
 
   val auth = new AuthService
   val message = new MessageService(auth.token)
-  val saMessageRenderer = new SaMessageRendererService(auth.token)
+  val saMessageRenderer = new MessageRendererService(auth.token, servicePort = 8089)
+  val atsMessageRenderer = new MessageRendererService(auth.token, servicePort = 8093)
+  val secureMessageRenderer = new MessageRendererService(auth.token, servicePort = 9847)
+
   lazy val configBasedCryptor = CryptoWithKeysFromConfig(baseConfigKey = "queryParameter.encryption")
 
   val mobileMessagesGetRequest = FakeRequest("GET", "/").
@@ -86,6 +95,6 @@ trait AcceptanceSpec extends UnitSpec
       s"${microserviceConfigPathFor("message")}.port" -> stubPort,
       "auditing.enabled" -> "false",
       "queryParameter.encryption.key" -> "kepODU8hulPkolIryPOrTY=="
-    ) ++ saMessageRenderer.config
+    )
   )
 }

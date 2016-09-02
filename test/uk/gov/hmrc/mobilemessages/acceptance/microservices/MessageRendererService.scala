@@ -23,7 +23,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import org.apache.http.HttpHeaders
 import uk.gov.hmrc.mobilemessages.domain.Message
 
-class SaMessageRendererService(authToken: String, servicePort: Int = 8089) {
+class MessageRendererService(authToken: String, servicePort: Int) {
 
   private lazy val wireMockServer = new WireMockServer(wireMockConfig().port(servicePort))
   private val service = new WireMock(servicePort)
