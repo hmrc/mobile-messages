@@ -19,13 +19,13 @@ package uk.gov.hmrc.mobilemessages.connector
 import com.fasterxml.jackson.databind.JsonMappingException
 import com.github.tomakehurst.wiremock.client.WireMock
 import it.utils.WiremockServiceLocatorSugar
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import play.api.libs.json.Json
 import play.api.test.FakeApplication
 import play.twirl.api.Html
 import uk.gov.hmrc.domain.{Nino, SaUtr}
-import uk.gov.hmrc.mobilemessages.acceptance.microservices.{MessageService, MessageRendererService}
+import uk.gov.hmrc.mobilemessages.acceptance.microservices.{MessageRendererService, MessageService}
 import uk.gov.hmrc.mobilemessages.controller.StubApplicationConfiguration
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageId, RenderMessageLocation}
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
@@ -90,8 +90,6 @@ class MessagesConnectorSpec
     implicit lazy val hc = HeaderCarrier(Some(Authorization(authToken)))
 
     lazy val html = Html.apply("<div>some snippet</div>")
-    val saUtr = SaUtr("1234567890")
-    val nino = Nino("CS700100A")
     val responseRenderer = RenderMessageLocation("sa-message-renderer", "http://somelocation")
 
 
@@ -118,7 +116,7 @@ class MessagesConnectorSpec
     lazy val PostSuccessResult = Future.successful(HttpResponse(200, Some(Json.toJson(responseRenderer))))
     lazy val PostConflictResult = Future.successful(HttpResponse(409, Some(Json.toJson(responseRenderer))))
 
-    implicit val authUser: Option[Authority] = Some(Authority(nino, ConfidenceLevel.L200, "someId"))
+    implicit val authUser: Option[Authority] = Some(Authority(Nino("CS700100A"), ConfidenceLevel.L200, "someId"))
 
     val connector = MessageConnector
 
@@ -129,20 +127,20 @@ class MessagesConnectorSpec
     "throw BadRequestException when a 400 response is returned" in new Setup {
       message.headersListFailsWith(status = 400)
       intercept[BadRequestException] {
-        await(connector.messages(saUtr))
+        await(connector.messages())
       }
     }
 
     "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
       message.headersListFailsWith(status = 500)
       intercept[Upstream5xxResponse] {
-        await(connector.messages(saUtr))
+        await(connector.messages())
       }
     }
 
     "return empty response when a 200 response is received with an empty payload" in new Setup {
       message.headersListReturns(Seq.empty)
-      await(connector.messages(saUtr)) shouldBe Seq.empty
+      await(connector.messages()) shouldBe Seq.empty
     }
 
     "return a list of items when a 200 response is received with a payload" in new Setup {
@@ -153,7 +151,7 @@ class MessagesConnectorSpec
           message.headerWith(id = "someId3")
         )
       )
-      await(connector.messages(saUtr)) shouldBe Seq(
+      await(connector.messages()) shouldBe Seq(
         message.headerWith(id = "someId1"),
         message.headerWith(id = "someId2"),
         message.headerWith(id = "someId3")

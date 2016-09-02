@@ -34,7 +34,7 @@ import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeadResponseBody, Me
 import uk.gov.hmrc.mobilemessages.domain.{Accounts, Message, MessageHeader, MessageId}
 import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
-import uk.gov.hmrc.mobilemessages.utils.{EncryptionUtils, UnitTestCryptor}
+import uk.gov.hmrc.mobilemessages.utils.UnitTestCryptor
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
 import uk.gov.hmrc.play.http._
@@ -63,7 +63,7 @@ class TestMessageConnector(result: Seq[MessageHeader], html: Html, message: Mess
 
   override val messageBaseUrl: String = "someUrl"
 
-  override def messages(utr: SaUtr)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = Future.successful(result)
+  override def messages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = Future.successful(result)
 
   override def readMessageContent(url: String)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[uk.gov.hmrc.mobilemessages.connector.Authority]): Future[Html] = Future.successful(html)
 
