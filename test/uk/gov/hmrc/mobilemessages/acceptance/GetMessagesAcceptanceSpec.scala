@@ -67,5 +67,4 @@ class GetMessagesAcceptanceSpec extends AcceptanceSpec{
              """.stripMargin)
 
   }
-
 }

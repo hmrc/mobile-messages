@@ -17,19 +17,64 @@
 package uk.gov.hmrc.mobilemessages.acceptance
 
 import play.api.libs.json.Json
+import uk.gov.hmrc.mobilemessages.connector.model.ResourceActionLocation
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 
 class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
   "microservice render message" should {
 
-    "return a rendered message after calling get message and renderer" in new Setup {
+    "return a rendered message after calling get message and sa renderer" in new Setup {
       auth.containsUserWith(utr)
 
       private val messageBody = message.bodyWith(id = messageId1)
 
       message.getByIdReturns(messageBody)
       saMessageRenderer.successfullyRenders(
+        message.convertedFrom(messageBody),
+        messageBody.renderUrl.url
+      )
+
+      // when
+      val readMessageResponse = messageController.read(None)(
+        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCryptor)}" } """))
+      ).futureValue
+
+      bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(message.convertedFrom(messageBody))
+    }
+
+    "return a rendered message after calling get message and ats renderer" in new Setup {
+      auth.containsUserWith(utr)
+
+      private val messageBody = message.bodyWith(
+        id = messageId1,
+        renderUrl = ResourceActionLocation("ats-message-renderer", "/ats/render/url/path")
+      )
+
+      message.getByIdReturns(messageBody)
+      atsMessageRenderer.successfullyRenders(
+        message.convertedFrom(messageBody),
+        messageBody.renderUrl.url
+      )
+
+      // when
+      val readMessageResponse = messageController.read(None)(
+        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCryptor)}" } """))
+      ).futureValue
+
+      bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(message.convertedFrom(messageBody))
+    }
+
+    "return a rendered message after calling get message and secure message renderer" in new Setup {
+      auth.containsUserWith(utr)
+
+      private val messageBody = message.bodyWith(
+        id = messageId1,
+        renderUrl = ResourceActionLocation("secure-message-renderer", "/secure/render/url/path")
+      )
+
+      message.getByIdReturns(messageBody)
+      secureMessageRenderer.successfullyRenders(
         message.convertedFrom(messageBody),
         messageBody.renderUrl.url
       )
