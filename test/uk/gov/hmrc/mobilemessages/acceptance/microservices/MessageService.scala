@@ -49,12 +49,32 @@ class MessageService(authToken: String) {
         )))
   }
 
+  def getByIdFailsWith(status: Int, body: String = "", messageId: MessageId): Unit = {
+    givenThat(get(urlEqualTo(s"/messages/${messageId.value}")).
+      withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)).
+      willReturn(aResponse().
+        withStatus(status).
+        withBody(
+          body
+        )))
+  }
+
   def headersListReturns(messageHeaders: Seq[MessageHeader]): Unit = {
     givenThat(get(urlEqualTo(s"/messages")).
       withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)).
       willReturn(aResponse().
         withBody(
           jsonRepresentationOf(messageHeaders)
+        )))
+  }
+
+  def headersListFailsWith(status: Int, body: String = ""): Unit = {
+    givenThat(get(urlEqualTo(s"/messages")).
+      withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)).
+      willReturn(aResponse().
+        withStatus(status).
+        withBody(
+          body
         )))
   }
 

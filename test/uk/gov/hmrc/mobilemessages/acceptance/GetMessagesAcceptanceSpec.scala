@@ -19,54 +19,53 @@ package uk.gov.hmrc.mobilemessages.acceptance
 import org.joda.time.{DateTime, LocalDate}
 import play.api.libs.json.Json
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
+class GetMessagesAcceptanceSpec extends AcceptanceSpec{
 
-class GetMessagesAcceptanceSpec {
+  "microservice get messages" should {
 
-//  "microservice get messages" should {
-//
-//    "return a list of message heads converted from message service response" in new Setup {
-//      auth.containsUserWith(utr)
-//      message.headersListReturns(
-//        Seq(
-//          message.headerWith(id = messageId1),
-//          message.headerWith(id = messageId2, readTime = Some(readTime))
-//        )
-//      )
-//
-//      val getMessagesResponse = messageController.getMessages(None)(mobileMessagesGetRequest).futureValue
-//      jsonBodyOf(getMessagesResponse) shouldBe expectedGetMessagesResponse
-//    }
-//  }
-//
-//
-//  trait Setup {
-//    val validFromDate = new LocalDate(29348L)
-//    val readTime = new DateTime(82347L)
-//    val messageId1 = "messageId90342"
-//    val messageId2 = "messageId932847"
-//
-//    val expectedGetMessagesResponse =
-//      Json.parse(
-//        s"""
-//           |[
-//           |  {
-//           |    "id": "$messageId1",
-//           |    "subject": "message subject",
-//           |    "validFrom": "${validFromDate.toString()}",
-//           |    "readTimeUrl": "${encrypted(messageId1, configBasedCryptor)}",
-//           |    "sentInError": false
-//           |  },
-//           |  {
-//           |    "id": "$messageId2",
-//           |    "subject": "message subject",
-//           |    "validFrom": "${validFromDate.toString()}",
-//           |    "readTimeUrl": "${encrypted(messageId2, configBasedCryptor)}",
-//           |    "readTime": ${readTime.getMillis()},
-//           |    "sentInError": false
-//           |  }
-//           |]
-//             """.stripMargin)
-//
-//  }
+    "return a list of message heads converted from message service response" in new Setup {
+      auth.containsUserWith(utr)
+      message.headersListReturns(
+        Seq(
+          message.headerWith(id = messageId1),
+          message.headerWith(id = messageId2, readTime = Some(readTime))
+        )
+      )
+
+      val getMessagesResponse = messageController.getMessages(None)(mobileMessagesGetRequest).futureValue
+      jsonBodyOf(getMessagesResponse) shouldBe expectedGetMessagesResponse
+    }
+  }
+
+
+  trait Setup {
+    val validFromDate = new LocalDate(29348L)
+    val readTime = new DateTime(82347L)
+    val messageId1 = "messageId90342"
+    val messageId2 = "messageId932847"
+
+    val expectedGetMessagesResponse =
+      Json.parse(
+        s"""
+           |[
+           |  {
+           |    "id": "$messageId1",
+           |    "subject": "message subject",
+           |    "validFrom": "${validFromDate.toString()}",
+           |    "readTimeUrl": "${encrypted(messageId1, configBasedCryptor)}",
+           |    "sentInError": false
+           |  },
+           |  {
+           |    "id": "$messageId2",
+           |    "subject": "message subject",
+           |    "validFrom": "${validFromDate.toString()}",
+           |    "readTimeUrl": "${encrypted(messageId2, configBasedCryptor)}",
+           |    "readTime": ${readTime.getMillis()},
+           |    "sentInError": false
+           |  }
+           |]
+             """.stripMargin)
+
+  }
 
 }
