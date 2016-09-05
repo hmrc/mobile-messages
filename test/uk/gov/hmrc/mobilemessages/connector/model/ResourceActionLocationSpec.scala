@@ -17,6 +17,7 @@
 package uk.gov.hmrc.mobilemessages.connector.model
 
 import org.mockito.Mockito
+import org.mockito.Mockito.when
 import org.scalatest.mock.MockitoSugar
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.test.UnitSpec
@@ -27,14 +28,14 @@ class ResourceActionLocationSpec extends UnitSpec {
 
     "append path to url correctly" in {
       val servicesConfigMock = MockitoSugar.mock[ServicesConfig]
-      Mockito.when(servicesConfigMock.baseUrl("service")).thenReturn("http://localhost:3030")
+      when(servicesConfigMock.baseUrl("service")).thenReturn("http://localhost:3030")
 
       val expectedUrl = "http://localhost:3030/path/to/resource"
 
       ResourceActionLocation("service", "/path/to/resource").toUrlUsing(servicesConfigMock) shouldBe expectedUrl
       ResourceActionLocation("service", "path/to/resource").toUrlUsing(servicesConfigMock) shouldBe expectedUrl
 
-      Mockito.when(servicesConfigMock.baseUrl("service")).thenReturn("http://localhost:3030/")
+      when(servicesConfigMock.baseUrl("service")).thenReturn("http://localhost:3030/")
 
       ResourceActionLocation("service", "/path/to/resource").toUrlUsing(servicesConfigMock) shouldBe expectedUrl
       ResourceActionLocation("service", "path/to/resource").toUrlUsing(servicesConfigMock) shouldBe expectedUrl

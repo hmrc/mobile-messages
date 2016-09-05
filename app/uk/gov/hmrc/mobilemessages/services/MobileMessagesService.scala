@@ -55,7 +55,7 @@ trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
         messageConnector.render(message, hc) map { renderedMessage =>
           message match {
             case unreadMessage@UnreadMessage(_, _, _) => messageConnector.markAsRead(unreadMessage)
-            case _ => ()
+            case _ => Future.successful()
           }
           renderedMessage
         }

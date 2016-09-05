@@ -21,7 +21,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import org.apache.http.HttpHeaders
-import uk.gov.hmrc.mobilemessages.connector.model.GetMessageResponseBody
+import uk.gov.hmrc.mobilemessages.connector.model.UpstreamMessageResponse
 
 class MessageRendererService(authToken: String, servicePort: Int, serviceName: String) {
 
@@ -41,7 +41,7 @@ class MessageRendererService(authToken: String, servicePort: Int, serviceName: S
     wireMockServer.resetRequests()
   }
 
-  def successfullyRenders(messageBody: GetMessageResponseBody, overrideBody: Option[String] = None): Unit = {
+  def successfullyRenders(messageBody: UpstreamMessageResponse, overrideBody: Option[String] = None): Unit = {
     service.register(get(urlEqualTo(messageBody.renderUrl.url)).
       withHeader(HttpHeaders.AUTHORIZATION, equalTo(authToken)).
       willReturn(aResponse().
@@ -56,7 +56,7 @@ class MessageRendererService(authToken: String, servicePort: Int, serviceName: S
         withBody(body)))
   }
 
-  def rendered(messageBody: GetMessageResponseBody) = {
+  def rendered(messageBody: UpstreamMessageResponse) = {
     s"""
        |<div>This is a message with id: ${messageBody.id} rendered by $serviceName</div>
      """.stripMargin

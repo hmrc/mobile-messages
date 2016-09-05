@@ -20,7 +20,7 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import org.joda.time.{DateTime, LocalDate}
 import play.api.Play
 import play.api.http.HeaderNames
-import uk.gov.hmrc.mobilemessages.connector.model.{GetMessageResponseBody, ResourceActionLocation}
+import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageResponse, ResourceActionLocation}
 import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.mobilemessages.utils.ConfigHelper.microserviceConfigPathFor
 
@@ -32,7 +32,7 @@ class MessageService(authToken: String) {
     s"http://$host:$port$path"
   }
 
-  def convertedFrom(messageBody: GetMessageResponseBody): Message = {
+  def convertedFrom(messageBody: UpstreamMessageResponse): Message = {
 
     messageBody.markAsReadUrl match {
       case Some(location) => UnreadMessage(
@@ -47,7 +47,7 @@ class MessageService(authToken: String) {
     }
   }
 
-  def getByIdReturns(message: GetMessageResponseBody): Unit = {
+  def getByIdReturns(message: UpstreamMessageResponse): Unit = {
     givenThat(get(urlEqualTo(s"/messages/${message.id}")).
       withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)).
       willReturn(aResponse().
@@ -85,24 +85,24 @@ class MessageService(authToken: String) {
         )))
   }
 
-  def markAsReadSucceedsFor(messageBody: GetMessageResponseBody): Unit = {
+  def markAsReadSucceedsFor(messageBody: UpstreamMessageResponse): Unit = {
     givenThat(post(urlEqualTo(messageBody.markAsReadUrl.get.url)).
       withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)).
       willReturn(aResponse().withStatus(200)))
   }
 
-  def markAsReadFailsWith(status: Int, messageBody: GetMessageResponseBody): Unit = {
+  def markAsReadFailsWith(status: Int, messageBody: UpstreamMessageResponse): Unit = {
     givenThat(post(urlEqualTo(messageBody.markAsReadUrl.get.url)).
       withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)).
       willReturn(aResponse().withStatus(status)))
   }
 
-  def assertMarkAsReadHasBeenCalledFor(messageBody: GetMessageResponseBody): Unit = {
+  def assertMarkAsReadHasBeenCalledFor(messageBody: UpstreamMessageResponse): Unit = {
     verify(postRequestedFor(urlEqualTo(messageBody.markAsReadUrl.get.url))
       .withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)))
   }
 
-  def assertMarkAsReadHasNeverBeenCalledFor(messageBody: GetMessageResponseBody): Unit = {
+  def assertMarkAsReadHasNeverBeenCalledFor(messageBody: UpstreamMessageResponse): Unit = {
     verify(0, postRequestedFor(urlEqualTo(messageBody.markAsReadUrl.get.url))
       .withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)))
   }
@@ -114,7 +114,7 @@ class MessageService(authToken: String) {
   def bodyWith(id: String,
                renderUrl: ResourceActionLocation = ResourceActionLocation("sa-message-renderer", "/utr/render"),
                markAsReadUrl: Option[ResourceActionLocation] = None) = {
-    GetMessageResponseBody(id, renderUrl, markAsReadUrl)
+    UpstreamMessageResponse(id, renderUrl, markAsReadUrl)
   }
 
   def bodyToBeMarkedAsReadWith(id: String) = {
@@ -129,7 +129,7 @@ class MessageService(authToken: String) {
     MessageHeader(MessageId(id), subject, validFrom, readTime, sentInError)
   }
 
-  def jsonRepresentationOf(message: GetMessageResponseBody) = {
+  def jsonRepresentationOf(message: UpstreamMessageResponse) = {
     if (message.markAsReadUrl.isDefined) {
       s"""
          |    {

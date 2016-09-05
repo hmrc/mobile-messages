@@ -50,8 +50,7 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
     implicit authenticated =>
       implicit val hc = HeaderCarrier.fromHeadersAndSession(authenticated.request.headers, None)
 
-      val body: JsValue = authenticated.request.body
-      body.validate[MessageIdHiddenInUrl].fold (
+      authenticated.request.body.validate[MessageIdHiddenInUrl].fold (
         errors => {
           Logger.warn("Received JSON error with read endpoint: " + errors)
           Future.successful(BadRequest(Json.toJson(ErrorGenericBadRequest(errors))))
