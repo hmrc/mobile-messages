@@ -17,7 +17,7 @@
 package uk.gov.hmrc.mobilemessages.controllers.model
 
 import org.joda.time.{DateTime, DateTimeZone}
-import uk.gov.hmrc.mobilemessages.acceptance.microservices.MessageService
+import uk.gov.hmrc.mobilemessages.acceptance.microservices.MessageServiceMock
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 import uk.gov.hmrc.mobilemessages.utils.UnitTestCrypto
@@ -25,7 +25,7 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 class MessageHeaderResponseBodySpec extends UnitSpec {
 
-  val message = new MessageService("authToken")
+  val message = new MessageServiceMock("authToken")
 
   "get messages response" should {
     "be correctly converted from message headers" in {

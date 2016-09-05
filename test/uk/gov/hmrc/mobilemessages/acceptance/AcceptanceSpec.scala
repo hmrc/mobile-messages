@@ -24,7 +24,7 @@ import play.api.test.{FakeApplication, FakeRequest}
 import play.api.{GlobalSettings, Play}
 import uk.gov.hmrc.crypto.CryptoWithKeysFromConfig
 import uk.gov.hmrc.domain.SaUtr
-import uk.gov.hmrc.mobilemessages.acceptance.microservices.{AuthService, MessageRendererService, MessageService}
+import uk.gov.hmrc.mobilemessages.acceptance.microservices.{AuthServiceMock, MessageRendererServiceMock, MessageServiceMock}
 import uk.gov.hmrc.mobilemessages.acceptance.utils.WiremockServiceLocatorSugar
 import uk.gov.hmrc.mobilemessages.controllers.{LiveMobileMessagesController, MobileMessagesController}
 import uk.gov.hmrc.mobilemessages.utils.ConfigHelper.microserviceConfigPathFor
@@ -68,11 +68,11 @@ trait AcceptanceSpec extends UnitSpec
 
   val utr = SaUtr("109238")
 
-  val auth = new AuthService
-  val message = new MessageService(auth.token)
-  val saMessageRenderer = new MessageRendererService(auth.token, servicePort = 8089, "sa-message-renderer")
-  val atsMessageRenderer = new MessageRendererService(auth.token, servicePort = 8093, "ats-message-renderer")
-  val secureMessageRenderer = new MessageRendererService(auth.token, servicePort = 9847, "secure-message-renderer")
+  val auth = new AuthServiceMock
+  val message = new MessageServiceMock(auth.token)
+  val saMessageRenderer = new MessageRendererServiceMock(auth.token, servicePort = 8089, "sa-message-renderer")
+  val atsMessageRenderer = new MessageRendererServiceMock(auth.token, servicePort = 8093, "ats-message-renderer")
+  val secureMessageRenderer = new MessageRendererServiceMock(auth.token, servicePort = 9847, "secure-message-renderer")
 
   lazy val configBasedCrypto = CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption")
 

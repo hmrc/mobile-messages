@@ -25,11 +25,11 @@ import play.api.test.Helpers._
 import play.twirl.api.Html
 import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 import uk.gov.hmrc.domain.{Nino, SaUtr}
-import uk.gov.hmrc.mobilemessages.acceptance.microservices.MessageService
+import uk.gov.hmrc.mobilemessages.acceptance.microservices.MessageServiceMock
 import uk.gov.hmrc.mobilemessages.config.MicroserviceAuditConnector
 import uk.gov.hmrc.mobilemessages.connector.{AuthConnector, Authority, MessageConnector}
 import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControl, AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck}
-import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, MessageIdHiddenInUrl}
+import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
 import uk.gov.hmrc.mobilemessages.domain.{Accounts, Message, MessageHeader, MessageId}
 import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
@@ -106,7 +106,7 @@ trait Setup {
   val now = DateTimeUtils.now
   lazy val html = Html.apply("<div>some snippet</div>")
 
-  val message = new MessageService("authToken")
+  val message = new MessageServiceMock("authToken")
 
   val msgId1 = "543e8c6001000001003e4a9e"
   val msgId2 = "643e8c5f01000001003e4a8f"
@@ -142,8 +142,8 @@ trait Setup {
 
   val emptyRequestWithAcceptHeader = FakeRequest().withHeaders(acceptHeader)
 
-  lazy val readTimeRequest = fakeRequest(Json.toJson(MessageIdHiddenInUrl(encrypted("543e8c6001000001003e4a9e")))).withHeaders(acceptHeader)
-  lazy val readTimeRequestNoHeaders = fakeRequest(Json.toJson(MessageIdHiddenInUrl(encrypted("543e8c6001000001003e4a9e"))))
+  lazy val readTimeRequest = fakeRequest(Json.toJson(RenderMessageRequest(encrypted("543e8c6001000001003e4a9e")))).withHeaders(acceptHeader)
+  lazy val readTimeRequestNoHeaders = fakeRequest(Json.toJson(RenderMessageRequest(encrypted("543e8c6001000001003e4a9e"))))
 
   val authConnector = new TestAuthConnector(Some(nino), Some(saUtrVal))
   val messageConnector = new TestMessageConnector(Seq.empty[MessageHeader], html, sampleMessage)

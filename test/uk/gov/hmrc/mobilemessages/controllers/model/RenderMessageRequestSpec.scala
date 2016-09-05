@@ -16,23 +16,40 @@
 
 package uk.gov.hmrc.mobilemessages.controllers.model
 
-import uk.gov.hmrc.mobilemessages.acceptance.microservices.MessageService
+import uk.gov.hmrc.mobilemessages.acceptance.microservices.MessageServiceMock
 import uk.gov.hmrc.mobilemessages.domain.MessageId
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 import uk.gov.hmrc.mobilemessages.utils.UnitTestCrypto
 import uk.gov.hmrc.play.test.UnitSpec
 
-class MessageIdHiddenInUrlSpec extends UnitSpec {
+class RenderMessageRequestSpec extends UnitSpec {
 
-  val message = new MessageService("authToken")
+  val message = new MessageServiceMock("authToken")
+
+  val crypto = new UnitTestCrypto
 
   "messageId should be" should {
-    "correctly decrypted from encrypted version" in {
+    "be correctly decrypted from encrypted version" in {
 
-      val crypto = new UnitTestCrypto
       val messageId = "messageId43573947"
 
-      MessageIdHiddenInUrl(encrypted(messageId, crypto)).toMessageIdUsing(crypto) shouldBe MessageId(messageId)
+      RenderMessageRequest(encrypted(messageId, crypto)).toMessageIdOrUrlUsing(crypto) shouldBe Right(MessageId(messageId))
+    }
+  }
+
+  "legacy url" should {
+    "with protocol should be handled correctly" in {
+      val legacyUrl = "/message/sa/29384098232/9210381928/read-time"
+
+      RenderMessageRequest(legacyUrl).toMessageIdOrUrlUsing(crypto) shouldBe Left(legacyUrl)
+    }
+  }
+
+  "invalid data" should {
+    "cause security exception" in {
+      intercept[SecurityException] {
+        RenderMessageRequest("invalidDataThatIsNeitherUrlNorEncrypted").toMessageIdOrUrlUsing(crypto)
+      }
     }
   }
 }

@@ -129,6 +129,40 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
       message.assertMarkAsReadHasNeverBeenCalledFor(messageBody)
     }
+
+    "render legacy request - with url" in new Setup {
+      private val messageBody = message.bodyToBeMarkedAsReadWith(id = messageId1)
+      message.legacyMarkAsReadSucceedsFor(messageBody)
+      saMessageRenderer.successfullyRenders(messageBody)
+
+      // when
+      val readMessageResponse = messageController.read(None)(
+        mobileMessagesGetRequest.withBody(Json.parse(
+          s""" { "url": "${messageBody.markAsReadUrl.get.url}" } """
+        ))
+      ).futureValue
+
+      bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(messageBody)
+
+      message.assertMarkAsReadHasBeenCalledFor(messageBody)
+    }
+
+    "render legacy request when message render returns 409" in new Setup {
+      private val messageBody = message.bodyToBeMarkedAsReadWith(id = messageId1)
+      message.legacyMarkAsReadSucceedsFor(messageBody, status = 409)
+      saMessageRenderer.successfullyRenders(messageBody)
+
+      // when
+      val readMessageResponse = messageController.read(None)(
+        mobileMessagesGetRequest.withBody(Json.parse(
+          s""" { "url": "${messageBody.markAsReadUrl.get.url}" } """
+        ))
+      ).futureValue
+
+      bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(messageBody)
+
+      message.assertMarkAsReadHasBeenCalledFor(messageBody)
+    }
   }
 
   trait Setup {

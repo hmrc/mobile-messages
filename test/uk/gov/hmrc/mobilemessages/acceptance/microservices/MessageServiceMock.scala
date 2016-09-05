@@ -24,7 +24,7 @@ import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageResponse, Reso
 import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.mobilemessages.utils.ConfigHelper.microserviceConfigPathFor
 
-class MessageService(authToken: String) {
+class MessageServiceMock(authToken: String) {
 
   def fullUrlFor(serviceName: String, path: String) = {
     val port = Play.current.configuration.getString(s"${microserviceConfigPathFor(serviceName)}.port").get
@@ -89,6 +89,19 @@ class MessageService(authToken: String) {
     givenThat(post(urlEqualTo(messageBody.markAsReadUrl.get.url)).
       withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)).
       willReturn(aResponse().withStatus(200)))
+  }
+
+  def legacyMarkAsReadSucceedsFor(messageBody: UpstreamMessageResponse, status: Int = 200): Unit = {
+    givenThat(post(urlEqualTo(messageBody.markAsReadUrl.get.url)).
+      withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)).
+      willReturn(aResponse().withStatus(status).withBody(
+        s"""
+           | {
+           |   "service": "${messageBody.renderUrl.service}",
+           |   "url": "${messageBody.renderUrl.url}"
+           | }
+        """.stripMargin
+      )))
   }
 
   def markAsReadFailsWith(status: Int, messageBody: UpstreamMessageResponse): Unit = {

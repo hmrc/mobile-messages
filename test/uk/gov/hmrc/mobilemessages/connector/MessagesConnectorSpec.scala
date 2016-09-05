@@ -25,7 +25,7 @@ import play.api.libs.json.Json
 import play.api.test.FakeApplication
 import play.twirl.api.Html
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mobilemessages.acceptance.microservices.{MessageRendererService, MessageService}
+import uk.gov.hmrc.mobilemessages.acceptance.microservices.{MessageRendererServiceMock, MessageServiceMock}
 import uk.gov.hmrc.mobilemessages.connector.model.ResourceActionLocation
 import uk.gov.hmrc.mobilemessages.controllers.StubApplicationConfiguration
 import uk.gov.hmrc.mobilemessages.domain._
@@ -94,8 +94,8 @@ class MessagesConnectorSpec
     val responseRenderer = RenderMessageLocation("sa-message-renderer", "http://somelocation")
 
 
-    val message = new MessageService(authToken)
-    val testMessageRenderer = new MessageRendererService(authToken, stubPort, "testService")
+    val message = new MessageServiceMock(authToken)
+    val testMessageRenderer = new MessageRendererServiceMock(authToken, stubPort, "testService")
 
     lazy val successfulEmptyResponse = HttpResponse(200, responseString = Some(""))
 
