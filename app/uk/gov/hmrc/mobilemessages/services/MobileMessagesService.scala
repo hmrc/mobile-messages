@@ -52,11 +52,13 @@ trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
   override def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] =
     withAudit("readMessageContent", Map.empty) {
       messageConnector.getMessageBy(messageId) flatMap { message =>
-        message match {
-          case unreadMessage@UnreadMessage(_, _, _) => messageConnector.markAsRead(unreadMessage)
-          case _ => ()
+        messageConnector.render(message, hc) map { renderedMessage =>
+          message match {
+            case unreadMessage@UnreadMessage(_, _, _) => messageConnector.markAsRead(unreadMessage)
+            case _ => ()
+          }
+          renderedMessage
         }
-        messageConnector.render(message, hc)
       }
     }
 }
