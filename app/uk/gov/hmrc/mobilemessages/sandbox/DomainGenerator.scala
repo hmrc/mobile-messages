@@ -17,9 +17,8 @@
 package uk.gov.hmrc.mobilemessages.sandbox
 
 import org.joda.time.DateTime
-import play.api.libs.json.Json
 import uk.gov.hmrc.domain.SaUtr
-import uk.gov.hmrc.mobilemessages.domain.MessageHeader
+import uk.gov.hmrc.mobilemessages.domain.{MessageHeader, MessageId}
 
 import scala.util.Random
 
@@ -36,7 +35,7 @@ object DomainGenerator {
   val nino = nextNino
   val saUtr = nextSaUtr
 
-  val readMessageId = "543e8c6001000001003e4a9e"
+  val readMessageId = MessageId("543e8c6001000001003e4a9e")
   def readMessageHeader(saUtr : SaUtr = nextSaUtr)(implicit dateTime:DateTime) = {
     MessageHeader(readMessageId,
       "You have a new tax statement",
@@ -45,7 +44,7 @@ object DomainGenerator {
       sentInError = false)
   }
 
-  val unreadMessageId = "643e8c5f01000001003e4a8f"
+  val unreadMessageId = MessageId("643e8c5f01000001003e4a8f")
   def unreadMessageHeader(saUtr: SaUtr = nextSaUtr)(implicit dateTime:DateTime) = MessageHeader(unreadMessageId,
     "Stopping Self Assessment",
     dateTime.toLocalDate,

@@ -126,7 +126,7 @@ class MessageService(authToken: String) {
                  validFrom: LocalDate = new LocalDate(29348L),
                  readTime: Option[DateTime] = None,
                  sentInError: Boolean = false) = {
-    MessageHeader(id, subject, validFrom, readTime, sentInError)
+    MessageHeader(MessageId(id), subject, validFrom, readTime, sentInError)
   }
 
   def jsonRepresentationOf(message: GetMessageResponseBody) = {
@@ -177,7 +177,7 @@ class MessageService(authToken: String) {
     if (messageHeader.readTime.isDefined)
       s"""
          | {
-         | "id": "${messageHeader.id}",
+         | "id": "${messageHeader.id.value}",
          | "subject": "${messageHeader.subject}",
          | "validFrom": "${messageHeader.validFrom}",
          | "readTime": "${messageHeader.readTime.get}",
@@ -187,7 +187,7 @@ class MessageService(authToken: String) {
     else
       s"""
          | {
-         | "id": "${messageHeader.id}",
+         | "id": "${messageHeader.id.value}",
          | "subject": "${messageHeader.subject}",
          | "validFrom": "${messageHeader.validFrom}",
          | "sentInError": ${messageHeader.sentInError}

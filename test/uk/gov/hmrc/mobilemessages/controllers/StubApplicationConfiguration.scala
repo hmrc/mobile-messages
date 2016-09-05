@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.controller
+package uk.gov.hmrc.mobilemessages.controllers
 
 trait StubApplicationConfiguration {
 

@@ -52,14 +52,14 @@ class GetMessagesAcceptanceSpec extends AcceptanceSpec{
            |    "id": "$messageId1",
            |    "subject": "message subject",
            |    "validFrom": "${validFromDate.toString()}",
-           |    "readTimeUrl": "${encrypted(messageId1, configBasedCryptor)}",
+           |    "readTimeUrl": "${encrypted(messageId1, configBasedCrypto)}",
            |    "sentInError": false
            |  },
            |  {
            |    "id": "$messageId2",
            |    "subject": "message subject",
            |    "validFrom": "${validFromDate.toString()}",
-           |    "readTimeUrl": "${encrypted(messageId2, configBasedCryptor)}",
+           |    "readTimeUrl": "${encrypted(messageId2, configBasedCrypto)}",
            |    "readTime": ${readTime.getMillis()},
            |    "sentInError": false
            |  }

@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilemessages.controllers.model
 import uk.gov.hmrc.mobilemessages.acceptance.microservices.MessageService
 import uk.gov.hmrc.mobilemessages.domain.MessageId
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
-import uk.gov.hmrc.mobilemessages.utils.UnitTestCryptor
+import uk.gov.hmrc.mobilemessages.utils.UnitTestCrypto
 import uk.gov.hmrc.play.test.UnitSpec
 
 class MessageIdHiddenInUrlSpec extends UnitSpec {
@@ -29,10 +29,10 @@ class MessageIdHiddenInUrlSpec extends UnitSpec {
   "messageId should be" should {
     "correctly decrypted from encrypted version" in {
 
-      val cryptor = new UnitTestCryptor
+      val crypto = new UnitTestCrypto
       val messageId = "messageId43573947"
 
-      MessageIdHiddenInUrl(encrypted(messageId, cryptor)).toMessageIdUsing(cryptor) shouldBe MessageId(messageId)
+      MessageIdHiddenInUrl(encrypted(messageId, crypto)).toMessageIdUsing(crypto) shouldBe MessageId(messageId)
     }
   }
 }

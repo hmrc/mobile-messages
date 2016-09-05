@@ -18,10 +18,10 @@ package uk.gov.hmrc.mobilemessages.config
 
 import com.typesafe.config.Config
 import net.ceedubs.ficus.Ficus._
+import play.api._
 import play.api.libs.json.Json
 import play.api.mvc.Results._
 import play.api.mvc.{RequestHeader, Result}
-import play.api._
 import uk.gov.hmrc.api.config.{ServiceLocatorConfig, ServiceLocatorRegistration}
 import uk.gov.hmrc.api.connector.ServiceLocatorConnector
 import uk.gov.hmrc.api.controllers._

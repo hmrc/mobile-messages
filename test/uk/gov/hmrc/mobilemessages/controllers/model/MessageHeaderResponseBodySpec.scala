@@ -20,10 +20,10 @@ import org.joda.time.{DateTime, DateTimeZone}
 import uk.gov.hmrc.mobilemessages.acceptance.microservices.MessageService
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
-import uk.gov.hmrc.mobilemessages.utils.UnitTestCryptor
+import uk.gov.hmrc.mobilemessages.utils.UnitTestCrypto
 import uk.gov.hmrc.play.test.UnitSpec
 
-class MessageHeadResponseBodySpec extends UnitSpec {
+class MessageHeaderResponseBodySpec extends UnitSpec {
 
   val message = new MessageService("authToken")
 
@@ -32,20 +32,20 @@ class MessageHeadResponseBodySpec extends UnitSpec {
       val messageHeader1 = message.headerWith(id = "id1")
       val messageHeader2 = message.headerWith(id = "id2", readTime = Some(DateTime.now(DateTimeZone.UTC)))
 
-      MessageHeadResponseBody.fromAll(Seq(messageHeader1, messageHeader2))(new UnitTestCryptor) shouldBe Seq(
+      MessageHeaderResponseBody.fromAll(Seq(messageHeader1, messageHeader2))(new UnitTestCrypto) shouldBe Seq(
         expectedMessageResponseItemFor(messageHeader1),
         expectedMessageResponseItemFor(messageHeader2)
       )
     }
   }
 
-  def expectedMessageResponseItemFor(messageHeader: MessageHeader): MessageHeadResponseBody = {
-    MessageHeadResponseBody(
-      messageHeader.id,
+  def expectedMessageResponseItemFor(messageHeader: MessageHeader): MessageHeaderResponseBody = {
+    MessageHeaderResponseBody(
+      messageHeader.id.value,
       messageHeader.subject,
       messageHeader.validFrom,
       messageHeader.readTime,
-      encrypted(messageHeader.id),
+      encrypted(messageHeader.id.value),
       messageHeader.sentInError
     )
   }
