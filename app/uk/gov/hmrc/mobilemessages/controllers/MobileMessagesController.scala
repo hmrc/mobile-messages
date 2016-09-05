@@ -70,7 +70,7 @@ object SandboxMobileMessagesController extends MobileMessagesController {
   override val accessControl = AccountAccessControlCheckAccessOff
   override implicit val ec: ExecutionContext = ExecutionContext.global
   override val crypto: Encrypter with Decrypter = CryptoWithKeysFromConfig(
-    baseConfigKey = "queryParameter.encryption"
+    baseConfigKey = "cookie.encryption"
   )
 }
 
@@ -79,6 +79,6 @@ object LiveMobileMessagesController extends MobileMessagesController {
   override val accessControl = AccountAccessControlWithHeaderCheck
   override implicit val ec: ExecutionContext = ExecutionContext.global
   override val crypto: Encrypter with Decrypter = CryptoWithKeysFromConfig(
-    baseConfigKey = "queryParameter.encryption"
+    baseConfigKey = "cookie.encryption"
   )
 }
