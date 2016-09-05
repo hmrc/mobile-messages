@@ -20,7 +20,7 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.libs.json.Json
 import uk.gov.hmrc.domain.SaUtr
 
-class AuthService {
+class AuthServiceMock {
   def token = "authToken9349872"
 
   def containsUserWith(utr: SaUtr) = {

@@ -35,7 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait MobileMessagesService {
   def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]]
 
-  def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html]
+  def readMessageContent(messageIdOrUrl: Either[String, MessageId])(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html]
 }
 
 trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
@@ -49,13 +49,16 @@ trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
     }
   }
 
-  override def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] =
+  override def readMessageContent(messageIdOrUrl: Either[String, MessageId])(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] =
     withAudit("readMessageContent", Map.empty) {
-      messageConnector.getMessageBy(messageId) flatMap { message =>
-        messageConnector.render(message, hc) map { renderedMessage =>
-          markAsReadIfUnread.apply(message)
-          renderedMessage
-        }
+      messageIdOrUrl match {
+        case Left(url) => messageConnector.readMessageContent(url)
+        case Right(messageId) => messageConnector.getMessageBy(messageId) flatMap { message =>
+            messageConnector.render(message, hc) map { renderedMessage =>
+              markAsReadIfUnread.apply(message)
+              renderedMessage
+            }
+          }
       }
     }
 
@@ -73,8 +76,8 @@ trait SandboxMobileMessagesService extends MobileMessagesService with FileResour
   def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
     Future.successful(Seq(readMessageHeader(saUtr), unreadMessageHeader(saUtr)))
 
-  override def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
-    val partial = messageId == readMessageId match {
+  override def readMessageContent(messageIdOrUrl: Either[String, MessageId])(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
+    val partial = messageIdOrUrl.right.get == readMessageId match {
       case true => newTaxStatement
       case false => stoppingSA
     }

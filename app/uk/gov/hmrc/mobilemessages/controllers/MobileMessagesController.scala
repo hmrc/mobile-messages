@@ -23,7 +23,7 @@ import play.twirl.api.Html
 import uk.gov.hmrc.api.controllers._
 import uk.gov.hmrc.crypto.{CryptoWithKeysFromConfig, Decrypter, Encrypter}
 import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck}
-import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, MessageIdHiddenInUrl}
+import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
 import uk.gov.hmrc.play.http.HeaderCarrier
@@ -50,14 +50,14 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
     implicit authenticated =>
       implicit val hc = HeaderCarrier.fromHeadersAndSession(authenticated.request.headers, None)
 
-      authenticated.request.body.validate[MessageIdHiddenInUrl].fold (
+      authenticated.request.body.validate[RenderMessageRequest].fold(
         errors => {
           Logger.warn("Received JSON error with read endpoint: " + errors)
           Future.successful(BadRequest(Json.toJson(ErrorGenericBadRequest(errors))))
         },
-        messageIdHiddenInUrl => {
+        renderMessageRequest => {
           implicit val auth = authenticated.authority
-          errorWrapper(service.readMessageContent(messageIdHiddenInUrl.toMessageIdUsing(crypto)).
+          errorWrapper(service.readMessageContent(renderMessageRequest.toMessageIdOrUrlUsing(crypto)).
             map((as: Html) => Ok(as)))
         }
       )
