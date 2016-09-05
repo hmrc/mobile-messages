@@ -74,7 +74,7 @@ trait AcceptanceSpec extends UnitSpec
   val atsMessageRenderer = new MessageRendererService(auth.token, servicePort = 8093, "ats-message-renderer")
   val secureMessageRenderer = new MessageRendererService(auth.token, servicePort = 9847, "secure-message-renderer")
 
-  lazy val configBasedCrypto = CryptoWithKeysFromConfig(baseConfigKey = "queryParameter.encryption")
+  lazy val configBasedCrypto = CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption")
 
   val mobileMessagesGetRequest = FakeRequest("GET", "/").
     withHeaders(
@@ -93,8 +93,7 @@ trait AcceptanceSpec extends UnitSpec
       s"${microserviceConfigPathFor("auth")}.port" -> stubPort,
       s"${microserviceConfigPathFor("message")}.host" -> stubHost,
       s"${microserviceConfigPathFor("message")}.port" -> stubPort,
-      "auditing.enabled" -> "false",
-      "queryParameter.encryption.key" -> "kepODU8hulPkolIryPOrTY=="
+      "auditing.enabled" -> "false"
     )
   )
 }
