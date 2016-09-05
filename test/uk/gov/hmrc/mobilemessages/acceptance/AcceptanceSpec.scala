@@ -24,7 +24,7 @@ import play.api.test.{FakeApplication, FakeRequest}
 import play.api.{GlobalSettings, Play}
 import uk.gov.hmrc.crypto.CryptoWithKeysFromConfig
 import uk.gov.hmrc.domain.SaUtr
-import uk.gov.hmrc.mobilemessages.acceptance.microservices.{AuthService, MessageService, MessageRendererService}
+import uk.gov.hmrc.mobilemessages.acceptance.microservices.{AuthService, MessageRendererService, MessageService}
 import uk.gov.hmrc.mobilemessages.acceptance.utils.WiremockServiceLocatorSugar
 import uk.gov.hmrc.mobilemessages.controllers.{LiveMobileMessagesController, MobileMessagesController}
 import uk.gov.hmrc.mobilemessages.utils.ConfigHelper.microserviceConfigPathFor
@@ -74,7 +74,7 @@ trait AcceptanceSpec extends UnitSpec
   val atsMessageRenderer = new MessageRendererService(auth.token, servicePort = 8093, "ats-message-renderer")
   val secureMessageRenderer = new MessageRendererService(auth.token, servicePort = 9847, "secure-message-renderer")
 
-  lazy val configBasedCryptor = CryptoWithKeysFromConfig(baseConfigKey = "queryParameter.encryption")
+  lazy val configBasedCrypto = CryptoWithKeysFromConfig(baseConfigKey = "queryParameter.encryption")
 
   val mobileMessagesGetRequest = FakeRequest("GET", "/").
     withHeaders(

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.controller
+package uk.gov.hmrc.mobilemessages.controllers
 
 import java.util.UUID
 
@@ -28,13 +28,12 @@ import uk.gov.hmrc.domain.{Nino, SaUtr}
 import uk.gov.hmrc.mobilemessages.acceptance.microservices.MessageService
 import uk.gov.hmrc.mobilemessages.config.MicroserviceAuditConnector
 import uk.gov.hmrc.mobilemessages.connector.{AuthConnector, Authority, MessageConnector}
-import uk.gov.hmrc.mobilemessages.controllers.MobileMessagesController
 import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControl, AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck}
-import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeadResponseBody, MessageIdHiddenInUrl}
+import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, MessageIdHiddenInUrl}
 import uk.gov.hmrc.mobilemessages.domain.{Accounts, Message, MessageHeader, MessageId}
 import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
-import uk.gov.hmrc.mobilemessages.utils.UnitTestCryptor
+import uk.gov.hmrc.mobilemessages.utils.UnitTestCrypto
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
 import uk.gov.hmrc.play.http._
@@ -64,8 +63,6 @@ class TestMessageConnector(result: Seq[MessageHeader], html: Html, message: Mess
   override val messageBaseUrl: String = "someUrl"
 
   override def messages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = Future.successful(result)
-
-  override def readMessageContent(url: String)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[uk.gov.hmrc.mobilemessages.connector.Authority]): Future[Html] = Future.successful(html)
 
   override def getMessageBy(id: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Message] = Future.successful(message)
 
@@ -117,12 +114,12 @@ trait Setup {
     s"""[{"id":"$msgId1","subject":"You have a new tax statement","validFrom":"${now.minusDays(3).toLocalDate}","readTime":${now.minusDays(1).getMillis},"readTimeUrl":"${encrypted(msgId1)}","sentInError":false},
         |{"id":"$msgId2","subject":"Stopping Self Assessment","validFrom":"${now.toLocalDate}","readTimeUrl":"${encrypted(msgId2)}","sentInError":false}]""".stripMargin
 
-  def messageHeadResponseItemFrom(messageHeader: MessageHeader) = MessageHeadResponseBody(
-    messageHeader.id,
+  def messageHeaderResponseBodyFrom(messageHeader: MessageHeader) = MessageHeaderResponseBody(
+    messageHeader.id.value,
     messageHeader.subject,
     messageHeader.validFrom,
     messageHeader.readTime,
-    readTimeUrl = encrypted(messageHeader.id),
+    readTimeUrl = encrypted(messageHeader.id.value),
     messageHeader.sentInError
   )
 
@@ -132,7 +129,7 @@ trait Setup {
     message.headerWith(id = "id3")
   )
   val getMessagesResponseItemsList = messageServiceHeadersResponse.
-    map(messageHeadResponseItemFrom)
+    map(messageHeaderResponseBodyFrom)
 
   val sampleMessage = message.convertedFrom(message.bodyWith(id = "id1"))
 
@@ -170,7 +167,7 @@ trait Success extends Setup {
     override val service: MobileMessagesService = testMMService
     override val accessControl: AccountAccessControlWithHeaderCheck = testCompositeAction
     override implicit val ec: ExecutionContext = ExecutionContext.global
-    override val encrypter: Encrypter with Decrypter = new UnitTestCryptor
+    override val crypto: Encrypter with Decrypter = new UnitTestCrypto
   }
 }
 
@@ -182,7 +179,7 @@ trait SuccessWithMessages extends Setup {
     override val service: MobileMessagesService = testMMService
     override val accessControl: AccountAccessControlWithHeaderCheck = testCompositeAction
     override implicit val ec: ExecutionContext = ExecutionContext.global
-    override val encrypter: Encrypter with Decrypter = new UnitTestCryptor
+    override val crypto: Encrypter with Decrypter = new UnitTestCrypto
   }
 }
 
@@ -200,7 +197,7 @@ trait AuthWithoutNino extends Setup {
     override val service: MobileMessagesService = testMMService
     override val accessControl: AccountAccessControlWithHeaderCheck = testCompositeAction
     override implicit val ec: ExecutionContext = ExecutionContext.global
-    override val encrypter: Encrypter with Decrypter = new UnitTestCryptor
+    override val crypto: Encrypter with Decrypter = new UnitTestCrypto
   }
 
 }
@@ -219,7 +216,7 @@ trait AuthWithLowCL extends Setup {
     override val service: MobileMessagesService = testMMService
     override val accessControl: AccountAccessControlWithHeaderCheck = testCompositeAction
     override implicit val ec: ExecutionContext = ExecutionContext.global
-    override val encrypter: Encrypter with Decrypter = new UnitTestCryptor
+    override val crypto: Encrypter with Decrypter = new UnitTestCrypto
   }
 
 }
@@ -231,6 +228,6 @@ trait SandboxSuccess extends Setup {
     override val service: MobileMessagesService = testSandboxPersonalIncomeService
     override val accessControl: AccountAccessControlWithHeaderCheck = sandboxCompositeAction
     override implicit val ec: ExecutionContext = ExecutionContext.global
-    override val encrypter: Encrypter with Decrypter = new UnitTestCryptor
+    override val crypto: Encrypter with Decrypter = new UnitTestCrypto
   }
 }

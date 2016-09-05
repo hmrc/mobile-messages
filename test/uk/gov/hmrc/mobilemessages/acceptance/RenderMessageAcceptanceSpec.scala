@@ -19,7 +19,6 @@ package uk.gov.hmrc.mobilemessages.acceptance
 import org.apache.http.HttpStatus
 import play.api.libs.json.Json
 import uk.gov.hmrc.mobilemessages.connector.model.{GetMessageResponseBody, ResourceActionLocation}
-import uk.gov.hmrc.mobilemessages.domain.MessageId
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 
 class RenderMessageAcceptanceSpec extends AcceptanceSpec {
@@ -30,17 +29,14 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
       private val messageBody = message.bodyWith(id = messageId1)
 
       message.getByIdReturns(messageBody)
-      saMessageRenderer.successfullyRenders(
-        message.convertedFrom(messageBody),
-        messageBody.renderUrl.url
-      )
+      saMessageRenderer.successfullyRenders(messageBody)
 
       // when
       val readMessageResponse = messageController.read(None)(
-        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCryptor)}" } """))
+        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
       ).futureValue
 
-      bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(message.convertedFrom(messageBody))
+      bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(messageBody)
     }
 
     "return a rendered message after calling get message and ats renderer" in new Setup {
@@ -50,17 +46,14 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
       )
 
       message.getByIdReturns(messageBody)
-      atsMessageRenderer.successfullyRenders(
-        message.convertedFrom(messageBody),
-        messageBody.renderUrl.url
-      )
+      atsMessageRenderer.successfullyRenders(messageBody)
 
       // when
       val readMessageResponse = messageController.read(None)(
-        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCryptor)}" } """))
+        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
       ).futureValue
 
-      bodyOf(readMessageResponse) shouldBe atsMessageRenderer.rendered(message.convertedFrom(messageBody))
+      bodyOf(readMessageResponse) shouldBe atsMessageRenderer.rendered(messageBody)
     }
 
     "return a rendered message after calling get message and secure message renderer" in new Setup {
@@ -70,17 +63,14 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
       )
 
       message.getByIdReturns(messageBody)
-      secureMessageRenderer.successfullyRenders(
-        message.convertedFrom(messageBody),
-        messageBody.renderUrl.url
-      )
+      secureMessageRenderer.successfullyRenders(messageBody)
 
       // when
       val readMessageResponse = messageController.read(None)(
-        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCryptor)}" } """))
+        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
       ).futureValue
 
-      bodyOf(readMessageResponse) shouldBe secureMessageRenderer.rendered(message.convertedFrom(messageBody))
+      bodyOf(readMessageResponse) shouldBe secureMessageRenderer.rendered(messageBody)
     }
 
     "mark message as read if the markAsRead url is present in the message body" in new Setup {
@@ -89,10 +79,10 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
       // when
       val readMessageResponse = messageController.read(None)(
-        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCryptor)}" } """))
+        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
       ).futureValue
 
-      bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(message.convertedFrom(messageBody))
+      bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(messageBody)
 
       message.assertMarkAsReadHasBeenCalledFor(messageBody)
     }
@@ -102,10 +92,10 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
       // when
       val readMessageResponse = messageController.read(None)(
-        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCryptor)}" } """))
+        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
       ).futureValue
 
-      bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(message.convertedFrom(messageBody))
+      bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(messageBody)
 
       message.assertMarkAsReadHasNeverBeenCalled()
     }
@@ -116,10 +106,10 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
       // when
       val readMessageResponse = messageController.read(None)(
-        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCryptor)}" } """))
+        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
       ).futureValue
 
-      bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(message.convertedFrom(messageBody))
+      bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(messageBody)
 
       message.assertMarkAsReadHasBeenCalledFor(messageBody)
     }
@@ -132,7 +122,7 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
       // when
       val readMessageResponse = messageController.read(None)(
-        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCryptor)}" } """))
+        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
       ).futureValue
 
       status(readMessageResponse) shouldBe HttpStatus.SC_INTERNAL_SERVER_ERROR
@@ -146,10 +136,7 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
     auth.containsUserWith(utr)
     def successfulSetupFor(messageBody: GetMessageResponseBody): GetMessageResponseBody = {
       message.getByIdReturns(messageBody)
-      saMessageRenderer.successfullyRenders(
-        message.convertedFrom(messageBody),
-        messageBody.renderUrl.url
-      )
+      saMessageRenderer.successfullyRenders(messageBody)
       messageBody
     }
   }

@@ -21,31 +21,31 @@ import org.joda.time.{DateTime, LocalDate}
 import uk.gov.hmrc.crypto.{Encrypter, PlainText}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 
-case class MessageHeadResponseBody(id: String,
-                                   subject: String,
-                                   validFrom: LocalDate,
-                                   readTime: Option[DateTime],
-                                   readTimeUrl: String,
-                                   sentInError: Boolean)
+case class MessageHeaderResponseBody(id: String,
+                                     subject: String,
+                                     validFrom: LocalDate,
+                                     readTime: Option[DateTime],
+                                     readTimeUrl: String,
+                                     sentInError: Boolean)
 
-object MessageHeadResponseBody {
+object MessageHeaderResponseBody {
 
   import play.api.libs.json.{Json, _}
 
-  implicit val writes: Writes[MessageHeadResponseBody] = Json.writes[MessageHeadResponseBody]
+  implicit val writes: Writes[MessageHeaderResponseBody] = Json.writes[MessageHeaderResponseBody]
 
-  def fromAll(messageHeaders: Seq[MessageHeader])(encrypter: Encrypter): Seq[MessageHeadResponseBody] = {
+  def fromAll(messageHeaders: Seq[MessageHeader])(encrypter: Encrypter): Seq[MessageHeaderResponseBody] = {
     messageHeaders.map(from(_)(encrypter))
   }
 
-  def from(message: MessageHeader)(encrypter: Encrypter) = {
-    MessageHeadResponseBody(
-      message.id,
-      message.subject,
-      message.validFrom,
-      message.readTime,
-      Base64.encode(encrypter.encrypt(PlainText(message.id)).value.getBytes),
-      message.sentInError
+  def from(messageHeader: MessageHeader)(encrypter: Encrypter) = {
+    MessageHeaderResponseBody(
+      messageHeader.id.value,
+      messageHeader.subject,
+      messageHeader.validFrom,
+      messageHeader.readTime,
+      Base64.encode(encrypter.encrypt(PlainText(messageHeader.id.value)).value.getBytes),
+      messageHeader.sentInError
     )
   }
 }

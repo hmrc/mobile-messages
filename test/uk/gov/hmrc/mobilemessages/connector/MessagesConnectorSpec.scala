@@ -24,9 +24,10 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import play.api.libs.json.Json
 import play.api.test.FakeApplication
 import play.twirl.api.Html
-import uk.gov.hmrc.domain.{Nino, SaUtr}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilemessages.acceptance.microservices.{MessageRendererService, MessageService}
-import uk.gov.hmrc.mobilemessages.controller.StubApplicationConfiguration
+import uk.gov.hmrc.mobilemessages.connector.model.ResourceActionLocation
+import uk.gov.hmrc.mobilemessages.controllers.StubApplicationConfiguration
 import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
 import uk.gov.hmrc.play.http._
@@ -110,7 +111,7 @@ class MessagesConnectorSpec
     )
 
     val renderPath = "/some/render/path"
-    val messageToRender = ReadMessage(MessageId("id1"), s"http://$stubHost:$stubPort$renderPath")
+    val messageBodyToRender = message.bodyWith(id = "id1", renderUrl = ResourceActionLocation(testRendererServiceName, renderPath))
     val messageToBeMarkedAsReadBody = message.bodyToBeMarkedAsReadWith(id = "id48")
     val messageToBeMarkedAsRead = message.convertedFrom(messageToBeMarkedAsReadBody).asInstanceOf[UnreadMessage]
     lazy val ReadSuccessResult = Future.successful(HttpResponse(200, None, Map.empty, Some(html.toString())))
@@ -166,25 +167,25 @@ class MessagesConnectorSpec
     "throw BadRequestException when a 400 response is returned" in new Setup {
       testMessageRenderer.failsWith(status = 400, path = renderPath)
       intercept[BadRequestException] {
-        await(connector.render(messageToRender, hc))
+        await(connector.render(message.convertedFrom(messageBodyToRender), hc))
       }
     }
 
     "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
       testMessageRenderer.failsWith(status = 500, path = renderPath)
       intercept[Upstream5xxResponse] {
-        await(connector.render(messageToRender, hc))
+        await(connector.render(message.convertedFrom(messageBodyToRender), hc))
       }
     }
 
     s"return empty response when a 200 response is received with an empty payload" in new Setup {
-      testMessageRenderer.successfullyRenders(messageToRender, path = renderPath, overrideBody = Some(""))
-      await(connector.render(messageToRender, hc)).body shouldBe ""
+      testMessageRenderer.successfullyRenders(messageBodyToRender, overrideBody = Some(""))
+      await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body shouldBe ""
     }
 
     "return a rendered message when a 200 response is received with a payload" in new Setup {
-      testMessageRenderer.successfullyRenders(messageToRender, renderPath)
-      await(connector.render(messageToRender, hc)).body shouldBe testMessageRenderer.rendered(messageToRender)
+      testMessageRenderer.successfullyRenders(messageBodyToRender)
+      await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body shouldBe testMessageRenderer.rendered(messageBodyToRender)
     }
   }
 

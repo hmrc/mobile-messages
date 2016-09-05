@@ -21,7 +21,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import org.apache.http.HttpHeaders
-import uk.gov.hmrc.mobilemessages.domain.Message
+import uk.gov.hmrc.mobilemessages.connector.model.GetMessageResponseBody
 
 class MessageRendererService(authToken: String, servicePort: Int, serviceName: String) {
 
@@ -41,11 +41,11 @@ class MessageRendererService(authToken: String, servicePort: Int, serviceName: S
     wireMockServer.resetRequests()
   }
 
-  def successfullyRenders(message: Message, path: String, overrideBody: Option[String] = None): Unit = {
-    service.register(get(urlEqualTo(path)).
+  def successfullyRenders(messageBody: GetMessageResponseBody, overrideBody: Option[String] = None): Unit = {
+    service.register(get(urlEqualTo(messageBody.renderUrl.url)).
       withHeader(HttpHeaders.AUTHORIZATION, equalTo(authToken)).
       willReturn(aResponse().
-        withBody(if (overrideBody.isDefined) overrideBody.get else rendered(message))))
+      withBody(if (overrideBody.isDefined) overrideBody.get else rendered(messageBody))))
   }
 
   def failsWith(status: Int, body: String = "", path: String): Unit = {
@@ -56,9 +56,9 @@ class MessageRendererService(authToken: String, servicePort: Int, serviceName: S
         withBody(body)))
   }
 
-  def rendered(message: Message) = {
+  def rendered(messageBody: GetMessageResponseBody) = {
     s"""
-       |<div>This is a message with id: ${message.id.value} rendered by $serviceName</div>
+       |<div>This is a message with id: ${messageBody.id} rendered by $serviceName</div>
      """.stripMargin
   }
 }

@@ -17,11 +17,11 @@
 package uk.gov.hmrc.mobilemessages.connector.model
 
 import org.joda.time.{DateTime, LocalDate}
-import uk.gov.hmrc.mobilemessages.domain.MessageHeader
+import uk.gov.hmrc.mobilemessages.domain.{MessageHeader, MessageId}
 
-case class MessageServiceGetMessagesResponse(items: Seq[MessageHeader])
+case class UpstreamMessageHeadersResponse(items: Seq[MessageHeader])
 
-object MessageServiceGetMessagesResponse {
+object UpstreamMessageHeadersResponse {
 
   import play.api.libs.functional.syntax._
   import play.api.libs.json.{Json, Reads, _}
@@ -36,9 +36,9 @@ object MessageServiceGetMessagesResponse {
         (__ \ "readTime").readNullable[DateTime] and
         (__ \ "sentInError").read[Boolean]
       ) ((id, subject, validFrom, readTime, sentInError) =>
-          MessageHeader(id, subject, validFrom, readTime, sentInError)
+          MessageHeader(MessageId(id), subject, validFrom, readTime, sentInError)
   )
 
-  implicit val reads = Json.reads[MessageServiceGetMessagesResponse]
+  implicit val reads = Json.reads[UpstreamMessageHeadersResponse]
 
 }

@@ -72,7 +72,7 @@ trait SandboxMobileMessagesService extends MobileMessagesService with FileResour
     Future.successful(Seq(readMessageHeader(saUtr), unreadMessageHeader(saUtr)))
 
   override def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
-    val partial = messageId.value == readMessageId match {
+    val partial = messageId == readMessageId match {
       case true => newTaxStatement
       case false => stoppingSA
     }

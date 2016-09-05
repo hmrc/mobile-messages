@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.mobilemessages.acceptance.microservices
 
-import uk.gov.hmrc.domain.SaUtr
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.libs.json.Json
+import uk.gov.hmrc.domain.SaUtr
 
 class AuthService {
   def token = "authToken9349872"

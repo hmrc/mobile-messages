@@ -19,12 +19,12 @@ package uk.gov.hmrc.mobilemessages.utils
 import com.ning.http.util.Base64
 import uk.gov.hmrc.crypto.{AesCrypto, Encrypter, PlainText}
 
-class UnitTestCryptor extends AesCrypto {
+class UnitTestCrypto extends AesCrypto {
   override protected val encryptionKey: String = "hwdODU8hulPkolIryPRkVW=="
 }
 
 object EncryptionUtils {
-  def encrypted(value: String, encrypter: Encrypter = new UnitTestCryptor) = {
+  def encrypted(value: String, encrypter: Encrypter = new UnitTestCrypto) = {
     Base64.encode(encrypter.encrypt(PlainText(value)).value.getBytes)
   }
 }

@@ -23,7 +23,7 @@ import play.twirl.api.Html
 import uk.gov.hmrc.api.controllers._
 import uk.gov.hmrc.crypto.{CryptoWithKeysFromConfig, Decrypter, Encrypter}
 import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck}
-import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeadResponseBody, MessageIdHiddenInUrl}
+import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, MessageIdHiddenInUrl}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
 import uk.gov.hmrc.play.http.HeaderCarrier
@@ -36,13 +36,13 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
 
   val service: MobileMessagesService
   val accessControl: AccountAccessControlWithHeaderCheck
-  val encrypter: Encrypter with Decrypter
+  val crypto: Encrypter with Decrypter
 
   final def getMessages(journeyId: Option[String] = None) = accessControl.validateAccept(acceptHeaderValidationRules).async {
     implicit authenticated =>
       implicit val hc = HeaderCarrier.fromHeadersAndSession(authenticated.request.headers, None)
       errorWrapper(service.readAndUnreadMessages().map((messageHeaders: Seq[MessageHeader]) =>
-        Ok(Json.toJson(MessageHeadResponseBody.fromAll(messageHeaders)(encrypter)))
+        Ok(Json.toJson(MessageHeaderResponseBody.fromAll(messageHeaders)(crypto)))
       ))
   }
 
@@ -58,7 +58,7 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
         },
         messageIdHiddenInUrl => {
           implicit val auth = authenticated.authority
-          errorWrapper(service.readMessageContent(messageIdHiddenInUrl.toMessageIdUsing(encrypter)).
+          errorWrapper(service.readMessageContent(messageIdHiddenInUrl.toMessageIdUsing(crypto)).
             map((as: Html) => Ok(as)))
         }
       )
@@ -69,7 +69,7 @@ object SandboxMobileMessagesController extends MobileMessagesController {
   override val service = SandboxMobileMessagesService
   override val accessControl = AccountAccessControlCheckAccessOff
   override implicit val ec: ExecutionContext = ExecutionContext.global
-  override val encrypter: Encrypter with Decrypter = CryptoWithKeysFromConfig(
+  override val crypto: Encrypter with Decrypter = CryptoWithKeysFromConfig(
     baseConfigKey = "queryParameter.encryption"
   )
 }
@@ -78,7 +78,7 @@ object LiveMobileMessagesController extends MobileMessagesController {
   override val service = LiveMobileMessagesService
   override val accessControl = AccountAccessControlWithHeaderCheck
   override implicit val ec: ExecutionContext = ExecutionContext.global
-  override val encrypter: Encrypter with Decrypter = CryptoWithKeysFromConfig(
+  override val crypto: Encrypter with Decrypter = CryptoWithKeysFromConfig(
     baseConfigKey = "queryParameter.encryption"
   )
 }

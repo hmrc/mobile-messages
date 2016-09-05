@@ -17,9 +17,9 @@
 package uk.gov.hmrc.mobilemessages.connector.model
 
 import org.mockito.Mockito
+import org.scalatest.mock.MockitoSugar
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.test.UnitSpec
-import org.scalatest.mock.MockitoSugar
 
 class ResourceActionLocationSpec extends UnitSpec {
 
