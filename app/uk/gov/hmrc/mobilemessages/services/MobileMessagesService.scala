@@ -23,7 +23,7 @@ import uk.gov.hmrc.api.service.Auditor
 import uk.gov.hmrc.domain.SaUtr
 import uk.gov.hmrc.mobilemessages.config.MicroserviceAuditConnector
 import uk.gov.hmrc.mobilemessages.connector._
-import uk.gov.hmrc.mobilemessages.domain.{MessageHeader, MessageId, UnreadMessage}
+import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
 import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator._
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -53,14 +53,16 @@ trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
     withAudit("readMessageContent", Map.empty) {
       messageConnector.getMessageBy(messageId) flatMap { message =>
         messageConnector.render(message, hc) map { renderedMessage =>
-          message match {
-            case unreadMessage@UnreadMessage(_, _, _) => messageConnector.markAsRead(unreadMessage)
-            case _ => Future.successful()
-          }
+          markAsReadIfUnread.apply(message)
           renderedMessage
         }
       }
     }
+
+  def markAsReadIfUnread(implicit hc: HeaderCarrier, ec: ExecutionContext): Message => Unit = {
+      case unreadMessage@UnreadMessage(_, _, _) => messageConnector.markAsRead(unreadMessage)
+      case _ => ()
+  }
 }
 
 trait SandboxMobileMessagesService extends MobileMessagesService with FileResource {
