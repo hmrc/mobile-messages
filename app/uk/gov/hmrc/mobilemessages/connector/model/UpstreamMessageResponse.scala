@@ -29,9 +29,9 @@ case class ResourceActionLocation(service: String, url: String) {
   }
 }
 
-case class GetMessageResponseBody(id: String,
-                                  renderUrl: ResourceActionLocation,
-                                  markAsReadUrl: Option[ResourceActionLocation]) {
+case class UpstreamMessageResponse(id: String,
+                                   renderUrl: ResourceActionLocation,
+                                   markAsReadUrl: Option[ResourceActionLocation]) {
   def toMessageUsing(servicesConfig: ServicesConfig): Message = {
     markAsReadUrl.fold[Message](
       ReadMessage(
@@ -55,9 +55,9 @@ object ResourceActionLocation {
   implicit val reads: Reads[ResourceActionLocation] = Json.reads[ResourceActionLocation]
 }
 
-object GetMessageResponseBody {
+object UpstreamMessageResponse {
 
   import play.api.libs.json.Json
 
-  implicit val reads: Reads[GetMessageResponseBody] = Json.reads[GetMessageResponseBody]
+  implicit val reads: Reads[UpstreamMessageResponse] = Json.reads[UpstreamMessageResponse]
 }

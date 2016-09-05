@@ -18,7 +18,7 @@ package uk.gov.hmrc.mobilemessages.acceptance
 
 import org.apache.http.HttpStatus
 import play.api.libs.json.Json
-import uk.gov.hmrc.mobilemessages.connector.model.{GetMessageResponseBody, ResourceActionLocation}
+import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageResponse, ResourceActionLocation}
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 
 class RenderMessageAcceptanceSpec extends AcceptanceSpec {
@@ -134,7 +134,7 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
   trait Setup {
     val messageId1 = "messageId90342"
     auth.containsUserWith(utr)
-    def successfulSetupFor(messageBody: GetMessageResponseBody): GetMessageResponseBody = {
+    def successfulSetupFor(messageBody: UpstreamMessageResponse): UpstreamMessageResponse = {
       message.getByIdReturns(messageBody)
       saMessageRenderer.successfullyRenders(messageBody)
       messageBody

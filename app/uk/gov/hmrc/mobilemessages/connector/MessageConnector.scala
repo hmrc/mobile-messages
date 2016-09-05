@@ -22,7 +22,7 @@ import java.util.UUID
 import org.apache.commons.codec.CharEncoding
 import org.joda.time.DateTime
 import play.api.Play._
-import uk.gov.hmrc.mobilemessages.connector.model.{GetMessageResponseBody, UpstreamMessageHeadersResponse}
+import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageResponse, UpstreamMessageHeadersResponse}
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.{Authorization, SessionId}
@@ -50,7 +50,7 @@ trait MessageConnector extends SessionCookieEncryptionSupport {
   }
 
   def getMessageBy(id: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Message] = {
-    http.GET[GetMessageResponseBody](s"$messageBaseUrl/messages/${id.value}").
+    http.GET[UpstreamMessageResponse](s"$messageBaseUrl/messages/${id.value}").
       map(_.toMessageUsing(MessageConnector.asInstanceOf[ServicesConfig]))
   }
 
