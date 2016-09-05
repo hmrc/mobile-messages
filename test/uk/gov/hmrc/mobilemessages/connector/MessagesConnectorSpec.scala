@@ -222,14 +222,14 @@ class MessagesConnectorSpec
   "messagesConnector mark message as read" should {
 
     "throw BadRequestException when a 400 response is returned" in new Setup {
-      message.markAsReaFailsWith(status = 400, messageToBeMarkedAsReadBody)
+      message.markAsReadFailsWith(status = 400, messageToBeMarkedAsReadBody)
       intercept[BadRequestException] {
         await(connector.markAsRead(messageToBeMarkedAsRead))
       }
     }
 
     "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
-      message.markAsReaFailsWith(status = 500, messageToBeMarkedAsReadBody)
+      message.markAsReadFailsWith(status = 500, messageToBeMarkedAsReadBody)
       intercept[Upstream5xxResponse] {
         await(connector.markAsRead(messageToBeMarkedAsRead))
       }

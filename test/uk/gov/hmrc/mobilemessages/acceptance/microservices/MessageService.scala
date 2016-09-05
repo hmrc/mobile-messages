@@ -91,7 +91,7 @@ class MessageService(authToken: String) {
       willReturn(aResponse().withStatus(200)))
   }
 
-  def markAsReaFailsWith(status: Int, messageBody: GetMessageResponseBody): Unit = {
+  def markAsReadFailsWith(status: Int, messageBody: GetMessageResponseBody): Unit = {
     givenThat(post(urlEqualTo(messageBody.markAsReadUrl.get.url)).
       withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)).
       willReturn(aResponse().withStatus(status)))
@@ -99,6 +99,11 @@ class MessageService(authToken: String) {
 
   def assertMarkAsReadHasBeenCalledFor(messageBody: GetMessageResponseBody): Unit = {
     verify(postRequestedFor(urlEqualTo(messageBody.markAsReadUrl.get.url))
+      .withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)))
+  }
+
+  def assertMarkAsReadHasNeverBeenCalledFor(messageBody: GetMessageResponseBody): Unit = {
+    verify(0, postRequestedFor(urlEqualTo(messageBody.markAsReadUrl.get.url))
       .withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)))
   }
 

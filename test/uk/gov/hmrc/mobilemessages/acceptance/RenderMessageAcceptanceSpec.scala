@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.mobilemessages.acceptance
 
+import org.apache.http.HttpStatus
 import play.api.libs.json.Json
 import uk.gov.hmrc.mobilemessages.connector.model.{GetMessageResponseBody, ResourceActionLocation}
+import uk.gov.hmrc.mobilemessages.domain.MessageId
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 
 class RenderMessageAcceptanceSpec extends AcceptanceSpec {
@@ -110,7 +112,7 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
     "still return successful response even if mark as read fails" in new Setup {
       private val messageBody = successfulSetupFor(message.bodyToBeMarkedAsReadWith(id = messageId1))
-      message.markAsReaFailsWith(status = 500, messageBody)
+      message.markAsReadFailsWith(status = 500, messageBody)
 
       // when
       val readMessageResponse = messageController.read(None)(
@@ -120,6 +122,22 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
       bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(message.convertedFrom(messageBody))
 
       message.assertMarkAsReadHasBeenCalledFor(messageBody)
+    }
+
+    "does not mark message as read when the rendering fails" in new Setup {
+      private val messageBody = message.bodyToBeMarkedAsReadWith(id = messageId1)
+      message.getByIdReturns(messageBody)
+      saMessageRenderer.failsWith(status = 500, path = messageBody.renderUrl.url)
+      message.markAsReadSucceedsFor(messageBody)
+
+      // when
+      val readMessageResponse = messageController.read(None)(
+        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCryptor)}" } """))
+      ).futureValue
+
+      status(readMessageResponse) shouldBe HttpStatus.SC_INTERNAL_SERVER_ERROR
+
+      message.assertMarkAsReadHasNeverBeenCalledFor(messageBody)
     }
   }
 

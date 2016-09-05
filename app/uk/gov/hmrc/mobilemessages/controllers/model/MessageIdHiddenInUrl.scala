@@ -18,7 +18,6 @@
 
 
 
-  import com.ning.http.util.Base64
   import play.api.libs.json.Json
   import uk.gov.hmrc.crypto.{Crypted, Decrypter}
   import uk.gov.hmrc.mobilemessages.domain.MessageId
