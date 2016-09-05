@@ -38,7 +38,6 @@ private object AppDependencies {
   private val cucumberVersion = "1.2.4"
 
   val compile = Seq(
-
     ws,
     "uk.gov.hmrc" %% "microservice-bootstrap" % microserviceBootstrapVersion,
     "uk.gov.hmrc" %% "play-hmrc-api" % playHmrcApiVersion,
@@ -51,7 +50,7 @@ private object AppDependencies {
     "uk.gov.hmrc" %% "reactive-circuit-breaker" % "1.7.0",
     "uk.gov.hmrc" %% "emailaddress" % "1.1.0",
     "uk.gov.hmrc" %% "crypto" % "3.1.0",
-    "uk.gov.hmrc" %% "reactivemongo-bson" % "0.11.7" //NOTE: this is included purely for sandbox object creation
+    "uk.gov.hmrc" %% "reactivemongo-bson" % "0.11.8" //NOTE: this is included purely for sandbox object creation
   )
 
   trait TestDependencies {
