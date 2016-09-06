@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilemessages.connector.model
 import org.joda.time.{DateTime, LocalDate}
 import uk.gov.hmrc.mobilemessages.domain.{MessageHeader, MessageId}
 
-case class UpstreamMessageHeadersResponse(items: Seq[MessageHeader])
+final case class UpstreamMessageHeadersResponse(items: Seq[MessageHeader])
 
 object UpstreamMessageHeadersResponse {
 

@@ -21,7 +21,7 @@ import org.joda.time.{DateTime, LocalDate}
 import uk.gov.hmrc.crypto.{Encrypter, PlainText}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 
-case class MessageHeaderResponseBody(id: String,
+final case class MessageHeaderResponseBody(id: String,
                                      subject: String,
                                      validFrom: LocalDate,
                                      readTime: Option[DateTime],

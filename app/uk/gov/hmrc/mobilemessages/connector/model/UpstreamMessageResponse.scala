@@ -21,7 +21,7 @@ import play.api.libs.json.Reads
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageId, ReadMessage, UnreadMessage}
 import uk.gov.hmrc.play.config.ServicesConfig
 
-case class ResourceActionLocation(service: String, url: String) {
+final case class ResourceActionLocation(service: String, url: String) {
   def toUrlUsing(servicesConfig: ServicesConfig) = {
     val baseUrl: String = servicesConfig.baseUrl(service)
 
@@ -29,7 +29,7 @@ case class ResourceActionLocation(service: String, url: String) {
   }
 }
 
-case class UpstreamMessageResponse(id: String,
+final case class UpstreamMessageResponse(id: String,
                                    renderUrl: ResourceActionLocation,
                                    markAsReadUrl: Option[ResourceActionLocation]) {
   def toMessageUsing(servicesConfig: ServicesConfig): Message = {
