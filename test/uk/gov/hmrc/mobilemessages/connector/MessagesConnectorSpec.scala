@@ -18,7 +18,6 @@ package uk.gov.hmrc.mobilemessages.connector
 
 import com.fasterxml.jackson.databind.JsonMappingException
 import com.github.tomakehurst.wiremock.client.WireMock
-import it.utils.WiremockServiceLocatorSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import play.api.libs.json.Json
@@ -26,6 +25,7 @@ import play.api.test.FakeApplication
 import play.twirl.api.Html
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilemessages.acceptance.microservices.{MessageRendererServiceMock, MessageServiceMock}
+import uk.gov.hmrc.mobilemessages.acceptance.utils.WiremockServiceLocatorSugar
 import uk.gov.hmrc.mobilemessages.connector.model.ResourceActionLocation
 import uk.gov.hmrc.mobilemessages.controllers.StubApplicationConfiguration
 import uk.gov.hmrc.mobilemessages.domain._
