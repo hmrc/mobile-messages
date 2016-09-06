@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilemessages.domain
 import play.api.Logger
 import uk.gov.hmrc.play.config.ServicesConfig
 
-case class RenderMessageLocation(service : String, url : String)
+final case class RenderMessageLocation(service : String, url : String)
 
 object RenderMessageLocation extends ServicesConfig {
   import play.api.libs.json.Json

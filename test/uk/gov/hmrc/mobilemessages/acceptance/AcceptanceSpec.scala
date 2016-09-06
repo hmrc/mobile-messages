@@ -17,7 +17,7 @@
 package uk.gov.hmrc.mobilemessages.acceptance
 
 import com.github.tomakehurst.wiremock.client.WireMock
-import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
+import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import play.api.test.{FakeApplication, FakeRequest}
@@ -36,7 +36,8 @@ trait AcceptanceSpec extends UnitSpec
   with WiremockServiceLocatorSugar
   with BeforeAndAfterAll
   with BeforeAndAfterEach
-  with IntegrationPatience {
+  with IntegrationPatience
+  with Eventually {
 
   override def beforeAll() = {
     super.beforeAll()

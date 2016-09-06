@@ -18,7 +18,7 @@ package uk.gov.hmrc.mobilemessages.domain
 
 import org.joda.time.{DateTime, LocalDate}
 
-case class MessageHeader(id: MessageId,
+final case class MessageHeader(id: MessageId,
                          subject: String,
                          validFrom: LocalDate,
                          readTime: Option[DateTime],

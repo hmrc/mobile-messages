@@ -29,7 +29,7 @@ import uk.gov.hmrc.play.http.hooks.HttpHook
 import scala.concurrent.Future
 
 
-case class AuthenticatedRequest[A](authority: Option[Authority], request: Request[A]) extends WrappedRequest(request)
+final case class AuthenticatedRequest[A](authority: Option[Authority], request: Request[A]) extends WrappedRequest(request)
 
 trait AccountAccessControl extends ActionBuilder[AuthenticatedRequest] with Results {
 

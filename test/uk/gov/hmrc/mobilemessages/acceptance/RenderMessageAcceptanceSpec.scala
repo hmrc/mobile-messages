@@ -18,7 +18,7 @@ package uk.gov.hmrc.mobilemessages.acceptance
 
 import org.apache.http.HttpStatus
 import play.api.libs.json.Json
-import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageResponse, ResourceActionLocation}
+import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 
 class RenderMessageAcceptanceSpec extends AcceptanceSpec {
@@ -84,7 +84,9 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
       bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(messageBody)
 
-      message.assertMarkAsReadHasBeenCalledFor(messageBody)
+      eventually {
+        message.assertMarkAsReadHasBeenCalledFor(messageBody)
+      }
     }
 
     "do not mark message as read if the markAsRead url is not present in the message body" in new Setup {
@@ -97,6 +99,7 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
       bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(messageBody)
 
+      waitUntilMarkAsReadIsCalled()
       message.assertMarkAsReadHasNeverBeenCalled()
     }
 
@@ -111,7 +114,9 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
       bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(messageBody)
 
-      message.assertMarkAsReadHasBeenCalledFor(messageBody)
+      eventually {
+        message.assertMarkAsReadHasBeenCalledFor(messageBody)
+      }
     }
 
     "does not mark message as read when the rendering fails" in new Setup {
@@ -127,10 +132,11 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
       status(readMessageResponse) shouldBe HttpStatus.SC_INTERNAL_SERVER_ERROR
 
+      waitUntilMarkAsReadIsCalled()
       message.assertMarkAsReadHasNeverBeenCalledFor(messageBody)
     }
 
-    "render legacy request - with url" in new Setup {
+    "render legacy request with url instead of messageId" in new Setup {
       private val messageBody = message.bodyToBeMarkedAsReadWith(id = messageId1)
       message.legacyMarkAsReadSucceedsFor(messageBody)
       saMessageRenderer.successfullyRenders(messageBody)
@@ -144,7 +150,9 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
       bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(messageBody)
 
-      message.assertMarkAsReadHasBeenCalledFor(messageBody)
+      eventually {
+        message.assertMarkAsReadHasBeenCalledFor(messageBody)
+      }
     }
 
     "render legacy request when message render returns 409" in new Setup {
@@ -161,7 +169,9 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
       bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(messageBody)
 
-      message.assertMarkAsReadHasBeenCalledFor(messageBody)
+      eventually {
+        message.assertMarkAsReadHasBeenCalledFor(messageBody)
+      }
     }
   }
 
@@ -172,6 +182,10 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
       message.getByIdReturns(messageBody)
       saMessageRenderer.successfullyRenders(messageBody)
       messageBody
+    }
+
+    def waitUntilMarkAsReadIsCalled(): Unit = {
+      Thread.sleep(100)
     }
   }
 }
