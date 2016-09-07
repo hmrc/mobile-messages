@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.mobilemessages.connector
 
-import play.api.{Logger, Play}
 import play.api.libs.json.JsValue
+import play.api.{Logger, Play}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilemessages.config.WSHttp
 import uk.gov.hmrc.mobilemessages.domain.Accounts
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
 import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.play.http.{ForbiddenException, UnauthorizedException, HeaderCarrier, HttpGet}
+import uk.gov.hmrc.play.http.{ForbiddenException, HeaderCarrier, HttpGet, UnauthorizedException}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -31,7 +31,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class NinoNotFoundOnAccount(message:String) extends uk.gov.hmrc.play.http.HttpException(message, 401)
 class AccountWithLowCL(message:String) extends uk.gov.hmrc.play.http.HttpException(message, 401)
 
-case class Authority(nino:Nino, cl:ConfidenceLevel, authId:String)
+final case class Authority(nino:Nino, cl:ConfidenceLevel, authId:String)
 
 trait AuthConnector {
   import uk.gov.hmrc.domain.{Nino, SaUtr}

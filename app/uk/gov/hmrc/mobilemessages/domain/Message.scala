@@ -16,26 +16,15 @@
 
 package uk.gov.hmrc.mobilemessages.domain
 
-import play.api.Logger
-import play.api.libs.json.Json
-import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator
-import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.time.DateTimeUtils
+final case class MessageId(value: String)
 
-class DomainFormatCheckSpec extends UnitSpec {
-
-  import DomainGenerator._
-
-  "MessageHeader" should {
-
-    implicit val dateTime = DateTimeUtils.now
-
-    "be set to READ" in {
-      Logger.debug("READ message header response : " + Json.prettyPrint(readMessageHeaderJson))
-    }
-    "be set to UNREAD" in {
-      Logger.debug("UNREAD message header response : " + Json.prettyPrint(unreadMessageHeaderJson))
-    }
-  }
+trait Message{
+  def id: MessageId
+  def renderUrl: String
 }
 
+final case class ReadMessage(override val id: MessageId, override val renderUrl: String)
+  extends Message
+
+final case class UnreadMessage(override val id: MessageId, override val renderUrl: String, markAsReadUrl: String)
+   extends Message

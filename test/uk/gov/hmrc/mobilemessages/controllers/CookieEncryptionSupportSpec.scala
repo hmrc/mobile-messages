@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.controller
+package uk.gov.hmrc.mobilemessages.controllers
 
 import org.scalatest.concurrent.ScalaFutures
-import play.api.libs.json.Json
-import play.api.mvc.Result
 import play.api.test.FakeApplication
-import play.api.test.Helpers._
 import uk.gov.hmrc.mobilemessages.connector.SessionCookieEncryptionSupport
-import uk.gov.hmrc.mobilemessages.domain.MessageHeader
-import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs
-import uk.gov.hmrc.play.test.{WithFakeApplication, UnitSpec}
+import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
 
 class CookieEncryptionSupportSpec extends UnitSpec with WithFakeApplication with ScalaFutures with StubApplicationConfiguration {
@@ -38,10 +33,10 @@ class CookieEncryptionSupportSpec extends UnitSpec with WithFakeApplication with
 
       val crypto = new SessionCookieEncryptionSupport {}
 
-      val data = Map(("some key1" , "some value1"),("some key2" , "some value2"))
+      val data = Map(("some key1", "some value1"), ("some key2", "some value2"))
       val result: (String, String) = crypto.withSession(data.toList: _ *)
-      val len=s"${crypto.mtdpSessionCookie}=".length
-      val encryptedResult = result._2.substring(len+1,result._2.length-1)
+      val len = s"${crypto.mtdpSessionCookie}=".length
+      val encryptedResult = result._2.substring(len + 1, result._2.length - 1)
 
       val decryptedMap: Map[String, String] = crypto.sessionOf(encryptedResult)
       decryptedMap shouldBe data
@@ -51,7 +46,7 @@ class CookieEncryptionSupportSpec extends UnitSpec with WithFakeApplication with
 
       val crypto = new SessionCookieEncryptionSupport {}
 
-      val data = Map(("some key1" , "some value1"),("some key2" , "some value2"))
+      val data = Map(("some key1", "some value1"), ("some key2", "some value2"))
       val result: (String, String) = crypto.withSession(data.toList: _ *)
 
       intercept[SecurityException] {

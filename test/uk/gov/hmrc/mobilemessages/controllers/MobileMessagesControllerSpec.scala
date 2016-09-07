@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.controller
+package uk.gov.hmrc.mobilemessages.controllers
 
 import org.scalatest.concurrent.ScalaFutures
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, Reads}
 import play.api.mvc.Result
 import play.api.test.FakeApplication
 import play.api.test.Helpers._
-import uk.gov.hmrc.mobilemessages.domain.MessageHeader
+import uk.gov.hmrc.mobilemessages.controllers.model.MessageHeaderResponseBody
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs
-import uk.gov.hmrc.play.test.{WithFakeApplication, UnitSpec}
+import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
+
+import scala.concurrent.Future
 
 
 class MobileMessagesReadControllerSpec extends UnitSpec with WithFakeApplication with ScalaFutures with StubApplicationConfiguration {
@@ -40,7 +42,8 @@ class MobileMessagesReadControllerSpec extends UnitSpec with WithFakeApplication
     }
 
     "read a valid html response from the read service when a journeyId is supplied" in new Success {
-      val result: Result = await(controller.read(journeyId)(readTimeRequest))
+      private val read: Future[Result] = controller.read(journeyId)(readTimeRequest)
+      val result: Result = await(read)
 
       status(result) shouldBe 200
       contentAsString(result) shouldBe html.toString()
@@ -57,7 +60,6 @@ class MobileMessagesReadControllerSpec extends UnitSpec with WithFakeApplication
 
       status(result) shouldBe 406
     }
-
   }
 
   "messages Sandbox read" should {
@@ -75,6 +77,8 @@ class MobileMessagesReadControllerSpec extends UnitSpec with WithFakeApplication
 
 class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication with ScalaFutures with StubApplicationConfiguration {
 
+  implicit val reads: Reads[MessageHeaderResponseBody] = Json.reads[MessageHeaderResponseBody]
+
   override lazy val fakeApplication = FakeApplication(additionalConfiguration = config)
 
   "messages Live" should {
@@ -84,7 +88,7 @@ class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication wit
       val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
 
       status(result) shouldBe 200
-      contentAsJson(result).as[Seq[MessageHeader]] shouldBe Seq.empty[MessageHeader]
+      contentAsJson(result).as[Seq[MessageHeaderResponseBody]] shouldBe Seq.empty[MessageHeaderResponseBody]
     }
 
 
@@ -93,7 +97,7 @@ class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication wit
       val result: Result = await(controller.getMessages(journeyId)(emptyRequestWithAcceptHeader))
 
       status(result) shouldBe 200
-      contentAsJson(result).as[Seq[MessageHeader]] shouldBe Seq.empty[MessageHeader]
+      contentAsJson(result).as[Seq[MessageHeaderResponseBody]] shouldBe Seq.empty[MessageHeaderResponseBody]
     }
 
     "return a list of messages successfully" in new SuccessWithMessages {
@@ -101,7 +105,7 @@ class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication wit
       val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
 
       status(result) shouldBe 200
-      contentAsJson(result).as[Seq[MessageHeader]] shouldBe messageHeaderList
+      contentAsJson(result).as[Seq[MessageHeaderResponseBody]] shouldBe getMessagesResponseItemsList
     }
 
     "return forbidden when authority record does not have correct confidence level" in new AuthWithLowCL {

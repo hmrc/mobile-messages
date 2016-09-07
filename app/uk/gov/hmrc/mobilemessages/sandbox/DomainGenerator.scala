@@ -17,9 +17,8 @@
 package uk.gov.hmrc.mobilemessages.sandbox
 
 import org.joda.time.DateTime
-import play.api.libs.json.Json
 import uk.gov.hmrc.domain.SaUtr
-import uk.gov.hmrc.mobilemessages.domain.MessageHeader
+import uk.gov.hmrc.mobilemessages.domain.{MessageHeader, MessageId}
 
 import scala.util.Random
 
@@ -36,28 +35,22 @@ object DomainGenerator {
   val nino = nextNino
   val saUtr = nextSaUtr
 
-  val readMessageId = "543e8c6001000001003e4a9e"
+  val readMessageId = MessageId("543e8c6001000001003e4a9e")
   def readMessageHeader(saUtr : SaUtr = nextSaUtr)(implicit dateTime:DateTime) = {
     MessageHeader(readMessageId,
       "You have a new tax statement",
       dateTime.minusDays(3).toLocalDate,
       Some(dateTime.minusDays(1)),
-      s"/message/sa/$saUtr/$readMessageId/read-time",
-      false)
+      sentInError = false)
   }
-  def readMessageHeaderJson(implicit dateTime:DateTime) = Json.toJson(readMessageHeader())
 
-  val unreadMessageId = "643e8c5f01000001003e4a8f"
+  val unreadMessageId = MessageId("643e8c5f01000001003e4a8f")
   def unreadMessageHeader(saUtr: SaUtr = nextSaUtr)(implicit dateTime:DateTime) = MessageHeader(unreadMessageId,
     "Stopping Self Assessment",
     dateTime.toLocalDate,
     None,
-    s"/message/sa/$saUtr/$unreadMessageId/read-time",
-    false)
-  def unreadMessageHeaderJson(implicit dateTime:DateTime) = Json.toJson(unreadMessageHeader())
-
+    sentInError = false)
 }
-
 
 //TODO add this to domain
 sealed class SaUtrGenerator(random: Random = new Random) {

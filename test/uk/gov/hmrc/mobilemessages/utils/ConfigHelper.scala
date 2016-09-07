@@ -14,21 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.domain
+package uk.gov.hmrc.mobilemessages.utils
 
-import play.api.Logger
-import uk.gov.hmrc.play.config.ServicesConfig
+object ConfigHelper {
 
-final case class RenderMessageLocation(service : String, url : String)
-
-object RenderMessageLocation extends ServicesConfig {
-  import play.api.libs.json.Json
-
-  implicit def toUrl(renderMessageLocation: RenderMessageLocation) : String = {
-    val url = s"${baseUrl(renderMessageLocation.service)}${renderMessageLocation.url}"
-    Logger.info(s"Sending request to $url")
-    url
+  def microserviceConfigPathFor(serviceName: String) = {
+    s"microservice.services.$serviceName"
   }
 
-  implicit val formats = Json.format[RenderMessageLocation]
 }
