@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.domain
+package uk.gov.hmrc.mobilemessages.utils
 
-import play.api.libs.json.Json
+import com.ning.http.util.Base64
+import uk.gov.hmrc.crypto.{AesCrypto, Encrypter, PlainText}
 
-case class ReadTimeUrl(url : String)
+class UnitTestCrypto extends AesCrypto {
+  override protected val encryptionKey: String = "hwdODU8hulPkolIryPRkVW=="
+}
 
-object ReadTimeUrl {
-  implicit val formats = Json.format[ReadTimeUrl]
+object EncryptionUtils {
+  def encrypted(value: String, encrypter: Encrypter = new UnitTestCrypto) = {
+    Base64.encode(encrypter.encrypt(PlainText(value)).value.getBytes)
+  }
 }

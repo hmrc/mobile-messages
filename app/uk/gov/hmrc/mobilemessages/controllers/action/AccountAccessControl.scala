@@ -19,8 +19,8 @@ package uk.gov.hmrc.mobilemessages.controllers.action
 import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc._
-import uk.gov.hmrc.api.controllers.{ErrorUnauthorizedLowCL, ErrorAcceptHeaderInvalid, HeaderValidator}
-import uk.gov.hmrc.mobilemessages.connector.{Authority, AccountWithLowCL, NinoNotFoundOnAccount, AuthConnector}
+import uk.gov.hmrc.api.controllers.{ErrorAcceptHeaderInvalid, ErrorUnauthorizedLowCL, HeaderValidator}
+import uk.gov.hmrc.mobilemessages.connector.{AccountWithLowCL, AuthConnector, Authority, NinoNotFoundOnAccount}
 import uk.gov.hmrc.mobilemessages.controllers.{ErrorUnauthorizedNoNino, ForbiddenAccess}
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
 import uk.gov.hmrc.play.http._
@@ -29,7 +29,7 @@ import uk.gov.hmrc.play.http.hooks.HttpHook
 import scala.concurrent.Future
 
 
-case class AuthenticatedRequest[A](authority: Option[Authority], request: Request[A]) extends WrappedRequest(request)
+final case class AuthenticatedRequest[A](authority: Option[Authority], request: Request[A]) extends WrappedRequest(request)
 
 trait AccountAccessControl extends ActionBuilder[AuthenticatedRequest] with Results {
 

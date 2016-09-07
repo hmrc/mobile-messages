@@ -19,12 +19,10 @@ package uk.gov.hmrc.mobilemessages.domain
 import play.api.libs.json.Json
 import uk.gov.hmrc.domain.{Nino, SaUtr}
 
-case class Accounts(nino: Option[Nino], saUtr: Option[SaUtr])
+final case class Accounts(nino: Option[Nino], saUtr: Option[SaUtr])
 
 object Accounts {
   implicit val accountsFmt = {
-    import Nino.{ninoRead, ninoWrite}
-    import SaUtr.{saUtrRead, saUtrWrite}
 
     Json.format[Accounts]
   }
