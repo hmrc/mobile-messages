@@ -23,14 +23,12 @@ Messages
     "subject" : "Your Tax Return",
     "validFrom" : "2013-06-04",
     "readTime": "2014-05-02T17:17:45.618Z",
-    "readTimeUrl" : "/message/sa/1234512345/543e8c6001000001003e4a9e/read-time",
     "sentInError": false
   },
   { //unread message
     "id" : "543e8c5f01000001003e4a9c",
     "subject" : "Your Tax Return",
     "validFrom" : "2013-06-04",
-    "readTimeUrl" : "/message/sa/1234512345/543e8c5f01000001003e4a9c/read-time",
     "sentInError": false
   }
 ]
