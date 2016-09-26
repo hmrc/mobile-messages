@@ -82,52 +82,6 @@ trait MessageConnector extends SessionCookieEncryptionSupport {
   def markAsRead(message: UnreadMessage)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
     http.POSTEmpty(message.markAsReadUrl)
   }
-
-  @deprecated("This needs to be here not to break existing users. Will be deleted at the end of the card.", "DC-541")
-  def readMessageContent(url: String)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
-    import RestFormats.dateTimeWrite
-
-    def post: Future[RenderMessageLocation] = {
-      Logger.info(s"messageBaseUrl $messageBaseUrl - url $url - Full URL is " + s"$messageBaseUrl$url")
-
-      http.POST[JsObject, RenderMessageLocation](s"$messageBaseUrl$url", Json.obj("readTime" -> now))
-        .recover {
-          case ex@uk.gov.hmrc.play.http.Upstream4xxResponse(message, 409, _, _) =>
-            Logger.info("409 response message " + message)
-            val index = message.indexOf("{")
-            if (index == -1) throw ex
-            Json.parse(message.substring(index, message.length - 1)).as[RenderMessageLocation]
-
-          case ex: Throwable =>
-            Logger.info("Unknown exception " + ex)
-            throw ex
-        }
-    }
-
-    def render(renderMessageLocation:RenderMessageLocation, hc:HeaderCarrier): Future[Html] = {
-      val authToken: Authorization = hc.authorization.getOrElse(throw new IllegalArgumentException("Failed to find auth header!"))
-      val userId = auth.getOrElse(throw new IllegalArgumentException("Failed to find the user!"))
-
-      val keys = Seq(
-        SessionKeys.sessionId -> SessionId(s"session-${UUID.randomUUID}").value,
-        SessionKeys.authProvider -> provider,
-        SessionKeys.name -> id,
-        SessionKeys.authToken -> URLEncoder.encode(authToken.value, CharEncoding.UTF_8),
-        SessionKeys.userId -> userId.authId,
-        SessionKeys.token -> token,
-        SessionKeys.lastRequestTimestamp -> now.getMillis.toString)
-
-      val session: (String, String) = withSession(keys: _ *)
-      implicit val updatedHc = hc.withExtraHeaders(session)
-      http.GET[Html](renderMessageLocation)
-    }
-
-    for {
-      renderMessageLocation <- post
-      resp <- render(renderMessageLocation, hc)
-    } yield(resp)
-
-  }
 }
 
 object MessageConnector extends MessageConnector with ServicesConfig {

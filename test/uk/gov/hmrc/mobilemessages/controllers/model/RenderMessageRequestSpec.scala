@@ -33,22 +33,14 @@ class RenderMessageRequestSpec extends UnitSpec {
 
       val messageId = "messageId43573947"
 
-      RenderMessageRequest(encrypted(messageId, crypto)).toMessageIdOrUrlUsing(crypto) shouldBe Right(MessageId(messageId))
-    }
-  }
-
-  "legacy url" should {
-    "with protocol should be handled correctly" in {
-      val legacyUrl = "/message/sa/29384098232/9210381928/read-time"
-
-      RenderMessageRequest(legacyUrl).toMessageIdOrUrlUsing(crypto) shouldBe Left(legacyUrl)
+      RenderMessageRequest(encrypted(messageId, crypto)).toMessageIdUsing(crypto) shouldBe MessageId(messageId)
     }
   }
 
   "invalid data" should {
     "cause security exception" in {
       intercept[SecurityException] {
-        RenderMessageRequest("invalidDataThatIsNeitherUrlNorEncrypted").toMessageIdOrUrlUsing(crypto)
+        RenderMessageRequest("invalidDataThatIsNeitherMessageIdNorEncrypted").toMessageIdUsing(crypto)
       }
     }
   }
