@@ -25,18 +25,6 @@ final case class RenderMessageRequest(url: String) {
   def toMessageIdUsing(decrypter: Decrypter): MessageId = {
     MessageId(decrypter.decrypt(Crypted.fromBase64(url)).value)
   }
-
-  private def readTimePathIsStoredIn(url: String): Boolean = {
-    url.endsWith("read-time")
-  }
-
-  def toMessageIdOrUrlUsing(decrypter: Decrypter): Either[String, MessageId] = {
-    if (readTimePathIsStoredIn(url)) {
-      Left(url)
-    } else {
-      Right(MessageId(decrypter.decrypt(Crypted.fromBase64(url)).value))
-    }
-  }
 }
 
 object RenderMessageRequest {

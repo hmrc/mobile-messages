@@ -12,11 +12,11 @@ Read Message
 
 *  **Request body**
 
-    The URL provided in the request body can be obtained from the [/messages response](docs/messages.md) ```readTimeUrl``` value
+    The URL provided in the request body can be obtained from the [/messages response](docs/messages.md) ```id``` value
 
 ```json
     {
-      "url":  "/message/sa/1234512345/543e8c5f01000001003e4a9c/read-time"
+      "url":  "543e8c5f01000001003e4a9c"
     }
 ```
 
