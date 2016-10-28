@@ -18,17 +18,18 @@ package uk.gov.hmrc.mobilemessages.acceptance.microservices
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import org.joda.time.{DateTime, LocalDate}
-import play.api.Play
+import org.mockito.internal.matchers.Any
 import play.api.http.HeaderNames
-import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageResponse, ResourceActionLocation}
+import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageResponse}
+import uk.gov.hmrc.mobilemessages.controllers.StubApplicationConfiguration
 import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.mobilemessages.utils.ConfigHelper.microserviceConfigPathFor
 
-class MessageServiceMock(authToken: String) {
+class MessageServiceMock(authToken: String) extends StubApplicationConfiguration {
 
   def fullUrlFor(serviceName: String, path: String) = {
-    val port = Play.current.configuration.getString(s"${microserviceConfigPathFor(serviceName)}.port").get
-    val host = Play.current.configuration.getString(s"${microserviceConfigPathFor(serviceName)}.host").get
+    val port = config.get(s"${microserviceConfigPathFor(serviceName)}.port").get
+    val host = config.get(s"${microserviceConfigPathFor(serviceName)}.host").get
     s"http://$host:$port$path"
   }
 

@@ -50,7 +50,7 @@ trait AcceptanceSpec extends UnitSpec
 
   override def afterAll() = {
     super.afterAll()
-    Play.stop()
+    Play.stop(app)
     stopMockServer()
     saMessageRenderer.stop()
     atsMessageRenderer.stop()
