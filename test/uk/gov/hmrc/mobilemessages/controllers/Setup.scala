@@ -34,8 +34,10 @@ import uk.gov.hmrc.mobilemessages.domain.{Accounts, Message, MessageHeader, Mess
 import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 import uk.gov.hmrc.mobilemessages.utils.UnitTestCrypto
+import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
+import uk.gov.hmrc.play.config.RunMode
 import uk.gov.hmrc.play.http._
 import uk.gov.hmrc.time.DateTimeUtils
 
@@ -73,7 +75,7 @@ class TestMessageConnector(result: Seq[MessageHeader], html: Html, message: Mess
   override val id: String = "id"
 }
 
-class TestMobileMessagesService(testAuthConnector: TestAuthConnector, mobileMessageConnector: MessageConnector) extends LiveMobileMessagesService {
+class TestMobileMessagesService(testAuthConnector: TestAuthConnector, mobileMessageConnector: MessageConnector, testAuditConnector: AuditConnector) extends LiveMobileMessagesService {
   var saveDetails: Map[String, String] = Map.empty
 
   override def audit(service: String, details: Map[String, String])(implicit hc: HeaderCarrier, ec: ExecutionContext) = {
@@ -83,7 +85,7 @@ class TestMobileMessagesService(testAuthConnector: TestAuthConnector, mobileMess
 
   override val authConnector = testAuthConnector
   override val messageConnector = mobileMessageConnector
-  override val auditConnector: AuditConnector = MicroserviceAuditConnector
+  override val auditConnector: AuditConnector = testAuditConnector
 }
 
 class TestAccessCheck(testAuthConnector: TestAuthConnector) extends AccountAccessControl {
@@ -123,6 +125,11 @@ trait Setup {
     messageHeader.sentInError
   )
 
+  object MicroserviceAuditConnectorTest extends AuditConnector with RunMode {
+    override def auditingConfig: AuditingConfig = AuditingConfig(None, false, false)
+  }
+
+
   val messageServiceHeadersResponse = Seq(
     message.headerWith(id = "id1"),
     message.headerWith(id = "id2"),
@@ -149,7 +156,7 @@ trait Setup {
   val messageConnector = new TestMessageConnector(Seq.empty[MessageHeader], html, sampleMessage)
   val testAccess = new TestAccessCheck(authConnector)
   val testCompositeAction = new TestAccountAccessControlWithAccept(testAccess)
-  val testMMService = new TestMobileMessagesService(authConnector, messageConnector)
+  val testMMService = new TestMobileMessagesService(authConnector, messageConnector, MicroserviceAuditConnectorTest)
 
   object sandbox extends SandboxMobileMessagesService {
     implicit val dateTime = now
@@ -173,7 +180,7 @@ trait Success extends Setup {
 
 trait SuccessWithMessages extends Setup {
 
-  override val testMMService = new TestMobileMessagesService(authConnector, new TestMessageConnector(messageServiceHeadersResponse, html, sampleMessage))
+  override val testMMService = new TestMobileMessagesService(authConnector, new TestMessageConnector(messageServiceHeadersResponse, html, sampleMessage), MicroserviceAuditConnectorTest)
 
   val controller = new MobileMessagesController {
     override val service: MobileMessagesService = testMMService

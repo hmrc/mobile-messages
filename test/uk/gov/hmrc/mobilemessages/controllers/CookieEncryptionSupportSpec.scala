@@ -22,10 +22,7 @@ import uk.gov.hmrc.mobilemessages.connector.SessionCookieEncryptionSupport
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
 
-class CookieEncryptionSupportSpec extends UnitSpec with WithFakeApplication with ScalaFutures with StubApplicationConfiguration {
-
-  override lazy val fakeApplication = FakeApplication(additionalConfiguration = config)
-
+class CookieEncryptionSupportSpec extends UnitSpec with ScalaFutures with StubApplicationConfiguration {
 
   "encrypt/decrypt cookie" should {
 

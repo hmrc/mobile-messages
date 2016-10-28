@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilemessages.acceptance
 import org.joda.time.{DateTime, LocalDate}
 import play.api.libs.json.Json
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
-class GetMessagesAcceptanceSpec extends AcceptanceSpec{
+class GetMessagesAcceptanceSpec extends AcceptanceSpec {
 
   "microservice get messages" should {
 

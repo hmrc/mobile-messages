@@ -50,7 +50,7 @@ class PlatformIntegrationSpec extends UnitSpec with MockitoSugar with ScalaFutur
   }
 
   trait Setup {
-    val documentationController = new DocumentationController {}
+    val documentationController = DocumentationController
     val request = FakeRequest()
   }
 
