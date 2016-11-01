@@ -84,7 +84,7 @@ object MicroserviceGlobal extends DefaultMicroserviceGlobal with RunMode with Se
 
   val cacheFilter = CacheControlFilter.fromConfig(CacheControlFilter.configKey)
 
-  override val microserviceFilters = defaultMicroserviceFilters.filterNot( _.isInstanceOf[NoCacheFilter.type] ) :+ cacheFilter
+  override def microserviceFilters = defaultMicroserviceFilters.filterNot( _.isInstanceOf[NoCacheFilter.type] ) :+ cacheFilter
 
   override implicit val hc: HeaderCarrier = HeaderCarrier()
 
