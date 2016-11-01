@@ -19,15 +19,18 @@ package uk.gov.hmrc.mobilemessages.controllers
 import org.scalatest.concurrent.ScalaFutures
 import play.api.libs.json.{Json, Reads}
 import play.api.mvc.Result
+import play.api.test.FakeApplication
 import play.api.test.Helpers._
 import uk.gov.hmrc.mobilemessages.controllers.model.MessageHeaderResponseBody
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
 import scala.concurrent.Future
 
 
-class MobileMessagesReadControllerSpec extends UnitSpec with ScalaFutures with StubApplicationConfiguration {
+class MobileMessagesReadControllerSpec extends UnitSpec with WithFakeApplication with ScalaFutures with StubApplicationConfiguration {
+
+  override lazy val fakeApplication = FakeApplication(additionalConfiguration = config)
 
   "messages Live read" should {
 
@@ -72,9 +75,11 @@ class MobileMessagesReadControllerSpec extends UnitSpec with ScalaFutures with S
 
 }
 
-class MobileMessagesControllerSpec extends UnitSpec with ScalaFutures with StubApplicationConfiguration {
+class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication with ScalaFutures with StubApplicationConfiguration {
 
   implicit val reads: Reads[MessageHeaderResponseBody] = Json.reads[MessageHeaderResponseBody]
+
+  override lazy val fakeApplication = FakeApplication(additionalConfiguration = config)
 
   "messages Live" should {
 

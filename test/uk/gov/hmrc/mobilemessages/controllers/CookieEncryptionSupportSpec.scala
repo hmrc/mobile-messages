@@ -17,12 +17,10 @@
 package uk.gov.hmrc.mobilemessages.controllers
 
 import org.scalatest.concurrent.ScalaFutures
-import play.api.test.FakeApplication
 import uk.gov.hmrc.mobilemessages.connector.SessionCookieEncryptionSupport
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
-
-class CookieEncryptionSupportSpec extends UnitSpec with ScalaFutures with StubApplicationConfiguration {
+class CookieEncryptionSupportSpec extends UnitSpec with ScalaFutures with StubApplicationConfiguration with WithFakeApplication {
 
   "encrypt/decrypt cookie" should {
 
