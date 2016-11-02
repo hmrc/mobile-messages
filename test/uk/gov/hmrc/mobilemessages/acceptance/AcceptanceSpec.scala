@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilemessages.acceptance
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import com.github.tomakehurst.wiremock.client.WireMock
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.mock.MockitoSugar
@@ -39,6 +41,10 @@ trait AcceptanceSpec extends UnitSpec
   with IntegrationPatience
   with Eventually {
 
+
+  implicit val system = ActorSystem()
+  implicit val materializer = ActorMaterializer()
+
   override def beforeAll() = {
     super.beforeAll()
     Play.start(app)
@@ -50,7 +56,7 @@ trait AcceptanceSpec extends UnitSpec
 
   override def afterAll() = {
     super.afterAll()
-    Play.stop()
+    Play.stop(app)
     stopMockServer()
     saMessageRenderer.stop()
     atsMessageRenderer.stop()
