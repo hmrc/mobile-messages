@@ -14,37 +14,7 @@
     "versions":[
       {
         "version":"1.0",
-        "status":"PUBLISHED",
-        "endpoints":[
-          {
-            "uriPattern":"/messages",
-            "endpointName":"Get Messages",
-            "method":"GET",
-            "authType":"USER",
-            "throttlingTier":"UNLIMITED",
-            "scope":"read:messages",
-            "queryParameters": [
-              {
-                "name": "journeyId",
-                "required": false
-              }
-            ]
-          },
-          {
-            "uriPattern":"/messages/read",
-            "endpointName":"Read Message",
-            "method":"POST",
-            "authType":"USER",
-            "throttlingTier":"UNLIMITED",
-            "scope":"read:messages",
-            "queryParameters": [
-              {
-                "name": "journeyId",
-                "required": false
-              }
-            ]
-          }
-        ]
+        "status":"PUBLISHED"
       }
     ]
   }
