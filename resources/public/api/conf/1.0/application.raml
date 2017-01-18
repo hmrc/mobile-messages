@@ -1,0 +1,62 @@
+#%RAML 1.0
+---
+
+title: Mobile Messages
+version: 1.0
+protocols: [ HTTPS ]
+baseUri: https://api.service.hmrc.gov.uk/
+
+documentation:
+ - title: Overview
+   content: !include docs/overview.md
+ - title: Versioning
+   content: !include http://api-documentation-raml-frontend.service/api-documentation/assets/common/docs/versioning.md
+ - title: Errors
+   content: !include http://api-documentation-raml-frontend.service/api-documentation/assets/common/docs/errors.md
+
+mediaType: [ application/json, application/hal+json ]
+
+uses:
+  sec: http://api-documentation-raml-frontend.service/api-documentation/assets/common/modules/securitySchemes.raml
+  headers: http://api-documentation-raml-frontend.service/api-documentation/assets/common/modules/headers.raml
+  annotations: http://api-documentation-raml-frontend.service/api-documentation/assets/common/modules/annotations.raml
+  types: http://api-documentation-raml-frontend.service/api-documentation/assets/common/modules/types.raml
+
+/mobile-messages:
+  /messages:
+    get:
+      displayName: Get messages
+      description: This endpoint retrieves the messages.
+      is: [headers.acceptHeader]
+      (annotations.scope): "read:messages"
+      securedBy: [ sec.oauth_2_0: { scopes: [ "read:messages" ] } ]
+      queryParameters:
+        journeyId:
+          type: string
+          required: false
+      responses:
+        200:
+          body:
+            application/json:
+              examples:
+                example-1:
+                  value: !include examples/get-messages-example-1.json
+    /read:
+      post:
+        displayName: Read message
+        description: This endpoint retrieves the message.
+        is: [headers.acceptHeader]
+        (annotations.scope): "read:messages"
+        securedBy: [ sec.oauth_2_0: { scopes: [ "read:messages" ] } ]
+        queryParameters:
+          journeyId:
+            type: string
+            required: false
+        responses:
+          200:
+            body:
+              application/json:
+                examples:
+                  example-1:
+                    value: !include examples/read-message-example-1.json
+
