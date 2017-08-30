@@ -3,22 +3,7 @@ import uk.gov.hmrc.SbtAutoBuildPlugin
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
 import uk.gov.hmrc.versioning.SbtGitVersioning
 
-object MicroServiceBuild extends Build with MicroService {
-
-  import play.sbt.routes.RoutesKeys._
-
-  val appName = "mobile-messages"
-
-  override lazy val plugins: Seq[Plugins] = Seq(
-    SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin
-  )
-
-  override lazy val appDependencies: Seq[ModuleID] = AppDependencies()
-  override lazy val playSettings : Seq[Setting[_]] = Seq(routesImport ++= Seq("uk.gov.hmrc.domain._", "uk.gov.hmrc.mobilemessages.binder.Binders._"))
-
-}
-
-private object AppDependencies {
+object AppDependencies {
   import play.sbt.PlayImport._
   import play.core.PlayVersion
 
