@@ -22,26 +22,20 @@ import java.util.UUID
 import org.apache.commons.codec.CharEncoding
 import org.joda.time.DateTime
 import play.api.Play._
-import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageResponse, UpstreamMessageHeadersResponse}
+import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.logging.{Authorization, SessionId}
+import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageHeadersResponse, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
 import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.play.http.logging.{Authorization, SessionId}
-
-import play.api.Logger
-import uk.gov.hmrc.mobilemessages.domain.RenderMessageLocation
-import RenderMessageLocation.{formats, toUrl}
-import uk.gov.hmrc.play.controllers.RestFormats
-import play.api.libs.json.{JsObject, Json}
 
 
-trait MessageConnector extends SessionCookieEncryptionSupport {
+trait MessageConnector extends SessionCookieEncryptionSupport with HttpErrorFunctions {
 
   import play.twirl.api.Html
-  import uk.gov.hmrc.play.http._
 
   import scala.concurrent.{ExecutionContext, Future}
 
-  def http: HttpGet with HttpPost
+  def http: CoreGet with CorePost
 
   val messageBaseUrl: String
   val provider: String
@@ -76,11 +70,11 @@ trait MessageConnector extends SessionCookieEncryptionSupport {
 
     val session: (String, String) = withSession(keys: _ *)
     implicit val updatedHc = hc.withExtraHeaders(session)
-    http.GET[Html](message.renderUrl)
+    http.GET[HttpResponse](message.renderUrl).map(response => Html(response.body))
   }
 
   def markAsRead(message: UnreadMessage)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
-    http.POSTEmpty(message.markAsReadUrl)
+    http.POSTEmpty[HttpResponse](message.markAsReadUrl)
   }
 }
 
