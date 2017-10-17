@@ -17,6 +17,7 @@
 package uk.gov.hmrc.mobilemessages.controllers
 
 import uk.gov.hmrc.api.controllers.ErrorResponse
+import uk.gov.hmrc.http.{ForbiddenException, HeaderCarrier, NotFoundException, UnauthorizedException}
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -33,7 +34,6 @@ trait ErrorHandling {
   import play.api.libs.json.Json
   import play.api.{Logger, mvc}
   import uk.gov.hmrc.api.controllers.{ErrorInternalServerError, ErrorNotFound, ErrorUnauthorizedLowCL}
-  import uk.gov.hmrc.play.http.{ForbiddenException, HeaderCarrier, NotFoundException, UnauthorizedException}
 
   implicit val ec : ExecutionContext
 

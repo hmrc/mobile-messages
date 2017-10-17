@@ -25,8 +25,8 @@ import play.api.test.Helpers._
 import play.twirl.api.Html
 import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 import uk.gov.hmrc.domain.{Nino, SaUtr}
+import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilemessages.acceptance.microservices.MessageServiceMock
-import uk.gov.hmrc.mobilemessages.config.MicroserviceAuditConnector
 import uk.gov.hmrc.mobilemessages.connector.{AuthConnector, Authority, MessageConnector}
 import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControl, AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck}
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
@@ -38,7 +38,6 @@ import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
 import uk.gov.hmrc.play.config.RunMode
-import uk.gov.hmrc.play.http._
 import uk.gov.hmrc.time.DateTimeUtils
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -49,7 +48,7 @@ class TestAuthConnector(nino: Option[Nino], saUtr: Option[SaUtr]) extends AuthCo
 
   override def serviceConfidenceLevel: ConfidenceLevel = ???
 
-  override def http: HttpGet = ???
+  override def http: CoreGet = ???
 
   override def accounts()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Accounts] = Future(Accounts(nino, saUtr))
 
@@ -58,7 +57,7 @@ class TestAuthConnector(nino: Option[Nino], saUtr: Option[SaUtr]) extends AuthCo
 
 class TestMessageConnector(result: Seq[MessageHeader], html: Html, message: Message) extends MessageConnector {
 
-  override def http: HttpGet with HttpPost = ???
+  override def http: CoreGet with CorePost = ???
 
   override def now: DateTime = ???
 
@@ -126,7 +125,7 @@ trait Setup {
   )
 
   object MicroserviceAuditConnectorTest extends AuditConnector with RunMode {
-    override def auditingConfig: AuditingConfig = AuditingConfig(None, false, false)
+    override def auditingConfig: AuditingConfig = AuditingConfig(None, enabled = false)
   }
 
 

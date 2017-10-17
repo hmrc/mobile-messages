@@ -17,6 +17,7 @@
 package uk.gov.hmrc.mobilemessages.connector.model
 
 import org.joda.time.{DateTime, LocalDate}
+import uk.gov.hmrc.http.controllers.RestFormats
 import uk.gov.hmrc.mobilemessages.domain.{MessageHeader, MessageId}
 
 final case class UpstreamMessageHeadersResponse(items: Seq[MessageHeader])
@@ -25,7 +26,6 @@ object UpstreamMessageHeadersResponse {
 
   import play.api.libs.functional.syntax._
   import play.api.libs.json.{Json, Reads, _}
-  import uk.gov.hmrc.play.controllers.RestFormats
 
   private implicit val dateTimeForm = RestFormats.dateTimeFormats
 
