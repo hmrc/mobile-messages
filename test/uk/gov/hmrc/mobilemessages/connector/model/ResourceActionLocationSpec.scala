@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.mobilemessages.connector.model
 
-import org.mockito.Mockito
 import org.mockito.Mockito.when
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.test.UnitSpec
 

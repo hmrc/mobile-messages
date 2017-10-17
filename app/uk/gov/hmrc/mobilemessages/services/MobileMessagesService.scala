@@ -21,13 +21,13 @@ import play.twirl.api.Html
 import uk.gov.hmrc.api.sandbox.FileResource
 import uk.gov.hmrc.api.service.Auditor
 import uk.gov.hmrc.domain.SaUtr
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilemessages.config.MicroserviceAuditConnector
 import uk.gov.hmrc.mobilemessages.connector._
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
 import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator._
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.http.HeaderCarrier
 import uk.gov.hmrc.time.DateTimeUtils
 
 import scala.concurrent.{ExecutionContext, Future}

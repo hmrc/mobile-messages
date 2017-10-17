@@ -26,7 +26,7 @@ import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControlCheckA
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
-import uk.gov.hmrc.play.http.HeaderCarrier
+import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -40,7 +40,7 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
 
   final def getMessages(journeyId: Option[String] = None) = accessControl.validateAccept(acceptHeaderValidationRules).async {
     implicit authenticated =>
-      implicit val hc = HeaderCarrier.fromHeadersAndSession(authenticated.request.headers, None)
+      implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(authenticated.request.headers, None)
       errorWrapper(service.readAndUnreadMessages().map((messageHeaders: Seq[MessageHeader]) =>
         Ok(Json.toJson(MessageHeaderResponseBody.fromAll(messageHeaders)(crypto)))
       ))
@@ -48,7 +48,7 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
 
   final def read(journeyId: Option[String] = None) = accessControl.validateAccept(acceptHeaderValidationRules).async(BodyParsers.parse.json) {
     implicit authenticated =>
-      implicit val hc = HeaderCarrier.fromHeadersAndSession(authenticated.request.headers, None)
+      implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(authenticated.request.headers, None)
 
       authenticated.request.body.validate[RenderMessageRequest].fold(
         errors => {

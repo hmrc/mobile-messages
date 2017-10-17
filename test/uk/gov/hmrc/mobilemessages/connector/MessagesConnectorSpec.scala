@@ -24,14 +24,14 @@ import play.api.libs.json.Json
 import play.api.test.FakeApplication
 import play.twirl.api.Html
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.http.logging.Authorization
+import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse, Upstream5xxResponse}
 import uk.gov.hmrc.mobilemessages.acceptance.microservices.{MessageRendererServiceMock, MessageServiceMock}
 import uk.gov.hmrc.mobilemessages.acceptance.utils.WiremockServiceLocatorSugar
 import uk.gov.hmrc.mobilemessages.connector.model.ResourceActionLocation
 import uk.gov.hmrc.mobilemessages.controllers.StubApplicationConfiguration
 import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
-import uk.gov.hmrc.play.http._
-import uk.gov.hmrc.play.http.logging.Authorization
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
 import scala.concurrent.ExecutionContext.Implicits.global
