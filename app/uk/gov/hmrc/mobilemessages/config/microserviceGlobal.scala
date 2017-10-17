@@ -28,15 +28,13 @@ import uk.gov.hmrc.api.config.{ServiceLocatorConfig, ServiceLocatorRegistration}
 import uk.gov.hmrc.api.connector.ServiceLocatorConnector
 import uk.gov.hmrc.api.controllers.{ErrorGenericBadRequest, ErrorInternalServerError, ErrorUnauthorized, _}
 import uk.gov.hmrc.api.filters.CacheControlFilter
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilemessages.controllers.ErrorNinoInvalid
-import uk.gov.hmrc.play.audit.filters.AuditFilter
 import uk.gov.hmrc.play.auth.controllers.AuthParamsControllerConfig
 import uk.gov.hmrc.play.auth.microservice.filters.AuthorisationFilter
 import uk.gov.hmrc.play.config.{AppName, ControllerConfig, RunMode}
-import uk.gov.hmrc.play.filters.{MicroserviceFilterSupport, NoCacheFilter}
-import uk.gov.hmrc.play.http.HeaderCarrier
-import uk.gov.hmrc.play.http.logging.filters.LoggingFilter
 import uk.gov.hmrc.play.microservice.bootstrap.DefaultMicroserviceGlobal
+import uk.gov.hmrc.play.microservice.filters.{AuditFilter, LoggingFilter, MicroserviceFilterSupport, NoCacheFilter}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
