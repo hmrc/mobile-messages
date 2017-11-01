@@ -9,7 +9,7 @@ object AppDependencies {
   private val domainVersion = "5.0.0"
   private val playHmrcApiVersion = "2.0.0"
 
-  private val reactiveCircuitBreaker = "3.1.0"
+  private val reactiveCircuitBreaker = "3.2.0"
   private val emailAddress = "2.1.0"
 
   private val crypto = "4.5.0"
