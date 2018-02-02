@@ -27,9 +27,11 @@ import uk.gov.hmrc.play.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
 
+import uk.gov.hmrc.http.HttpException
 
-class NinoNotFoundOnAccount(message:String) extends uk.gov.hmrc.http.HttpException(message, 401)
-class AccountWithLowCL(message:String) extends uk.gov.hmrc.http.HttpException(message, 401)
+
+class NinoNotFoundOnAccount(message:String) extends HttpException(message, 401)
+class AccountWithLowCL(message:String) extends HttpException(message, 401)
 
 final case class Authority(nino:Nino, cl:ConfidenceLevel, authId:String)
 
