@@ -21,8 +21,10 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import play.api.libs.json.Json
+import play.api.libs.json.Json.parse
 import play.api.test.FakeApplication
 import play.twirl.api.Html
+import uk.gov.hmrc.auth.core.ConfidenceLevel
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse, Upstream5xxResponse}
@@ -30,8 +32,8 @@ import uk.gov.hmrc.mobilemessages.acceptance.microservices.{MessageRendererServi
 import uk.gov.hmrc.mobilemessages.acceptance.utils.WiremockServiceLocatorSugar
 import uk.gov.hmrc.mobilemessages.connector.model.ResourceActionLocation
 import uk.gov.hmrc.mobilemessages.controllers.StubApplicationConfiguration
+import uk.gov.hmrc.mobilemessages.controllers.action.Authority
 import uk.gov.hmrc.mobilemessages.domain._
-import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -99,12 +101,12 @@ class MessagesConnectorSpec
 
     lazy val successfulEmptyResponse = HttpResponse(200, responseString = Some(""))
 
-    lazy val successfulEmptyMessageHeadersResposne = HttpResponse(200, Some(Json.parse(message.jsonRepresentationOf(Seq.empty))))
+    lazy val successfulEmptyMessageHeadersResposne = HttpResponse(200, Some(parse(message.jsonRepresentationOf(Seq.empty))))
 
     val messageId = MessageId("id123")
     lazy val successfulSingleMessageResponse = HttpResponse(
       200,
-      Some(Json.parse(
+      Some(parse(
         message.jsonRepresentationOf(
           message.bodyWith(id = "id123")
         )))

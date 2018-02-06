@@ -17,7 +17,7 @@
 package uk.gov.hmrc.mobilemessages.acceptance
 
 import org.apache.http.HttpStatus
-import play.api.libs.json.Json
+import play.api.libs.json.Json.parse
 import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 
@@ -33,7 +33,7 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
       // when
       val readMessageResponse = messageController.read(None)(
-        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
+        mobileMessagesGetRequest.withBody(parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
       ).futureValue
 
       bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(messageBody)
@@ -50,7 +50,7 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
       // when
       val readMessageResponse = messageController.read(None)(
-        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
+        mobileMessagesGetRequest.withBody(parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
       ).futureValue
 
       bodyOf(readMessageResponse) shouldBe atsMessageRenderer.rendered(messageBody)
@@ -67,7 +67,7 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
       // when
       val readMessageResponse = messageController.read(None)(
-        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
+        mobileMessagesGetRequest.withBody(parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
       ).futureValue
 
       bodyOf(readMessageResponse) shouldBe secureMessageRenderer.rendered(messageBody)
@@ -79,7 +79,7 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
       // when
       val readMessageResponse = messageController.read(None)(
-        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
+        mobileMessagesGetRequest.withBody(parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
       ).futureValue
 
       bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(messageBody)
@@ -94,7 +94,7 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
       // when
       val readMessageResponse = messageController.read(None)(
-        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
+        mobileMessagesGetRequest.withBody(parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
       ).futureValue
 
       bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(messageBody)
@@ -109,7 +109,7 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
       // when
       val readMessageResponse = messageController.read(None)(
-        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
+        mobileMessagesGetRequest.withBody(parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
       ).futureValue
 
       bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(messageBody)
@@ -127,7 +127,7 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
       // when
       val readMessageResponse = messageController.read(None)(
-        mobileMessagesGetRequest.withBody(Json.parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
+        mobileMessagesGetRequest.withBody(parse(s""" { "url": "${encrypted(messageBody.id, configBasedCrypto)}" } """))
       ).futureValue
 
       status(readMessageResponse) shouldBe HttpStatus.SC_INTERNAL_SERVER_ERROR
@@ -139,7 +139,9 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
 
   trait Setup {
     val messageId1 = "messageId90342"
-    auth.containsUserWith(utr)
+
+    auth.authRecordExists()
+
     def successfulSetupFor(messageBody: UpstreamMessageResponse): UpstreamMessageResponse = {
       message.getByIdReturns(messageBody)
       saMessageRenderer.successfullyRenders(messageBody)
