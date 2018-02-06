@@ -17,31 +17,18 @@
 package uk.gov.hmrc.mobilemessages.acceptance.microservices
 
 import com.github.tomakehurst.wiremock.client.WireMock._
-import play.api.libs.json.Json
-import uk.gov.hmrc.domain.SaUtr
+import play.api.libs.json.Json.obj
+import uk.gov.hmrc.auth.core.ConfidenceLevel
+import uk.gov.hmrc.auth.core.ConfidenceLevel.L200
+import uk.gov.hmrc.domain.Nino
 
 class AuthServiceMock {
   def token = "authToken9349872"
 
-  def containsUserWith(utr: SaUtr) = {
-    givenThat(get(urlMatching("/auth/authority*"))
-      .willReturn(aResponse().withStatus(200).withBody(
-        Json.parse(
-          s"""
-             | {
-             |    "confidenceLevel": 500,
-             |    "uri": "testUri",
-             |    "accounts": {
-             |        "sa": {
-             |            "utr": "$utr"
-             |         },
-             |         "paye": {
-             |            "nino": "BC233445B"
-             |         }
-             |     }
-             | }""".
-            stripMargin
-        )
-          .toString())))
+  def authRecordExists(nino: Nino = Nino("BC233445B"), confidenceLevel: ConfidenceLevel = L200, uri: String = "uri"): Unit = {
+    stubFor(post(urlEqualTo("/auth/authorise")).withRequestBody(equalToJson(
+      """{ "authorise": [], "retrieve": ["nino","confidenceLevel","userDetailsUri"] }""".stripMargin, true, false)).willReturn(
+        aResponse().withStatus(200).withBody(obj(
+          "confidenceLevel" -> confidenceLevel.level, "nino" -> nino.nino, "userDetailsUri" -> uri).toString)))
   }
 }

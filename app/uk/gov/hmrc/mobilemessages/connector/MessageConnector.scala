@@ -16,15 +16,16 @@
 
 package uk.gov.hmrc.mobilemessages.connector
 
-import java.net.URLEncoder
-import java.util.UUID
+import java.net.URLEncoder.encode
+import java.util.UUID.randomUUID
 
-import org.apache.commons.codec.CharEncoding
+import org.apache.commons.codec.CharEncoding.UTF_8
 import org.joda.time.DateTime
 import play.api.Play._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.logging.{Authorization, SessionId}
 import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageHeadersResponse, UpstreamMessageResponse}
+import uk.gov.hmrc.mobilemessages.controllers.action.Authority
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
 import uk.gov.hmrc.play.config.ServicesConfig
 
@@ -60,10 +61,10 @@ trait MessageConnector extends SessionCookieEncryptionSupport with HttpErrorFunc
 
     // TODO These keys below are not really (and never been) tested - would be nice to write integration tests for them
     val keys = Seq(
-      SessionKeys.sessionId -> SessionId(s"session-${UUID.randomUUID}").value,
+      SessionKeys.sessionId -> SessionId(s"session-${randomUUID}").value,
       SessionKeys.authProvider -> provider,
       SessionKeys.name -> id,
-      SessionKeys.authToken -> URLEncoder.encode(authToken.value, CharEncoding.UTF_8),
+      SessionKeys.authToken -> encode(authToken.value, UTF_8),
       SessionKeys.userId -> userId.authId,
       SessionKeys.token -> token,
       SessionKeys.lastRequestTimestamp -> now.getMillis.toString)

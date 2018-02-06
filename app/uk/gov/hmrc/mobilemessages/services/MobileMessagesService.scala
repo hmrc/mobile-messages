@@ -24,6 +24,7 @@ import uk.gov.hmrc.domain.SaUtr
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilemessages.config.MicroserviceAuditConnector
 import uk.gov.hmrc.mobilemessages.connector._
+import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControl, Authority}
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
 import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator._
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
@@ -39,7 +40,7 @@ trait MobileMessagesService {
 }
 
 trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
-  def authConnector: AuthConnector
+  val accountAccessControl: AccountAccessControl
 
   def messageConnector: MessageConnector
 
@@ -88,7 +89,7 @@ object SandboxMobileMessagesService extends SandboxMobileMessagesService {
 }
 
 object LiveMobileMessagesService extends LiveMobileMessagesService {
-  override val authConnector: AuthConnector = AuthConnector
+  override val accountAccessControl: AccountAccessControl = AccountAccessControl
 
   override val messageConnector: MessageConnector = MessageConnector
 

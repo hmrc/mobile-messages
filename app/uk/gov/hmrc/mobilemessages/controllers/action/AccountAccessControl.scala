@@ -17,31 +17,45 @@
 package uk.gov.hmrc.mobilemessages.controllers.action
 
 import play.api.Logger
+import play.api.Play.{configuration, current}
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
 import uk.gov.hmrc.api.controllers.{ErrorAcceptHeaderInvalid, ErrorUnauthorizedLowCL, HeaderValidator}
+import uk.gov.hmrc.auth.core.ConfidenceLevel.L0
+import uk.gov.hmrc.auth.core.retrieve.Retrievals.{confidenceLevel, nino, userDetailsUri}
+import uk.gov.hmrc.auth.core.retrieve.~
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions, ConfidenceLevel}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{Upstream4xxResponse, Request => _, _}
-import uk.gov.hmrc.mobilemessages.connector.{AccountWithLowCL, AuthConnector, Authority, NinoNotFoundOnAccount}
+import uk.gov.hmrc.mobilemessages.config.MicroserviceAuthConnector
 import uk.gov.hmrc.mobilemessages.controllers.{ErrorUnauthorizedNoNino, ForbiddenAccess}
 import uk.gov.hmrc.play.HeaderCarrierConverter.fromHeadersAndSession
-import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
-import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel.L0
+import uk.gov.hmrc.play.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
 
 
 final case class AuthenticatedRequest[A](authority: Option[Authority], request: Request[A]) extends WrappedRequest(request)
 
-trait AccountAccessControl extends ActionBuilder[AuthenticatedRequest] with Results {
+final case class Authority(nino:Nino, cl:ConfidenceLevel, authId:String)
+
+class NinoNotFoundOnAccount(message:String) extends HttpException(message, 401)
+class AccountWithLowCL(message:String) extends HttpException(message, 401)
+
+trait AccountAccessControl extends ActionBuilder[AuthenticatedRequest] with Results with AuthorisedFunctions{
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val authConnector: AuthConnector
+  val authConnector: AuthConnector = MicroserviceAuthConnector
+
+  def serviceConfidenceLevel: ConfidenceLevel = ???
+
+  val missingNinoException = new UnauthorizedException("The user must have a National Insurance Number to access this service")
 
   def invokeBlock[A](request: Request[A], block: AuthenticatedRequest[A] => Future[Result]) = {
     implicit val hc = fromHeadersAndSession(request.headers, None)
 
-    authConnector.grantAccess().flatMap {
+    grantAccess().flatMap {
       authority => {
         block(AuthenticatedRequest(Some(authority),request))
       }
@@ -62,6 +76,26 @@ trait AccountAccessControl extends ActionBuilder[AuthenticatedRequest] with Resu
     }
   }
 
+  private def confirmConfiendenceLevel(confidenceLevel : ConfidenceLevel) : Unit = {
+    if (serviceConfidenceLevel.level > confidenceLevel.level) {
+      throw new ForbiddenException("The user does not have sufficient permissions to access this service")
+    }
+  }
+
+  def grantAccess()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Authority] = {
+    authorised()
+      .retrieve(nino and confidenceLevel and userDetailsUri) {
+        case Some(foundNino) ~ foundConfidenceLevel ~ Some(foundUserDetailsUri) ⇒ {
+          if (foundNino.isEmpty) throw missingNinoException
+          else if (serviceConfidenceLevel.level > foundConfidenceLevel.level)
+            throw new ForbiddenException("The user does not have sufficient permissions to access this service")
+          else Future successful Authority(Nino(foundNino), foundConfidenceLevel, foundUserDetailsUri) //to do test this use of tyhe uri
+        }
+        case None ~ _~ _ ⇒ {
+          throw missingNinoException
+        }
+      }
+  }
 }
 
 trait AccountAccessControlWithHeaderCheck extends HeaderValidator {
@@ -80,12 +114,13 @@ trait AccountAccessControlWithHeaderCheck extends HeaderValidator {
   }
 }
 
-object Auth {
-  val authConnector: AuthConnector = AuthConnector
-}
+object AccountAccessControl extends AccountAccessControl with ServicesConfig{
+  private lazy val configureConfidenceLevel: Int = configuration.getInt("controllers.confidenceLevel").getOrElse(
+    throw new RuntimeException("The service has not been configured with a confidence level"))
+  private lazy val confidenceLevel = ConfidenceLevel.fromInt(configureConfidenceLevel).getOrElse(
+    throw new RuntimeException(s"unknown confidence level found: $configureConfidenceLevel"))
 
-object AccountAccessControl extends AccountAccessControl {
-  val authConnector: AuthConnector = Auth.authConnector
+  override def serviceConfidenceLevel: ConfidenceLevel = confidenceLevel
 }
 
 object AccountAccessControlWithHeaderCheck extends AccountAccessControlWithHeaderCheck {
@@ -93,22 +128,10 @@ object AccountAccessControlWithHeaderCheck extends AccountAccessControlWithHeade
 }
 
 object AccountAccessControlSandbox extends AccountAccessControl {
-    val authConnector: AuthConnector = new AuthConnector {
-      override val serviceUrl: String = "NO SERVICE"
+  override def serviceConfidenceLevel: ConfidenceLevel = L0
 
-      override def serviceConfidenceLevel: ConfidenceLevel = L0
-
-      override def http: CoreGet = new CoreGet {
-        override def GET[A](url: String)(implicit rds: HttpReads[A], hc: HeaderCarrier, ec: ExecutionContext) = sandboxMode
-
-        override def GET[A](url: String, queryParams: Seq[(String, String)])(implicit rds: HttpReads[A], hc: HeaderCarrier, ec: ExecutionContext) =
-          Future.failed(new IllegalArgumentException("Sandbox mode!"))
-
-        private def sandboxMode[A]: Future[A] = {
-          Future.failed(new IllegalArgumentException("Sandbox mode!"))
-        }
-      }
-    }
+  override def grantAccess()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Authority] =
+    Future.failed(new IllegalArgumentException("Sandbox mode!"))
 }
 
 object AccountAccessControlCheckAccessOff extends AccountAccessControlWithHeaderCheck {
