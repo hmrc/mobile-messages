@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,10 @@ import com.fasterxml.jackson.databind.JsonMappingException
 import com.github.tomakehurst.wiremock.client.WireMock
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
-import play.api.libs.json.Json
+import play.api.libs.json.Json.{parse, toJson}
 import play.api.test.FakeApplication
 import play.twirl.api.Html
+import uk.gov.hmrc.auth.core.ConfidenceLevel.L200
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse, Upstream5xxResponse}
@@ -30,8 +31,8 @@ import uk.gov.hmrc.mobilemessages.acceptance.microservices.{MessageRendererServi
 import uk.gov.hmrc.mobilemessages.acceptance.utils.WiremockServiceLocatorSugar
 import uk.gov.hmrc.mobilemessages.connector.model.ResourceActionLocation
 import uk.gov.hmrc.mobilemessages.controllers.StubApplicationConfiguration
+import uk.gov.hmrc.mobilemessages.controllers.action.Authority
 import uk.gov.hmrc.mobilemessages.domain._
-import uk.gov.hmrc.play.auth.microservice.connectors.ConfidenceLevel
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -99,12 +100,12 @@ class MessagesConnectorSpec
 
     lazy val successfulEmptyResponse = HttpResponse(200, responseString = Some(""))
 
-    lazy val successfulEmptyMessageHeadersResposne = HttpResponse(200, Some(Json.parse(message.jsonRepresentationOf(Seq.empty))))
+    lazy val successfulEmptyMessageHeadersResposne = HttpResponse(200, Some(parse(message.jsonRepresentationOf(Seq.empty))))
 
     val messageId = MessageId("id123")
     lazy val successfulSingleMessageResponse = HttpResponse(
       200,
-      Some(Json.parse(
+      Some(parse(
         message.jsonRepresentationOf(
           message.bodyWith(id = "id123")
         )))
@@ -115,10 +116,10 @@ class MessagesConnectorSpec
     val messageToBeMarkedAsReadBody = message.bodyToBeMarkedAsReadWith(id = "id48")
     val messageToBeMarkedAsRead = message.convertedFrom(messageToBeMarkedAsReadBody).asInstanceOf[UnreadMessage]
     lazy val ReadSuccessResult = Future.successful(HttpResponse(200, None, Map.empty, Some(html.toString())))
-    lazy val PostSuccessResult = Future.successful(HttpResponse(200, Some(Json.toJson(responseRenderer))))
-    lazy val PostConflictResult = Future.successful(HttpResponse(409, Some(Json.toJson(responseRenderer))))
+    lazy val PostSuccessResult = Future.successful(HttpResponse(200, Some(toJson(responseRenderer))))
+    lazy val PostConflictResult = Future.successful(HttpResponse(409, Some(toJson(responseRenderer))))
 
-    implicit val authUser: Option[Authority] = Some(Authority(Nino("CS700100A"), ConfidenceLevel.L200, "someId"))
+    implicit val authUser: Option[Authority] = Some(Authority(Nino("CS700100A"), L200))
 
     val connector = MessageConnector
 
@@ -167,25 +168,25 @@ class MessagesConnectorSpec
     "throw BadRequestException when a 400 response is returned" in new Setup {
       testMessageRenderer.failsWith(status = 400, path = renderPath)
       intercept[BadRequestException] {
-        await(connector.render(message.convertedFrom(messageBodyToRender), hc))
+        await(connector.render(message.convertedFrom(messageBodyToRender)))
       }
     }
 
     "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
       testMessageRenderer.failsWith(status = 500, path = renderPath)
       intercept[Upstream5xxResponse] {
-        await(connector.render(message.convertedFrom(messageBodyToRender), hc))
+        await(connector.render(message.convertedFrom(messageBodyToRender)))
       }
     }
 
     s"return empty response when a 200 response is received with an empty payload" in new Setup {
       testMessageRenderer.successfullyRenders(messageBodyToRender, overrideBody = Some(""))
-      await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body shouldBe ""
+      await(connector.render(message.convertedFrom(messageBodyToRender))).body shouldBe ""
     }
 
     "return a rendered message when a 200 response is received with a payload" in new Setup {
       testMessageRenderer.successfullyRenders(messageBodyToRender)
-      await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body shouldBe testMessageRenderer.rendered(messageBodyToRender)
+      await(connector.render(message.convertedFrom(messageBodyToRender))).body shouldBe testMessageRenderer.rendered(messageBodyToRender)
     }
   }
 

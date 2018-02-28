@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import uk.gov.hmrc.domain.SaUtr
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilemessages.config.MicroserviceAuditConnector
 import uk.gov.hmrc.mobilemessages.connector._
+import uk.gov.hmrc.mobilemessages.controllers.action.AccountAccessControl
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
 import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator._
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
@@ -35,11 +36,11 @@ import scala.concurrent.{ExecutionContext, Future}
 trait MobileMessagesService {
   def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]]
 
-  def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html]
+  def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Html]
 }
 
 trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
-  def authConnector: AuthConnector
+  val accountAccessControl: AccountAccessControl
 
   def messageConnector: MessageConnector
 
@@ -49,10 +50,10 @@ trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
     }
   }
 
-  override def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] =
+  override def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Html] =
     withAudit("readMessageContent", Map.empty) {
         messageConnector.getMessageBy(messageId) flatMap { message =>
-            messageConnector.render(message, hc) map { renderedMessage =>
+            messageConnector.render(message) map { renderedMessage =>
               markAsReadIfUnread.apply(message)
               renderedMessage
             }
@@ -73,7 +74,7 @@ trait SandboxMobileMessagesService extends MobileMessagesService with FileResour
   def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
     Future.successful(Seq(readMessageHeader(saUtr), unreadMessageHeader(saUtr)))
 
-  override def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
+  override def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Html] = {
     Future.successful(newTaxStatement)
   }
 
@@ -88,7 +89,7 @@ object SandboxMobileMessagesService extends SandboxMobileMessagesService {
 }
 
 object LiveMobileMessagesService extends LiveMobileMessagesService {
-  override val authConnector: AuthConnector = AuthConnector
+  override val accountAccessControl: AccountAccessControl = AccountAccessControl
 
   override val messageConnector: MessageConnector = MessageConnector
 
