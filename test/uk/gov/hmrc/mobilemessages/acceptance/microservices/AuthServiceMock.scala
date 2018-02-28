@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,31 +17,17 @@
 package uk.gov.hmrc.mobilemessages.acceptance.microservices
 
 import com.github.tomakehurst.wiremock.client.WireMock._
-import play.api.libs.json.Json
-import uk.gov.hmrc.domain.SaUtr
+import play.api.libs.json.Json.obj
+import uk.gov.hmrc.auth.core.ConfidenceLevel
+import uk.gov.hmrc.auth.core.ConfidenceLevel.L200
+import uk.gov.hmrc.domain.Nino
 
 class AuthServiceMock {
   def token = "authToken9349872"
 
-  def containsUserWith(utr: SaUtr) = {
-    givenThat(get(urlMatching("/auth/authority*"))
-      .willReturn(aResponse().withStatus(200).withBody(
-        Json.parse(
-          s"""
-             | {
-             |    "confidenceLevel": 500,
-             |    "uri": "testUri",
-             |    "accounts": {
-             |        "sa": {
-             |            "utr": "$utr"
-             |         },
-             |         "paye": {
-             |            "nino": "BC233445B"
-             |         }
-             |     }
-             | }""".
-            stripMargin
-        )
-          .toString())))
+  def authRecordExists(nino: Nino = Nino("BC233445B"), confidenceLevel: ConfidenceLevel = L200): Unit = {
+    stubFor(post(urlEqualTo("/auth/authorise")).withRequestBody(equalToJson(
+      """{ "authorise": [], "retrieve": ["nino","confidenceLevel"] }""".stripMargin, true, false)).willReturn(
+        aResponse().withStatus(200).withBody(obj("confidenceLevel" -> confidenceLevel.level, "nino" -> nino.nino).toString)))
   }
 }
