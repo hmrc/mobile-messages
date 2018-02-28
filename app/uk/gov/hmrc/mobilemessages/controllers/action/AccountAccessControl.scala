@@ -22,7 +22,7 @@ import play.api.libs.json.Json.toJson
 import play.api.mvc._
 import uk.gov.hmrc.api.controllers.{ErrorAcceptHeaderInvalid, ErrorUnauthorizedLowCL, HeaderValidator}
 import uk.gov.hmrc.auth.core.ConfidenceLevel.L0
-import uk.gov.hmrc.auth.core.retrieve.Retrievals.{confidenceLevel, nino, userDetailsUri}
+import uk.gov.hmrc.auth.core.retrieve.Retrievals.{confidenceLevel, nino}
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions, ConfidenceLevel}
 import uk.gov.hmrc.domain.Nino
@@ -37,7 +37,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 final case class AuthenticatedRequest[A](authority: Option[Authority], request: Request[A]) extends WrappedRequest(request)
 
-final case class Authority(nino:Nino, cl:ConfidenceLevel, authId:String)
+final case class Authority(nino:Nino, cl:ConfidenceLevel)
 
 class NinoNotFoundOnAccount(message:String) extends HttpException(message, 401)
 class AccountWithLowCL(message:String) extends HttpException(message, 401)
@@ -84,14 +84,14 @@ trait AccountAccessControl extends ActionBuilder[AuthenticatedRequest] with Resu
 
   def grantAccess()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Authority] = {
     authorised()
-      .retrieve(nino and confidenceLevel and userDetailsUri) {
-        case Some(foundNino) ~ foundConfidenceLevel ~ Some(foundUserDetailsUri) ⇒ {
+      .retrieve(nino and confidenceLevel) {
+        case Some(foundNino) ~ foundConfidenceLevel ⇒ {
           if (foundNino.isEmpty) throw missingNinoException
           else if (serviceConfidenceLevel.level > foundConfidenceLevel.level)
             throw new ForbiddenException("The user does not have sufficient permissions to access this service")
-          else Future successful Authority(Nino(foundNino), foundConfidenceLevel, foundUserDetailsUri) //to do test this use of tyhe uri
+          else Future successful Authority(Nino(foundNino), foundConfidenceLevel) //to do test this use of tyhe uri
         }
-        case None ~ _~ _ ⇒ {
+        case None ~ _ ⇒ {
           throw missingNinoException
         }
       }

@@ -16,16 +16,9 @@
 
 package uk.gov.hmrc.mobilemessages.connector
 
-import java.net.URLEncoder.encode
-import java.util.UUID.randomUUID
-
-import org.apache.commons.codec.CharEncoding.UTF_8
 import org.joda.time.DateTime
-import play.api.Play._
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.http.logging.{Authorization, SessionId}
 import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageHeadersResponse, UpstreamMessageResponse}
-import uk.gov.hmrc.mobilemessages.controllers.action.Authority
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
 import uk.gov.hmrc.play.config.ServicesConfig
 
@@ -39,9 +32,6 @@ trait MessageConnector extends SessionCookieEncryptionSupport with HttpErrorFunc
   def http: CoreGet with CorePost
 
   val messageBaseUrl: String
-  val provider: String
-  val token: String
-  val id: String
 
   def now: DateTime
 
@@ -55,22 +45,7 @@ trait MessageConnector extends SessionCookieEncryptionSupport with HttpErrorFunc
       map(_.toMessageUsing(MessageConnector.asInstanceOf[ServicesConfig]))
   }
 
-  def render(message: Message, hc: HeaderCarrier)(implicit ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
-    val authToken: Authorization = hc.authorization.getOrElse(throw new IllegalArgumentException("Failed to find auth header!"))
-    val userId = auth.getOrElse(throw new IllegalArgumentException("Failed to find the user!"))
-
-    // TODO These keys below are not really (and never been) tested - would be nice to write integration tests for them
-    val keys = Seq(
-      SessionKeys.sessionId -> SessionId(s"session-${randomUUID}").value,
-      SessionKeys.authProvider -> provider,
-      SessionKeys.name -> id,
-      SessionKeys.authToken -> encode(authToken.value, UTF_8),
-      SessionKeys.userId -> userId.authId,
-      SessionKeys.token -> token,
-      SessionKeys.lastRequestTimestamp -> now.getMillis.toString)
-
-    val session: (String, String) = withSession(keys: _ *)
-    implicit val updatedHc = hc.withExtraHeaders(session)
+  def render(message: Message)(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[Html] = {
     http.GET[HttpResponse](message.renderUrl).map(response => Html(response.body))
   }
 
@@ -91,9 +66,4 @@ object MessageConnector extends MessageConnector with ServicesConfig {
   override def now: DateTime = DateTimeUtils.now
 
   def exception(key: String) = throw new Exception(s"Failed to find $key")
-
-  override lazy val provider = current.configuration.getString("provider").getOrElse(exception("provider"))
-  override lazy val token = current.configuration.getString("token").getOrElse(exception("token"))
-  override lazy val id = current.configuration.getString("id").getOrElse(exception("id"))
-
 }

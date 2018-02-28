@@ -45,7 +45,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class TestAccessControl(nino: Option[Nino], saUtr: Option[SaUtr]) extends AccountAccessControl{
   override def grantAccess()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Authority] =
-    Future(Authority(nino.getOrElse(throw new Exception("Invalid nino")), L200, "some-auth-id"))
+    Future(Authority(nino.getOrElse(throw new Exception("Invalid nino")), L200))
 }
 
 class TestMessageConnector(result: Seq[MessageHeader], html: Html, message: Message) extends MessageConnector {
@@ -60,11 +60,7 @@ class TestMessageConnector(result: Seq[MessageHeader], html: Html, message: Mess
 
   override def getMessageBy(id: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Message] = Future.successful(message)
 
-  override def render(message: Message, hc: HeaderCarrier)(implicit ec: ExecutionContext, auth: Option[Authority]): Future[Html] = Future.successful(html)
-
-  override val provider: String = "provider"
-  override val token: String = "token"
-  override val id: String = "id"
+  override def render(message: Message)(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[Html] = Future.successful(html)
 }
 
 class TestMobileMessagesService(testAccessControl: TestAccessControl, mobileMessageConnector: MessageConnector, testAuditConnector: AuditConnector) extends LiveMobileMessagesService {
