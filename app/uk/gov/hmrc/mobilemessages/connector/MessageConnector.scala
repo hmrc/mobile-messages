@@ -16,9 +16,14 @@
 
 package uk.gov.hmrc.mobilemessages.connector
 
+import java.net.URLEncoder.encode
+
+import org.apache.commons.codec.CharEncoding.UTF_8
 import org.joda.time.DateTime
-import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.logging.Authorization
+import uk.gov.hmrc.http.{SessionKeys, _}
 import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageHeadersResponse, UpstreamMessageResponse}
+import uk.gov.hmrc.mobilemessages.controllers.action.Authority
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
 import uk.gov.hmrc.play.config.ServicesConfig
 
@@ -45,7 +50,15 @@ trait MessageConnector extends SessionCookieEncryptionSupport with HttpErrorFunc
       map(_.toMessageUsing(MessageConnector.asInstanceOf[ServicesConfig]))
   }
 
-  def render(message: Message)(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[Html] = {
+  def render(message: Message, hc: HeaderCarrier)(implicit ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
+    val authToken: Authorization = hc.authorization.getOrElse(throw new IllegalArgumentException("Failed to find auth header!"))
+    val userId = auth.getOrElse(throw new IllegalArgumentException("Failed to find the user!"))
+
+    val keys = Seq(SessionKeys.authToken -> encode(authToken.value, UTF_8), SessionKeys.userId -> userId.authId)
+
+    val session: (String, String) = withSession(keys: _ *)
+    implicit val updatedHc = hc.withExtraHeaders(session)
+
     http.GET[HttpResponse](message.renderUrl).map(response => Html(response.body))
   }
 
