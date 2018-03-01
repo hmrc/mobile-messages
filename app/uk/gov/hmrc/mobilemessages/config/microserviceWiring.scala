@@ -16,14 +16,17 @@
 
 package uk.gov.hmrc.mobilemessages.config
 
+import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.auth.core.PlayAuthConnector
+import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.hooks.{HttpHook, HttpHooks}
-import uk.gov.hmrc.http.{HttpDelete, HttpGet, HttpPost, HttpPut}
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.config.{AppName, ServicesConfig}
 import uk.gov.hmrc.play.http.ws._
 import uk.gov.hmrc.play.microservice.config.LoadAuditingConfig
+
+import scala.concurrent.{ExecutionContext, Future}
 
 object MicroserviceAuditConnector extends AuditConnector {
   lazy val auditingConfig: AuditingConfig = LoadAuditingConfig(s"auditing")
@@ -36,7 +39,23 @@ trait Hooks extends HttpHooks {
 trait WSHttp extends HttpGet with WSGet with HttpPut with WSPut with HttpPost with WSPost with HttpDelete with WSDelete with Hooks with AppName
 object WSHttp extends WSHttp
 
-object MicroserviceAuthConnector extends PlayAuthConnector with ServicesConfig with WSHttp {
+trait MobileMessagesAuthConnector extends PlayAuthConnector {
+  def getAuthorityRecord(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[AuthorityRecord] = ???
+}
+
+object MicroserviceAuthConnector extends MobileMessagesAuthConnector with ServicesConfig with WSHttp {
   override lazy val serviceUrl = baseUrl("auth")
   override def http = WSHttp
+
+  implicit val reads: Reads[AuthorityRecord] = Json.reads[AuthorityRecord]
+
+  override def getAuthorityRecord(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[AuthorityRecord] = {
+    http.GET[AuthorityRecord](s"$serviceUrl/auth/authority")
+  }
+}
+
+case class AuthorityRecord(uri: String)
+
+object AuthorityRecord {
+  implicit val format = Json.format[AuthorityRecord]
 }

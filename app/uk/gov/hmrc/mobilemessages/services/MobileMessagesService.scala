@@ -24,7 +24,7 @@ import uk.gov.hmrc.domain.SaUtr
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilemessages.config.MicroserviceAuditConnector
 import uk.gov.hmrc.mobilemessages.connector._
-import uk.gov.hmrc.mobilemessages.controllers.action.AccountAccessControl
+import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControl, Authority}
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
 import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator._
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
@@ -36,7 +36,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait MobileMessagesService {
   def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]]
 
-  def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Html]
+  def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html]
 }
 
 trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
@@ -50,10 +50,10 @@ trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
     }
   }
 
-  override def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Html] =
+  override def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] =
     withAudit("readMessageContent", Map.empty) {
         messageConnector.getMessageBy(messageId) flatMap { message =>
-            messageConnector.render(message) map { renderedMessage =>
+            messageConnector.render(message, hc) map { renderedMessage =>
               markAsReadIfUnread.apply(message)
               renderedMessage
             }
@@ -74,7 +74,7 @@ trait SandboxMobileMessagesService extends MobileMessagesService with FileResour
   def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
     Future.successful(Seq(readMessageHeader(saUtr), unreadMessageHeader(saUtr)))
 
-  override def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Html] = {
+  override def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
     Future.successful(newTaxStatement)
   }
 
