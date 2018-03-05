@@ -119,7 +119,7 @@ class MessagesConnectorSpec
     lazy val PostSuccessResult = Future.successful(HttpResponse(200, Some(toJson(responseRenderer))))
     lazy val PostConflictResult = Future.successful(HttpResponse(409, Some(toJson(responseRenderer))))
 
-    implicit val authUser: Option[Authority] = Some(Authority(Nino("CS700100A"), L200))
+    implicit val authUser: Option[Authority] = Some(Authority(Nino("CS700100A"), L200, "someId"))
 
     val connector = MessageConnector
 
@@ -168,25 +168,25 @@ class MessagesConnectorSpec
     "throw BadRequestException when a 400 response is returned" in new Setup {
       testMessageRenderer.failsWith(status = 400, path = renderPath)
       intercept[BadRequestException] {
-        await(connector.render(message.convertedFrom(messageBodyToRender)))
+        await(connector.render(message.convertedFrom(messageBodyToRender), hc))
       }
     }
 
     "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
       testMessageRenderer.failsWith(status = 500, path = renderPath)
       intercept[Upstream5xxResponse] {
-        await(connector.render(message.convertedFrom(messageBodyToRender)))
+        await(connector.render(message.convertedFrom(messageBodyToRender), hc))
       }
     }
 
     s"return empty response when a 200 response is received with an empty payload" in new Setup {
       testMessageRenderer.successfullyRenders(messageBodyToRender, overrideBody = Some(""))
-      await(connector.render(message.convertedFrom(messageBodyToRender))).body shouldBe ""
+      await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body shouldBe ""
     }
 
     "return a rendered message when a 200 response is received with a payload" in new Setup {
       testMessageRenderer.successfullyRenders(messageBodyToRender)
-      await(connector.render(message.convertedFrom(messageBodyToRender))).body shouldBe testMessageRenderer.rendered(messageBodyToRender)
+      await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body shouldBe testMessageRenderer.rendered(messageBodyToRender)
     }
   }
 
