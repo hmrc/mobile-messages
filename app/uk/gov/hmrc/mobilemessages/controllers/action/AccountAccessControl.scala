@@ -24,10 +24,10 @@ import uk.gov.hmrc.api.controllers.{ErrorAcceptHeaderInvalid, ErrorUnauthorizedL
 import uk.gov.hmrc.auth.core.ConfidenceLevel.L0
 import uk.gov.hmrc.auth.core.retrieve.Retrievals.{confidenceLevel, nino}
 import uk.gov.hmrc.auth.core.retrieve.~
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions, ConfidenceLevel}
+import uk.gov.hmrc.auth.core.{AuthorisedFunctions, ConfidenceLevel}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.{Upstream4xxResponse, Request => _, _}
-import uk.gov.hmrc.mobilemessages.config.MicroserviceAuthConnector
+import uk.gov.hmrc.http.{ForbiddenException, Upstream4xxResponse, Request => _, _}
+import uk.gov.hmrc.mobilemessages.config.{AuthorityRecord, MicroserviceAuthConnector, MobileMessagesAuthConnector}
 import uk.gov.hmrc.mobilemessages.controllers.{ErrorUnauthorizedNoNino, ForbiddenAccess}
 import uk.gov.hmrc.play.HeaderCarrierConverter.fromHeadersAndSession
 import uk.gov.hmrc.play.config.ServicesConfig
@@ -37,7 +37,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 final case class AuthenticatedRequest[A](authority: Option[Authority], request: Request[A]) extends WrappedRequest(request)
 
-final case class Authority(nino:Nino, cl:ConfidenceLevel)
+final case class Authority(nino:Nino, cl:ConfidenceLevel, authId:String)
 
 class NinoNotFoundOnAccount(message:String) extends HttpException(message, 401)
 class AccountWithLowCL(message:String) extends HttpException(message, 401)
@@ -46,7 +46,7 @@ trait AccountAccessControl extends ActionBuilder[AuthenticatedRequest] with Resu
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val authConnector: AuthConnector = MicroserviceAuthConnector
+  val authConnector: MobileMessagesAuthConnector = MicroserviceAuthConnector
 
   def serviceConfidenceLevel: ConfidenceLevel = ???
 
@@ -83,18 +83,18 @@ trait AccountAccessControl extends ActionBuilder[AuthenticatedRequest] with Resu
   }
 
   def grantAccess()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Authority] = {
-    authorised()
-      .retrieve(nino and confidenceLevel) {
+    authConnector.getAuthorityRecord.flatMap { authRecord: AuthorityRecord =>
+      authorised().retrieve(nino and confidenceLevel) {
         case Some(foundNino) ~ foundConfidenceLevel ⇒ {
           if (foundNino.isEmpty) throw missingNinoException
           else if (serviceConfidenceLevel.level > foundConfidenceLevel.level)
             throw new ForbiddenException("The user does not have sufficient permissions to access this service")
-          else Future successful Authority(Nino(foundNino), foundConfidenceLevel) //to do test this use of tyhe uri
-        }
-        case None ~ _ ⇒ {
+          else Future successful Authority(Nino(foundNino), foundConfidenceLevel, authRecord.uri)
+        } case None ~ _ ⇒ {
           throw missingNinoException
         }
       }
+    }
   }
 }
 

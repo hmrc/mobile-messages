@@ -4,8 +4,8 @@ import org.scalatest.concurrent.Eventually
 import uk.gov.hmrc.auth.core.ConfidenceLevel
 import uk.gov.hmrc.auth.core.ConfidenceLevel.{L200, L50}
 import uk.gov.hmrc.domain.{Nino, SaUtr}
-import uk.gov.hmrc.http.{ForbiddenException, HeaderCarrier, HttpResponse, UnauthorizedException}
-import utils.AuthStub.{authRecordExists, authRecordExistsWithoutNino}
+import uk.gov.hmrc.http._
+import utils.AuthStub._
 import utils.BaseISpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -42,6 +42,13 @@ class AccountAccessControlISpec extends BaseISpec with Eventually  {
       }
     }
 
+    "fail if no auth/authority returns unauthorised" in {
+      unauthorised
+
+      intercept[Upstream4xxResponse] {
+        await(AccountAccessControl.grantAccess())
+      }
+    }
   }
 }
 
