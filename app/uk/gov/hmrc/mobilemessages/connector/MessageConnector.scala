@@ -17,28 +17,26 @@
 package uk.gov.hmrc.mobilemessages.connector
 
 import java.net.URLEncoder.encode
+import javax.inject.{Inject, Named}
 
 import org.apache.commons.codec.CharEncoding.UTF_8
 import org.joda.time.DateTime
+import play.twirl.api.Html
+import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.http.{SessionKeys, _}
+import uk.gov.hmrc.mobilemessages.config.WSHttp
 import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageHeadersResponse, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.controllers.action.Authority
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
-import uk.gov.hmrc.play.config.ServicesConfig
+import uk.gov.hmrc.time.DateTimeUtils
 
+import scala.concurrent.{ExecutionContext, Future}
 
-trait MessageConnector extends SessionCookieEncryptionSupport with HttpErrorFunctions {
+class MessageConnector @Inject()(@Named("messages") val messageBaseUrl: String,
+                                     val http: WSHttp) extends SessionCookieEncryptionSupport with HttpErrorFunctions {
+  implicit val now: DateTime = DateTimeUtils.now
 
-  import play.twirl.api.Html
-
-  import scala.concurrent.{ExecutionContext, Future}
-
-  def http: CoreGet with CorePost
-
-  val messageBaseUrl: String
-
-  def now: DateTime
+  def exception(key: String) = throw new Exception(s"Failed to find $key")
 
   def messages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = {
     http.GET[UpstreamMessageHeadersResponse](s"$messageBaseUrl/messages").
@@ -47,7 +45,8 @@ trait MessageConnector extends SessionCookieEncryptionSupport with HttpErrorFunc
 
   def getMessageBy(id: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Message] = {
     http.GET[UpstreamMessageResponse](s"$messageBaseUrl/messages/${id.value}").
-      map(_.toMessageUsing(MessageConnector.asInstanceOf[ServicesConfig]))
+      map(upstreamResponseMessage =>
+        upstreamResponseMessage.toMessageUsing(upstreamResponseMessage.renderUrl.service))
   }
 
   def render(message: Message, hc: HeaderCarrier)(implicit ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
@@ -57,7 +56,7 @@ trait MessageConnector extends SessionCookieEncryptionSupport with HttpErrorFunc
     val keys = Seq(SessionKeys.authToken -> encode(authToken.value, UTF_8), SessionKeys.userId -> userId.authId)
 
     val session: (String, String) = withSession(keys: _ *)
-    implicit val updatedHc = hc.withExtraHeaders(session)
+    implicit val updatedHc: HeaderCarrier = hc.withExtraHeaders(session)
 
     http.GET[HttpResponse](message.renderUrl).map(response => Html(response.body))
   }
@@ -65,18 +64,4 @@ trait MessageConnector extends SessionCookieEncryptionSupport with HttpErrorFunc
   def markAsRead(message: UnreadMessage)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
     http.POSTEmpty[HttpResponse](message.markAsReadUrl)
   }
-}
-
-object MessageConnector extends MessageConnector with ServicesConfig {
-
-  import uk.gov.hmrc.mobilemessages.config.WSHttp
-  import uk.gov.hmrc.time.DateTimeUtils
-
-  override def http = WSHttp
-
-  override lazy val messageBaseUrl: String = baseUrl("message")
-
-  override def now: DateTime = DateTimeUtils.now
-
-  def exception(key: String) = throw new Exception(s"Failed to find $key")
 }

@@ -19,16 +19,20 @@ package uk.gov.hmrc.mobilemessages.controllers
 import java.util.UUID.randomUUID
 
 import org.joda.time.DateTime
+import org.scalatest.mockito.MockitoSugar
+import play.api.Configuration
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.twirl.api.Html
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.auth.core.ConfidenceLevel.L200
 import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 import uk.gov.hmrc.domain.{Nino, SaUtr}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilemessages.acceptance.microservices.MessageServiceMock
+import uk.gov.hmrc.mobilemessages.config.WSHttp
 import uk.gov.hmrc.mobilemessages.connector.MessageConnector
 import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControl, AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck, Authority}
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
@@ -36,25 +40,24 @@ import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId}
 import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 import uk.gov.hmrc.mobilemessages.utils.UnitTestCrypto
-import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
-import uk.gov.hmrc.play.config.RunMode
 import uk.gov.hmrc.time.DateTimeUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class TestAccessControl(nino: Option[Nino], saUtr: Option[SaUtr]) extends AccountAccessControl{
+class TestAccessControl(nino: Option[Nino], saUtr: Option[SaUtr]) extends AccountAccessControl with MockitoSugar {
+  override val authConnector = mock[AuthConnector]
+  override val http: WSHttp = mock[WSHttp]
+  override val authUrl = "authUrl"
+
   override def grantAccess()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Authority] =
     Future(Authority(nino.getOrElse(throw new Exception("Invalid nino")), L200, "some-auth-id"))
 }
 
-class TestMessageConnector(result: Seq[MessageHeader], html: Html, message: Message) extends MessageConnector {
+class TestMessageConnector(result: Seq[MessageHeader], html: Html, message: Message, http: WSHttp, messageBaseUrl: String)
+  extends MessageConnector(messageBaseUrl, http) with MockitoSugar with TimeSetup {
 
-  override def http: CoreGet with CorePost = ???
-
-  override def now: DateTime = ???
-
-  override val messageBaseUrl: String = "someUrl"
+  override val now: DateTime = timeNow
 
   override def messages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = Future.successful(result)
 
@@ -63,7 +66,9 @@ class TestMessageConnector(result: Seq[MessageHeader], html: Html, message: Mess
   override def render(message: Message, hc: HeaderCarrier)(implicit ec: ExecutionContext, auth: Option[Authority]): Future[Html] = Future.successful(html)
 }
 
-class TestMobileMessagesService(testAccessControl: TestAccessControl, mobileMessageConnector: MessageConnector, testAuditConnector: AuditConnector) extends LiveMobileMessagesService {
+class TestMobileMessagesService(override val appNameConfiguration: Configuration, testAccessControl: TestAccessControl,
+                                mobileMessageConnector: MessageConnector, testAuditConnector: AuditConnector)
+  extends LiveMobileMessagesService(mobileMessageConnector, testAuditConnector, testAccessControl, appNameConfiguration) {
   var saveDetails: Map[String, String] = Map.empty
 
   override def audit(service: String, details: Map[String, String])(implicit hc: HeaderCarrier, ec: ExecutionContext) = {
@@ -76,12 +81,21 @@ class TestMobileMessagesService(testAccessControl: TestAccessControl, mobileMess
   override val auditConnector: AuditConnector = testAuditConnector
 }
 
-class TestAccountAccessControlWithAccept(testAccessCheck: AccountAccessControl) extends AccountAccessControlWithHeaderCheck {
+class TestSandboxMobileMessagesService(val appNameConfiguration: Configuration, testAccessControl: TestAccessControl,
+                                mobileMessageConnector: MessageConnector, testAuditConnector: AuditConnector) extends SandboxMobileMessagesService with TimeSetup {
+  override implicit val dateTime: DateTime = timeNow
+  override val saUtr = SaUtr("1234567890")
+}
+
+class TestAccountAccessControlWithAccept(testAccessCheck: AccountAccessControl) extends AccountAccessControlWithHeaderCheck(testAccessCheck) {
   override val accessControl: AccountAccessControl = testAccessCheck
 }
 
+trait TimeSetup {
+  val timeNow: DateTime = DateTimeUtils.now
+}
 
-trait Setup {
+trait Setup extends MockitoSugar with TimeSetup {
   implicit val hc = HeaderCarrier()
 
   val journeyId = Option(randomUUID().toString)
@@ -89,7 +103,6 @@ trait Setup {
   val nino = Nino("CS700100A")
   val saUtrVal = SaUtr("1234567890")
 
-  val now = DateTimeUtils.now
   lazy val html = Html.apply("<div>some snippet</div>")
 
   val message = new MessageServiceMock("authToken")
@@ -97,8 +110,8 @@ trait Setup {
   val msgId1 = "543e8c6001000001003e4a9e"
   val msgId2 = "643e8c5f01000001003e4a8f"
   val messages =
-    s"""[{"id":"$msgId1","subject":"You have a new tax statement","validFrom":"${now.minusDays(3).toLocalDate}","readTime":${now.minusDays(1).getMillis},"readTimeUrl":"${encrypted(msgId1)}","sentInError":false},
-        |{"id":"$msgId2","subject":"Stopping Self Assessment","validFrom":"${now.toLocalDate}","readTimeUrl":"${encrypted(msgId2)}","sentInError":false}]""".stripMargin
+    s"""[{"id":"$msgId1","subject":"You have a new tax statement","validFrom":"${timeNow.minusDays(3).toLocalDate}","readTimeUrl":"${encrypted(msgId1)}","sentInError":false},
+       |{"id":"$msgId2","subject":"Stopping Self Assessment","validFrom":"${timeNow.toLocalDate}","readTimeUrl":"${encrypted(msgId2)}","sentInError":false}]""".stripMargin
 
   def messageHeaderResponseBodyFrom(messageHeader: MessageHeader) = MessageHeaderResponseBody(
     messageHeader.id.value,
@@ -109,10 +122,8 @@ trait Setup {
     messageHeader.sentInError
   )
 
-  object MicroserviceAuditConnectorTest extends AuditConnector with RunMode {
-    override def auditingConfig: AuditingConfig = AuditingConfig(None, enabled = false)
-  }
 
+  val mockAuditConnector = mock[AuditConnector]
 
   val messageServiceHeadersResponse = Seq(
     message.headerWith(id = "id1"),
@@ -137,18 +148,13 @@ trait Setup {
   lazy val readTimeRequestNoHeaders = fakeRequest(toJson(RenderMessageRequest(encrypted("543e8c6001000001003e4a9e"))))
 
   val testAccess = new TestAccessControl(Some(nino), Some(saUtrVal))
-  val messageConnector = new TestMessageConnector(Seq.empty[MessageHeader], html, sampleMessage)
+  val messageConnector = new TestMessageConnector(Seq.empty[MessageHeader], html, sampleMessage, mock[WSHttp], "someUrl")
   val testCompositeAction = new TestAccountAccessControlWithAccept(testAccess)
-  val testMMService = new TestMobileMessagesService(testAccess, messageConnector, MicroserviceAuditConnectorTest)
+  val testMMService = new TestMobileMessagesService(mock[Configuration], testAccess, messageConnector, mockAuditConnector)
 
-  object sandbox extends SandboxMobileMessagesService {
-    implicit val dateTime = now
-    val saUtr = saUtrVal
-  }
+  val testSandboxMMService = new TestSandboxMobileMessagesService(mock[Configuration], testAccess, messageConnector, mockAuditConnector)
 
-  val testSandboxPersonalIncomeService = sandbox
-
-  val sandboxCompositeAction = AccountAccessControlCheckAccessOff
+  val sandboxCompositeAction = new AccountAccessControlCheckAccessOff(testAccess)
 }
 
 trait Success extends Setup {
@@ -156,7 +162,6 @@ trait Success extends Setup {
   val controller = new MobileMessagesController {
     override val service: MobileMessagesService = testMMService
     override val accessControl: AccountAccessControlWithHeaderCheck = testCompositeAction
-    override implicit val ec: ExecutionContext = ExecutionContext.global
     override val crypto: Encrypter with Decrypter = new UnitTestCrypto
   }
 }
@@ -164,16 +169,15 @@ trait Success extends Setup {
 trait SuccessWithMessages extends Setup {
 
   override val testMMService =
-    new TestMobileMessagesService(testAccess, new TestMessageConnector(messageServiceHeadersResponse, html, sampleMessage), MicroserviceAuditConnectorTest)
+    new TestMobileMessagesService(mock[Configuration], testAccess,
+      new TestMessageConnector(messageServiceHeadersResponse, html, sampleMessage, mock[WSHttp], "someUrl"), mockAuditConnector)
 
   val controller = new MobileMessagesController {
     override val service: MobileMessagesService = testMMService
     override val accessControl: AccountAccessControlWithHeaderCheck = testCompositeAction
-    override implicit val ec: ExecutionContext = ExecutionContext.global
     override val crypto: Encrypter with Decrypter = new UnitTestCrypto
   }
 }
-
 
 trait AuthWithoutNino extends Setup {
 
@@ -186,12 +190,10 @@ trait AuthWithoutNino extends Setup {
   val controller = new MobileMessagesController {
     override val service: MobileMessagesService = testMMService
     override val accessControl: AccountAccessControlWithHeaderCheck = testCompositeAction
-    override implicit val ec: ExecutionContext = ExecutionContext.global
     override val crypto: Encrypter with Decrypter = new UnitTestCrypto
   }
 
 }
-
 
 trait AuthWithLowCL extends Setup {
 
@@ -204,19 +206,16 @@ trait AuthWithLowCL extends Setup {
   val controller = new MobileMessagesController {
     override val service: MobileMessagesService = testMMService
     override val accessControl: AccountAccessControlWithHeaderCheck = testCompositeAction
-    override implicit val ec: ExecutionContext = ExecutionContext.global
     override val crypto: Encrypter with Decrypter = new UnitTestCrypto
   }
 
 }
 
-
 trait SandboxSuccess extends Setup {
 
   val controller = new MobileMessagesController {
-    override val service: MobileMessagesService = testSandboxPersonalIncomeService
+    override val service: MobileMessagesService = testSandboxMMService
     override val accessControl: AccountAccessControlWithHeaderCheck = sandboxCompositeAction
-    override implicit val ec: ExecutionContext = ExecutionContext.global
     override val crypto: Encrypter with Decrypter = new UnitTestCrypto
   }
 }

@@ -25,7 +25,7 @@ final case class UpstreamMessageHeadersResponse(items: Seq[MessageHeader])
 object UpstreamMessageHeadersResponse {
 
   import play.api.libs.functional.syntax._
-  import play.api.libs.json.{Json, Reads, _}
+  import play.api.libs.json._
 
   private implicit val dateTimeForm = RestFormats.dateTimeFormats
 

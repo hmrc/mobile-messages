@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilemessages.controllers
 
+import javax.inject.Inject
+
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc.BodyParsers
@@ -27,10 +29,10 @@ import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, 
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
 import uk.gov.hmrc.play.HeaderCarrierConverter
-import uk.gov.hmrc.play.microservice.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
-import scala.concurrent.{ExecutionContext, Future}
-
+import scala.concurrent.Future
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 trait MobileMessagesController extends BaseController with HeaderValidator with ErrorHandling {
 
@@ -64,20 +66,14 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
   }
 }
 
-object SandboxMobileMessagesController extends MobileMessagesController {
-  override val service = SandboxMobileMessagesService
-  override val accessControl = AccountAccessControlCheckAccessOff
-  override implicit val ec: ExecutionContext = ExecutionContext.global
-  override val crypto: Encrypter with Decrypter = CryptoWithKeysFromConfig(
-    baseConfigKey = "cookie.encryption"
-  )
-}
+class SandboxMobileMessagesController @Inject()(val service: SandboxMobileMessagesService,
+                                                val accessControl: AccountAccessControlCheckAccessOff,
+                                                val crypto: Encrypter with Decrypter =
+                                                CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption"))
+  extends MobileMessagesController
 
-object LiveMobileMessagesController extends MobileMessagesController {
-  override val service = LiveMobileMessagesService
-  override val accessControl = AccountAccessControlWithHeaderCheck
-  override implicit val ec: ExecutionContext = ExecutionContext.global
-  override val crypto: Encrypter with Decrypter = CryptoWithKeysFromConfig(
-    baseConfigKey = "cookie.encryption"
-  )
-}
+class LiveMobileMessagesController @Inject()(val service: LiveMobileMessagesService,
+                                             val accessControl: AccountAccessControlWithHeaderCheck,
+                                             val crypto: Encrypter with Decrypter =
+                                             CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption"))
+  extends MobileMessagesController

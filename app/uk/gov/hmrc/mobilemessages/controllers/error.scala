@@ -18,7 +18,7 @@ package uk.gov.hmrc.mobilemessages.controllers
 
 import uk.gov.hmrc.api.controllers.ErrorResponse
 import uk.gov.hmrc.http.{ForbiddenException, HeaderCarrier, NotFoundException, UnauthorizedException}
-import uk.gov.hmrc.play.microservice.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -35,9 +35,7 @@ trait ErrorHandling {
   import play.api.{Logger, mvc}
   import uk.gov.hmrc.api.controllers.{ErrorInternalServerError, ErrorNotFound, ErrorUnauthorizedLowCL}
 
-  implicit val ec : ExecutionContext
-
-  def errorWrapper(func: => Future[mvc.Result])(implicit hc:HeaderCarrier) = {
+  def errorWrapper(func: => Future[mvc.Result])(implicit hc:HeaderCarrier, ec: ExecutionContext) = {
     func.recover {
       case ex:NotFoundException => Status(ErrorNotFound.httpStatusCode)(Json.toJson(ErrorNotFound))
 

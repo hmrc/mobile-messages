@@ -35,7 +35,7 @@ trait StubApplicationConfiguration {
     "microservice.services.sa-message-renderer.port" -> "8089",
     "microservice.services.ats-message-renderer.host" -> "localhost",
     "microservice.services.ats-message-renderer.port" -> "8093",
-     "microservice.services.test-renderer-service.host" -> "localhost",
+    "microservice.services.test-renderer-service.host" -> "localhost",
     "microservice.services.test-renderer-service.port" -> "9999",
     "microservice.services.secure-message-renderer.host" -> "localhost",
     "microservice.services.secure-message-renderer.port" -> "9847",
@@ -43,8 +43,8 @@ trait StubApplicationConfiguration {
     "microservice.services.message.port" -> "8910",
     "router.regex" -> ".*",
     "router.prefix" -> "/sandbox",
-    "router.regex" -> "X-MOBILE-USER-ID" ,
-    "application.secret"->"yNhI04vHs9<_HWbC`]20u`37=NGLGYY5:0Tg5?y`W<NoJnXWqmjcgZBec@rOxb^G",
-    "cookie.encryption.key"->"gvBoGdgzqG1AarzF1LY0zQ=="
+    "router.regex" -> "X-MOBILE-USER-ID",
+    "application.secret" -> "yNhI04vHs9<_HWbC`]20u`37=NGLGYY5:0Tg5?y`W<NoJnXWqmjcgZBec@rOxb^G",
+    "cookie.encryption.key" -> "gvBoGdgzqG1AarzF1LY0zQ=="
   )
 }

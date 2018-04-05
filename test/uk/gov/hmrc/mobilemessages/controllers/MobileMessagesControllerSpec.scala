@@ -27,7 +27,6 @@ import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
 import scala.concurrent.Future
 
-
 class MobileMessagesReadControllerSpec extends UnitSpec with WithFakeApplication with ScalaFutures with StubApplicationConfiguration {
 
   override lazy val fakeApplication = FakeApplication(additionalConfiguration = config)
@@ -130,7 +129,7 @@ class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication wit
   "messages Sandbox" should {
 
     "return the messages" in new SandboxSuccess {
-      val result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
+      val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
 
       status(result) shouldBe 200
 

@@ -16,12 +16,15 @@
 
 package uk.gov.hmrc.mobilemessages.domain
 
-import play.api.Logger
+import javax.inject.Inject
+
+import play.api.{Configuration, Logger}
 import uk.gov.hmrc.play.config.ServicesConfig
+import play.api.Mode.Mode
 
 final case class RenderMessageLocation(service : String, url : String)
 
-object RenderMessageLocation extends ServicesConfig {
+class RenderMessageLocationImpl @Inject()(val mode: Mode, val runModeConfiguration: Configuration) extends ServicesConfig {
   import play.api.libs.json.Json
 
   implicit def toUrl(renderMessageLocation: RenderMessageLocation) : String = {

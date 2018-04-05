@@ -19,7 +19,9 @@ package uk.gov.hmrc.mobilemessages.connector
 import com.fasterxml.jackson.databind.JsonMappingException
 import com.github.tomakehurst.wiremock.client.WireMock
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import play.api.libs.json.Json
 import play.api.libs.json.Json.{parse, toJson}
 import play.api.test.FakeApplication
 import play.twirl.api.Html
@@ -87,9 +89,10 @@ class MessagesConnectorSpec
     "microservice.services.ntc.port" -> s"$stubPort"
   )
 
-  private trait Setup {
+  private trait Setup extends MockitoSugar {
     private val authToken = "authToken"
     implicit lazy val hc = HeaderCarrier(Some(Authorization(authToken)))
+    implicit val formats = Json.format[RenderMessageLocation]
 
     lazy val html = Html.apply("<div>some snippet</div>")
     val responseRenderer = RenderMessageLocation("sa-message-renderer", "http://somelocation")
@@ -121,7 +124,7 @@ class MessagesConnectorSpec
 
     implicit val authUser: Option[Authority] = Some(Authority(Nino("CS700100A"), L200, "someId"))
 
-    val connector = MessageConnector
+    val connector = mock[MessageConnector]
 
   }
 

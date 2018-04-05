@@ -17,28 +17,36 @@
 package uk.gov.hmrc.mobilemessages.acceptance
 
 import org.joda.time.{DateTime, LocalDate}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.Result
+import play.api.test.FakeApplication
+import uk.gov.hmrc.mobilemessages.controllers.{LiveMobileMessagesController, MobileMessagesController, StubApplicationConfiguration}
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
+import uk.gov.hmrc.play.test.WithFakeApplication
+import play.api.test.Helpers._
 
-class GetMessagesAcceptanceSpec extends AcceptanceSpec {
+class GetMessagesAcceptanceSpec extends AcceptanceSpec with WithFakeApplication with StubApplicationConfiguration {
+
+  override lazy val fakeApplication = FakeApplication(additionalConfiguration = config)
 
   "microservice get messages" should {
 
     "return a list of message heads converted from message service response" in new Setup {
-      auth.authRecordExists()
+      running(fakeApplication) {
+        auth.authRecordExists()
 
-      message.headersListReturns(
-        Seq(
-          message.headerWith(id = messageId1),
-          message.headerWith(id = messageId2, readTime = Some(readTime))
+        messageMock.headersListReturns(
+          Seq(
+            messageMock.headerWith(id = messageId1),
+            messageMock.headerWith(id = messageId2, readTime = Some(readTime))
+          )
         )
-      )
 
-      val getMessagesResponse = messageController.getMessages(None)(mobileMessagesGetRequest).futureValue
-      jsonBodyOf(getMessagesResponse) shouldBe expectedGetMessagesResponse
+        val getMessagesResponse: Result = messageController.getMessages(None)(mobileMessagesGetRequest).futureValue
+        jsonBodyOf(getMessagesResponse) shouldBe expectedGetMessagesResponse
+      }
     }
   }
-
 
   trait Setup {
     val validFromDate = new LocalDate(29348L)
@@ -46,7 +54,7 @@ class GetMessagesAcceptanceSpec extends AcceptanceSpec {
     val messageId1 = "messageId90342"
     val messageId2 = "messageId932847"
 
-    val expectedGetMessagesResponse =
+    val expectedGetMessagesResponse: JsValue =
       Json.parse(
         s"""
            |[
@@ -68,5 +76,7 @@ class GetMessagesAcceptanceSpec extends AcceptanceSpec {
            |]
              """.stripMargin)
 
+    val messageController: MobileMessagesController = new LiveMobileMessagesController(testMobileMessagesService,
+      testAccountAccessControlWithHeaderCheck)
   }
 }

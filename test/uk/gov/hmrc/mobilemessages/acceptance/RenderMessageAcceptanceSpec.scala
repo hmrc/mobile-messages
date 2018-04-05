@@ -19,6 +19,7 @@ package uk.gov.hmrc.mobilemessages.acceptance
 import org.apache.http.HttpStatus
 import play.api.libs.json.Json.parse
 import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageResponse}
+import uk.gov.hmrc.mobilemessages.controllers.{LiveMobileMessagesController, MobileMessagesController}
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 
 class RenderMessageAcceptanceSpec extends AcceptanceSpec {
@@ -26,9 +27,9 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
   "microservice render message" should {
 
     "return a rendered message after calling get message and sa renderer" in new Setup {
-      private val messageBody = message.bodyWith(id = messageId1)
+      private val messageBody = messageMock.bodyWith(id = messageId1)
 
-      message.getByIdReturns(messageBody)
+      messageMock.getByIdReturns(messageBody)
       saMessageRenderer.successfullyRenders(messageBody)
 
       // when
@@ -40,12 +41,12 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
     }
 
     "return a rendered message after calling get message and ats renderer" in new Setup {
-      private val messageBody = message.bodyWith(
+      private val messageBody = messageMock.bodyWith(
         id = messageId1,
         renderUrl = ResourceActionLocation("ats-message-renderer", "/ats/render/url/path")
       )
 
-      message.getByIdReturns(messageBody)
+      messageMock.getByIdReturns(messageBody)
       atsMessageRenderer.successfullyRenders(messageBody)
 
       // when
@@ -57,12 +58,12 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
     }
 
     "return a rendered message after calling get message and secure message renderer" in new Setup {
-      private val messageBody = message.bodyWith(
+      private val messageBody = messageMock.bodyWith(
         id = messageId1,
         renderUrl = ResourceActionLocation("secure-message-renderer", "/secure/render/url/path")
       )
 
-      message.getByIdReturns(messageBody)
+      messageMock.getByIdReturns(messageBody)
       secureMessageRenderer.successfullyRenders(messageBody)
 
       // when
@@ -74,8 +75,8 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
     }
 
     "mark message as read if the markAsRead url is present in the message body" in new Setup {
-      private val messageBody = successfulSetupFor(message.bodyToBeMarkedAsReadWith(id = messageId1))
-      message.markAsReadSucceedsFor(messageBody)
+      private val messageBody = successfulSetupFor(messageMock.bodyToBeMarkedAsReadWith(id = messageId1))
+      messageMock.markAsReadSucceedsFor(messageBody)
 
       // when
       val readMessageResponse = messageController.read(None)(
@@ -85,12 +86,12 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
       bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(messageBody)
 
       eventually {
-        message.assertMarkAsReadHasBeenCalledFor(messageBody)
+        messageMock.assertMarkAsReadHasBeenCalledFor(messageBody)
       }
     }
 
     "do not mark message as read if the markAsRead url is not present in the message body" in new Setup {
-      private val messageBody = successfulSetupFor(message.bodyWith(id = messageId1))
+      private val messageBody = successfulSetupFor(messageMock.bodyWith(id = messageId1))
 
       // when
       val readMessageResponse = messageController.read(None)(
@@ -100,12 +101,12 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
       bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(messageBody)
 
       waitUntilMarkAsReadIsCalled()
-      message.assertMarkAsReadHasNeverBeenCalled()
+      messageMock.assertMarkAsReadHasNeverBeenCalled()
     }
 
     "still return successful response even if mark as read fails" in new Setup {
-      private val messageBody = successfulSetupFor(message.bodyToBeMarkedAsReadWith(id = messageId1))
-      message.markAsReadFailsWith(status = 500, messageBody)
+      private val messageBody = successfulSetupFor(messageMock.bodyToBeMarkedAsReadWith(id = messageId1))
+      messageMock.markAsReadFailsWith(status = 500, messageBody)
 
       // when
       val readMessageResponse = messageController.read(None)(
@@ -115,15 +116,15 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
       bodyOf(readMessageResponse) shouldBe saMessageRenderer.rendered(messageBody)
 
       eventually {
-        message.assertMarkAsReadHasBeenCalledFor(messageBody)
+        messageMock.assertMarkAsReadHasBeenCalledFor(messageBody)
       }
     }
 
     "does not mark message as read when the rendering fails" in new Setup {
-      private val messageBody = message.bodyToBeMarkedAsReadWith(id = messageId1)
-      message.getByIdReturns(messageBody)
+      private val messageBody = messageMock.bodyToBeMarkedAsReadWith(id = messageId1)
+      messageMock.getByIdReturns(messageBody)
       saMessageRenderer.failsWith(status = 500, path = messageBody.renderUrl.url)
-      message.markAsReadSucceedsFor(messageBody)
+      messageMock.markAsReadSucceedsFor(messageBody)
 
       // when
       val readMessageResponse = messageController.read(None)(
@@ -133,7 +134,7 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
       status(readMessageResponse) shouldBe HttpStatus.SC_INTERNAL_SERVER_ERROR
 
       waitUntilMarkAsReadIsCalled()
-      message.assertMarkAsReadHasNeverBeenCalledFor(messageBody)
+      messageMock.assertMarkAsReadHasNeverBeenCalledFor(messageBody)
     }
   }
 
@@ -143,7 +144,7 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
     auth.authRecordExists()
 
     def successfulSetupFor(messageBody: UpstreamMessageResponse): UpstreamMessageResponse = {
-      message.getByIdReturns(messageBody)
+      messageMock.getByIdReturns(messageBody)
       saMessageRenderer.successfullyRenders(messageBody)
       messageBody
     }
@@ -151,5 +152,8 @@ class RenderMessageAcceptanceSpec extends AcceptanceSpec {
     def waitUntilMarkAsReadIsCalled(): Unit = {
       Thread.sleep(100)
     }
+
+    val messageController: MobileMessagesController = new LiveMobileMessagesController(testMobileMessagesService,
+      testAccountAccessControlWithHeaderCheck)
   }
 }

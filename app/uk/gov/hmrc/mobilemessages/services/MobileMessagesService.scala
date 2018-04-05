@@ -16,17 +16,18 @@
 
 package uk.gov.hmrc.mobilemessages.services
 
+import javax.inject.Inject
+
 import org.joda.time.DateTime
+import play.api.Configuration
 import play.twirl.api.Html
 import uk.gov.hmrc.api.sandbox.FileResource
 import uk.gov.hmrc.api.service.Auditor
 import uk.gov.hmrc.domain.SaUtr
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilemessages.config.MicroserviceAuditConnector
 import uk.gov.hmrc.mobilemessages.connector._
 import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControl, Authority}
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
-import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator._
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.time.DateTimeUtils
@@ -39,10 +40,10 @@ trait MobileMessagesService {
   def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html]
 }
 
-trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
-  val accountAccessControl: AccountAccessControl
-
-  def messageConnector: MessageConnector
+class LiveMobileMessagesService @Inject()(val messageConnector: MessageConnector,
+                                          val auditConnector: AuditConnector,
+                                          val accountAccessControl: AccountAccessControl,
+                                          val appNameConfiguration: Configuration) extends MobileMessagesService with Auditor {
 
   override def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = {
     withAudit("readAndUnreadMessages", Map.empty) {
@@ -52,46 +53,32 @@ trait LiveMobileMessagesService extends MobileMessagesService with Auditor {
 
   override def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] =
     withAudit("readMessageContent", Map.empty) {
-        messageConnector.getMessageBy(messageId) flatMap { message =>
-            messageConnector.render(message, hc) map { renderedMessage =>
-              markAsReadIfUnread.apply(message)
-              renderedMessage
-            }
-          }
+      messageConnector.getMessageBy(messageId) flatMap { message =>
+        messageConnector.render(message, hc) map { renderedMessage =>
+          markAsReadIfUnread.apply(message)
+          renderedMessage
+        }
       }
+    }
 
   def markAsReadIfUnread(implicit hc: HeaderCarrier, ec: ExecutionContext): Message => Unit = {
-      case unreadMessage@UnreadMessage(_, _, _) => messageConnector.markAsRead(unreadMessage)
-      case _ => ()
+    case unreadMessage@UnreadMessage(_, _, _) => messageConnector.markAsRead(unreadMessage)
+    case _ => ()
   }
 }
 
-trait SandboxMobileMessagesService extends MobileMessagesService with FileResource {
+class SandboxMobileMessagesService extends MobileMessagesService with FileResource {
 
-  implicit val dateTime: DateTime
-  val saUtr: SaUtr
+  import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator._
 
-  def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
+  implicit val dateTime: DateTime = DateTimeUtils.now
+  val saUtr: SaUtr = nextSaUtr
+
+  override def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
     Future.successful(Seq(readMessageHeader(saUtr), unreadMessageHeader(saUtr)))
 
   override def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
     Future.successful(newTaxStatement)
   }
 
-}
-
-object SandboxMobileMessagesService extends SandboxMobileMessagesService {
-
-  import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator._
-
-  implicit val dateTime: DateTime = DateTimeUtils.now
-  val saUtr = nextSaUtr
-}
-
-object LiveMobileMessagesService extends LiveMobileMessagesService {
-  override val accountAccessControl: AccountAccessControl = AccountAccessControl
-
-  override val messageConnector: MessageConnector = MessageConnector
-
-  val auditConnector: AuditConnector = MicroserviceAuditConnector
 }

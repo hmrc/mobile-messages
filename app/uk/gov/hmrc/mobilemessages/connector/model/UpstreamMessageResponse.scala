@@ -16,33 +16,27 @@
 
 package uk.gov.hmrc.mobilemessages.connector.model
 
-
 import play.api.libs.json.Reads
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageId, ReadMessage, UnreadMessage}
-import uk.gov.hmrc.play.config.ServicesConfig
 
 final case class ResourceActionLocation(service: String, url: String) {
-  def toUrlUsing(servicesConfig: ServicesConfig) = {
-    val baseUrl: String = servicesConfig.baseUrl(service)
-
-    s"${baseUrl.stripSuffix("/").trim}/${url.stripPrefix("/").trim}"
-  }
+  def toUrlUsing(baseUrl: String) = s"${baseUrl.stripSuffix("/").trim}/${url.stripPrefix("/").trim}"
 }
 
 final case class UpstreamMessageResponse(id: String,
-                                   renderUrl: ResourceActionLocation,
-                                   markAsReadUrl: Option[ResourceActionLocation]) {
-  def toMessageUsing(servicesConfig: ServicesConfig): Message = {
+                                         renderUrl: ResourceActionLocation,
+                                         markAsReadUrl: Option[ResourceActionLocation]) {
+  def toMessageUsing(baseUrl: String): Message = {
     markAsReadUrl.fold[Message](
       ReadMessage(
         MessageId(id),
-        renderUrl.toUrlUsing(servicesConfig)
+        renderUrl.toUrlUsing(baseUrl)
       )
     )(res =>
       UnreadMessage(
         MessageId(id),
-        renderUrl.toUrlUsing(servicesConfig),
-        res.toUrlUsing(servicesConfig)
+        renderUrl.toUrlUsing(baseUrl),
+        res.toUrlUsing(baseUrl)
       )
     )
   }

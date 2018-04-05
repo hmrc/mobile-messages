@@ -23,13 +23,19 @@ import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import play.api.test.{FakeApplication, FakeRequest}
-import play.api.{GlobalSettings, Play}
+import play.api.{Configuration, GlobalSettings, Play}
+import play.twirl.api.Html
 import uk.gov.hmrc.crypto.CryptoWithKeysFromConfig
-import uk.gov.hmrc.domain.SaUtr
+import uk.gov.hmrc.domain.{Nino, SaUtr}
 import uk.gov.hmrc.mobilemessages.acceptance.microservices.{AuthServiceMock, MessageRendererServiceMock, MessageServiceMock}
 import uk.gov.hmrc.mobilemessages.acceptance.utils.WiremockServiceLocatorSugar
-import uk.gov.hmrc.mobilemessages.controllers.{LiveMobileMessagesController, MobileMessagesController}
+import uk.gov.hmrc.mobilemessages.config.WSHttp
+import uk.gov.hmrc.mobilemessages.controllers._
+import uk.gov.hmrc.mobilemessages.controllers.action.AccountAccessControlWithHeaderCheck
+import uk.gov.hmrc.mobilemessages.domain.MessageHeader
+import uk.gov.hmrc.mobilemessages.services.LiveMobileMessagesService
 import uk.gov.hmrc.mobilemessages.utils.ConfigHelper.microserviceConfigPathFor
+import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.test.UnitSpec
 
 trait AcceptanceSpec extends UnitSpec
@@ -71,12 +77,21 @@ trait AcceptanceSpec extends UnitSpec
     WireMock.reset()
   }
 
-  lazy val messageController: MobileMessagesController = LiveMobileMessagesController
+  val nino = Nino("CS700100A")
+  val saUtrVal = SaUtr("1234567890")
+  val testAccess = new TestAccessControl(Some(nino), Some(saUtrVal))
+  lazy val html = Html.apply("<div>some snippet</div>")
+  val message = new MessageServiceMock("authToken")
+  val mockAuditConnector = mock[AuditConnector]
+  val sampleMessage = message.convertedFrom(message.bodyWith(id = "id1"))
+  val messageConnector = new TestMessageConnector(Seq.empty[MessageHeader], html, sampleMessage, mock[WSHttp], "someUrl")
+  val testMobileMessagesService: LiveMobileMessagesService = new TestMobileMessagesService(mock[Configuration], testAccess, messageConnector, mockAuditConnector)
+  val testAccountAccessControlWithHeaderCheck: AccountAccessControlWithHeaderCheck = mock[AccountAccessControlWithHeaderCheck]
 
   val utr = SaUtr("109238")
 
   val auth = new AuthServiceMock
-  val message = new MessageServiceMock(auth.token)
+  val messageMock = new MessageServiceMock(auth.token)
   val saMessageRenderer = new MessageRendererServiceMock(auth.token, servicePort = 8089, "sa-message-renderer")
   val atsMessageRenderer = new MessageRendererServiceMock(auth.token, servicePort = 8093, "ats-message-renderer")
   val secureMessageRenderer = new MessageRendererServiceMock(auth.token, servicePort = 9847, "secure-message-renderer")
