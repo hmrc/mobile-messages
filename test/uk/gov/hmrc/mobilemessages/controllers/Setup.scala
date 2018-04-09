@@ -36,7 +36,7 @@ import uk.gov.hmrc.mobilemessages.config.WSHttp
 import uk.gov.hmrc.mobilemessages.connector.MessageConnector
 import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControl, AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck, Authority}
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
-import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId}
+import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, ReadMessage}
 import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 import uk.gov.hmrc.mobilemessages.utils.UnitTestCrypto
@@ -82,8 +82,7 @@ class TestMobileMessagesService(override val appNameConfiguration: Configuration
 }
 
 class TestSandboxMobileMessagesService(val appNameConfiguration: Configuration, testAccessControl: TestAccessControl,
-                                mobileMessageConnector: MessageConnector, testAuditConnector: AuditConnector) extends SandboxMobileMessagesService with TimeSetup {
-  override implicit val dateTime: DateTime = timeNow
+                                mobileMessageConnector: MessageConnector, testAuditConnector: AuditConnector) extends SandboxMobileMessagesService {
   override val saUtr = SaUtr("1234567890")
 }
 
@@ -133,7 +132,7 @@ trait Setup extends MockitoSugar with TimeSetup {
   val getMessagesResponseItemsList = messageServiceHeadersResponse.
     map(messageHeaderResponseBodyFrom)
 
-  val sampleMessage = message.convertedFrom(message.bodyWith(id = "id1"))
+//  val sampleMessage = message.convertedFrom(message.bodyWith(id = "id1"))
 
   val acceptHeader = "Accept" -> "application/vnd.hmrc.1.0+json"
   val emptyRequest = FakeRequest()
@@ -148,7 +147,7 @@ trait Setup extends MockitoSugar with TimeSetup {
   lazy val readTimeRequestNoHeaders = fakeRequest(toJson(RenderMessageRequest(encrypted("543e8c6001000001003e4a9e"))))
 
   val testAccess = new TestAccessControl(Some(nino), Some(saUtrVal))
-  val messageConnector = new TestMessageConnector(Seq.empty[MessageHeader], html, sampleMessage, mock[WSHttp], "someUrl")
+  val messageConnector = new TestMessageConnector(Seq.empty[MessageHeader], html, ReadMessage(id = MessageId("id1"), "someUrl"), mock[WSHttp], "someUrl")
   val testCompositeAction = new TestAccountAccessControlWithAccept(testAccess)
   val testMMService = new TestMobileMessagesService(mock[Configuration], testAccess, messageConnector, mockAuditConnector)
 
@@ -170,7 +169,7 @@ trait SuccessWithMessages extends Setup {
 
   override val testMMService =
     new TestMobileMessagesService(mock[Configuration], testAccess,
-      new TestMessageConnector(messageServiceHeadersResponse, html, sampleMessage, mock[WSHttp], "someUrl"), mockAuditConnector)
+      new TestMessageConnector(messageServiceHeadersResponse, html, ReadMessage(id = MessageId("id1"), "someUrl"), mock[WSHttp], "someUrl"), mockAuditConnector)
 
   val controller = new MobileMessagesController {
     override val service: MobileMessagesService = testMMService

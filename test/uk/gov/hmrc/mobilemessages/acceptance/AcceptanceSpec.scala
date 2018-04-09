@@ -32,7 +32,7 @@ import uk.gov.hmrc.mobilemessages.acceptance.utils.WiremockServiceLocatorSugar
 import uk.gov.hmrc.mobilemessages.config.WSHttp
 import uk.gov.hmrc.mobilemessages.controllers._
 import uk.gov.hmrc.mobilemessages.controllers.action.AccountAccessControlWithHeaderCheck
-import uk.gov.hmrc.mobilemessages.domain.MessageHeader
+import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, ReadMessage}
 import uk.gov.hmrc.mobilemessages.services.LiveMobileMessagesService
 import uk.gov.hmrc.mobilemessages.utils.ConfigHelper.microserviceConfigPathFor
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -77,20 +77,21 @@ trait AcceptanceSpec extends UnitSpec
     WireMock.reset()
   }
 
+  val auth = new AuthServiceMock
+
   val nino = Nino("CS700100A")
   val saUtrVal = SaUtr("1234567890")
   val testAccess = new TestAccessControl(Some(nino), Some(saUtrVal))
   lazy val html = Html.apply("<div>some snippet</div>")
-  val message = new MessageServiceMock("authToken")
-  val mockAuditConnector = mock[AuditConnector]
-  val sampleMessage = message.convertedFrom(message.bodyWith(id = "id1"))
-  val messageConnector = new TestMessageConnector(Seq.empty[MessageHeader], html, sampleMessage, mock[WSHttp], "someUrl")
+  val message = new MessageServiceMock(auth.token)
+  val mockAuditConnector: AuditConnector = mock[AuditConnector]
+  //val sampleMessage: Message = message.convertedFrom(message.bodyWith(id = "id1"))
+  val messageConnector = new TestMessageConnector(Seq.empty[MessageHeader], html, ReadMessage(id = MessageId("id1"), "someUrl"), mock[WSHttp], "someUrl")
   val testMobileMessagesService: LiveMobileMessagesService = new TestMobileMessagesService(mock[Configuration], testAccess, messageConnector, mockAuditConnector)
   val testAccountAccessControlWithHeaderCheck: AccountAccessControlWithHeaderCheck = mock[AccountAccessControlWithHeaderCheck]
 
   val utr = SaUtr("109238")
 
-  val auth = new AuthServiceMock
   val messageMock = new MessageServiceMock(auth.token)
   val saMessageRenderer = new MessageRendererServiceMock(auth.token, servicePort = 8089, "sa-message-renderer")
   val atsMessageRenderer = new MessageRendererServiceMock(auth.token, servicePort = 8093, "ats-message-renderer")

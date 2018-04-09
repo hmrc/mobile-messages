@@ -18,7 +18,6 @@ package uk.gov.hmrc.mobilemessages.services
 
 import javax.inject.Inject
 
-import org.joda.time.DateTime
 import play.api.Configuration
 import play.twirl.api.Html
 import uk.gov.hmrc.api.sandbox.FileResource
@@ -30,7 +29,6 @@ import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControl, Auth
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.time.DateTimeUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -71,7 +69,6 @@ class SandboxMobileMessagesService extends MobileMessagesService with FileResour
 
   import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator._
 
-  implicit val dateTime: DateTime = DateTimeUtils.now
   val saUtr: SaUtr = nextSaUtr
 
   override def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =

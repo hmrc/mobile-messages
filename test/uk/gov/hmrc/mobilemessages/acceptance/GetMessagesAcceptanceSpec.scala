@@ -17,34 +17,33 @@
 package uk.gov.hmrc.mobilemessages.acceptance
 
 import org.joda.time.{DateTime, LocalDate}
+import org.mockito.Mockito._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Result
-import play.api.test.FakeApplication
+import play.api.test.{FakeApplication, PlayRunners}
+import uk.gov.hmrc.mobilemessages.connector.MessagesConnectorSpec
 import uk.gov.hmrc.mobilemessages.controllers.{LiveMobileMessagesController, MobileMessagesController, StubApplicationConfiguration}
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 import uk.gov.hmrc.play.test.WithFakeApplication
-import play.api.test.Helpers._
 
-class GetMessagesAcceptanceSpec extends AcceptanceSpec with WithFakeApplication with StubApplicationConfiguration {
-
-  override lazy val fakeApplication = FakeApplication(additionalConfiguration = config)
+class GetMessagesAcceptanceSpec extends MessagesConnectorSpec with AcceptanceSpec with StubApplicationConfiguration with PlayRunners {
 
   "microservice get messages" should {
 
     "return a list of message heads converted from message service response" in new Setup {
-      running(fakeApplication) {
-        auth.authRecordExists()
+      auth.authRecordExists()
 
-        messageMock.headersListReturns(
-          Seq(
-            messageMock.headerWith(id = messageId1),
-            messageMock.headerWith(id = messageId2, readTime = Some(readTime))
-          )
+      //when(messageMock.fullUrlFor("sa-message-renderer", "/utr/render")).thenReturn("http://localhost:8089/utr/render")
+
+      messageMock.headersListReturns(
+        Seq(
+          messageMock.headerWith(id = messageId1),
+          messageMock.headerWith(id = messageId2, readTime = Some(readTime))
         )
+      )
 
-        val getMessagesResponse: Result = messageController.getMessages(None)(mobileMessagesGetRequest).futureValue
-        jsonBodyOf(getMessagesResponse) shouldBe expectedGetMessagesResponse
-      }
+      val getMessagesResponse: Result = messageController.getMessages(None)(mobileMessagesGetRequest).futureValue
+      jsonBodyOf(getMessagesResponse) shouldBe expectedGetMessagesResponse
     }
   }
 
@@ -70,7 +69,7 @@ class GetMessagesAcceptanceSpec extends AcceptanceSpec with WithFakeApplication 
            |    "subject": "message subject",
            |    "validFrom": "${validFromDate.toString()}",
            |    "readTimeUrl": "${encrypted(messageId2, configBasedCrypto)}",
-           |    "readTime": ${readTime.getMillis()},
+           |    "readTime": ${readTime.getMillis},
            |    "sentInError": false
            |  }
            |]
@@ -79,4 +78,5 @@ class GetMessagesAcceptanceSpec extends AcceptanceSpec with WithFakeApplication 
     val messageController: MobileMessagesController = new LiveMobileMessagesController(testMobileMessagesService,
       testAccountAccessControlWithHeaderCheck)
   }
+
 }

@@ -25,27 +25,27 @@ import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.mobilemessages.utils.ConfigHelper.microserviceConfigPathFor
 
 class MessageServiceMock(authToken: String) {
-
-  def fullUrlFor(serviceName: String, path: String) = {
-    val port = Play.current.configuration.getString(s"${microserviceConfigPathFor(serviceName)}.port").get
-    val host = Play.current.configuration.getString(s"${microserviceConfigPathFor(serviceName)}.host").get
-    s"http://$host:$port$path"
-  }
-
-  def convertedFrom(messageBody: UpstreamMessageResponse): Message = {
-
-    messageBody.markAsReadUrl match {
-      case Some(location) => UnreadMessage(
-        MessageId(messageBody.id),
-        fullUrlFor(messageBody.renderUrl.service, messageBody.renderUrl.url),
-        fullUrlFor(location.service, location.url)
-      )
-      case _ => ReadMessage(
-        MessageId(messageBody.id),
-        fullUrlFor(messageBody.renderUrl.service, messageBody.renderUrl.url)
-      )
-    }
-  }
+//
+//  def fullUrlFor(serviceName: String, path: String) = {
+//    val port = Play.current.configuration.getString(s"${microserviceConfigPathFor(serviceName)}.port").get
+//    val host = Play.current.configuration.getString(s"${microserviceConfigPathFor(serviceName)}.host").get
+//    s"http://$host:$port$path"
+//  }
+//
+//  def convertedFrom(messageBody: UpstreamMessageResponse): Message = {
+//
+//    messageBody.markAsReadUrl match {
+//      case Some(location) => UnreadMessage(
+//        MessageId(messageBody.id),
+//        fullUrlFor(messageBody.renderUrl.service, messageBody.renderUrl.url),
+//        fullUrlFor(location.service, location.url)
+//      )
+//      case _ => ReadMessage(
+//        MessageId(messageBody.id),
+//        fullUrlFor(messageBody.renderUrl.service, messageBody.renderUrl.url)
+//      )
+//    }
+//  }
 
   def getByIdReturns(message: UpstreamMessageResponse): Unit = {
     givenThat(get(urlEqualTo(s"/messages/${message.id}")).
