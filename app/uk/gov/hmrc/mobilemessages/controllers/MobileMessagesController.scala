@@ -67,13 +67,15 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
 }
 
 class SandboxMobileMessagesController @Inject()(val service: SandboxMobileMessagesService,
-                                                val accessControl: AccountAccessControlCheckAccessOff,
-                                                val crypto: Encrypter with Decrypter =
-                                                CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption"))
-  extends MobileMessagesController
+                                                val accessControl: AccountAccessControlCheckAccessOff)
+  extends MobileMessagesController {
+  val crypto: Encrypter with Decrypter =
+    CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption")
+}
 
 class LiveMobileMessagesController @Inject()(val service: LiveMobileMessagesService,
-                                             val accessControl: AccountAccessControlWithHeaderCheck,
-                                             val crypto: Encrypter with Decrypter =
-                                             CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption"))
-  extends MobileMessagesController
+                                             val accessControl: AccountAccessControlWithHeaderCheck)
+  extends MobileMessagesController {
+  val crypto: Encrypter with Decrypter =
+    CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption")
+}

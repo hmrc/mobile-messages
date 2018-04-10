@@ -21,19 +21,26 @@ import javax.inject.{Inject, Named}
 
 import org.apache.commons.codec.CharEncoding.UTF_8
 import org.joda.time.DateTime
+import play.api.{Configuration, Environment}
 import play.twirl.api.Html
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.mobilemessages.config.WSHttp
 import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageHeadersResponse, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.controllers.action.Authority
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
+import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.time.DateTimeUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class MessageConnector @Inject()(@Named("messages") val messageBaseUrl: String,
-                                     val http: WSHttp) extends SessionCookieEncryptionSupport with HttpErrorFunctions {
+                                 val http: HttpGet with HttpPost,
+                                 override val runModeConfiguration: Configuration,
+                                 environment: Environment)
+  extends SessionCookieEncryptionSupport with HttpErrorFunctions with ServicesConfig {
+
+  override protected def mode = environment.mode
+
   implicit val now: DateTime = DateTimeUtils.now
 
   def exception(key: String) = throw new Exception(s"Failed to find $key")
@@ -46,7 +53,7 @@ class MessageConnector @Inject()(@Named("messages") val messageBaseUrl: String,
   def getMessageBy(id: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Message] = {
     http.GET[UpstreamMessageResponse](s"$messageBaseUrl/messages/${id.value}").
       map(upstreamResponseMessage =>
-        upstreamResponseMessage.toMessageUsing(upstreamResponseMessage.renderUrl.service))
+        upstreamResponseMessage.toMessageUsing(baseUrl(upstreamResponseMessage.renderUrl.service)))
   }
 
   def render(message: Message, hc: HeaderCarrier)(implicit ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {

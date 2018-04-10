@@ -23,17 +23,16 @@ import play.api.libs.json.Json.toJson
 import play.api.libs.json.{Json, OFormat, Reads}
 import play.api.mvc._
 import uk.gov.hmrc.api.controllers.{ErrorAcceptHeaderInvalid, ErrorUnauthorizedLowCL, HeaderValidator}
-import uk.gov.hmrc.auth.core.ConfidenceLevel.L0
 import uk.gov.hmrc.auth.core.retrieve.Retrievals.{confidenceLevel, nino}
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions, ConfidenceLevel}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{Request => _, _}
-import uk.gov.hmrc.mobilemessages.config.WSHttp
 import uk.gov.hmrc.mobilemessages.controllers.{ErrorUnauthorizedNoNino, ForbiddenAccess}
 import uk.gov.hmrc.play.HeaderCarrierConverter.fromHeadersAndSession
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 final case class AuthenticatedRequest[A](authority: Option[Authority], request: Request[A]) extends WrappedRequest(request)
 
@@ -43,15 +42,10 @@ class NinoNotFoundOnAccount(message: String) extends HttpException(message, 401)
 
 class AccountWithLowCL(message: String) extends HttpException(message, 401)
 
-trait AccountAccessControl extends ActionBuilder[AuthenticatedRequest] with Results with AuthorisedFunctions {
-
-  import scala.concurrent.ExecutionContext.Implicits.global
-
-  val authUrl: String
-
-  val http: WSHttp
-
-  def serviceConfidenceLevel: ConfidenceLevel = ???
+class AccountAccessControl @Inject()(val authConnector: AuthConnector,
+                                     val http: HttpGet,
+                                     @Named("auth") val authUrl: String,
+                                     @Named("controllers.confidenceLevel") val serviceConfidenceLevel: Int) extends ActionBuilder[AuthenticatedRequest] with Results with AuthorisedFunctions {
 
   val missingNinoException = new UnauthorizedException("The user must have a National Insurance Number to access this service")
 
@@ -79,18 +73,12 @@ trait AccountAccessControl extends ActionBuilder[AuthenticatedRequest] with Resu
     }
   }
 
-  private def confirmConfiendenceLevel(confidenceLevel: ConfidenceLevel): Unit = {
-    if (serviceConfidenceLevel.level > confidenceLevel.level) {
-      throw new ForbiddenException("The user does not have sufficient permissions to access this service")
-    }
-  }
-
   def grantAccess()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Authority] = {
     getAuthorityRecord.flatMap { authRecord: AuthorityRecord =>
       authorised().retrieve(nino and confidenceLevel) {
         case Some(foundNino) ~ foundConfidenceLevel ⇒
           if (foundNino.isEmpty) throw missingNinoException
-          else if (serviceConfidenceLevel.level > foundConfidenceLevel.level)
+          else if (serviceConfidenceLevel > foundConfidenceLevel.level)
             throw new ForbiddenException("The user does not have sufficient permissions to access this service")
           else Future successful Authority(Nino(foundNino), foundConfidenceLevel, authRecord.uri)
         case None ~ _ ⇒
@@ -133,10 +121,11 @@ class AccountAccessControlCheckAccessOff @Inject()(override val accessControl: A
   override val checkAccess = false
 }
 
-class AccountAccessControlSandbox @Inject()(@Named("auth") val authUrl: String, val http: WSHttp, val authConnector: AuthConnector)
-  extends AccountAccessControl {
-  override def serviceConfidenceLevel: ConfidenceLevel = L0
-
+class AccountAccessControlSandbox @Inject()(@Named("auth") override val authUrl: String,
+                                            override val http: HttpGet,
+                                            override val authConnector: AuthConnector,
+                                            override val serviceConfidenceLevel: Int = 0)
+  extends AccountAccessControl(authConnector, http, authUrl, serviceConfidenceLevel) {
   override def grantAccess()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Authority] =
     Future.failed(new IllegalArgumentException("Sandbox mode!"))
 }

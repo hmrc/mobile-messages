@@ -27,6 +27,7 @@ import uk.gov.hmrc.api.connector.ServiceLocatorConnector
 import uk.gov.hmrc.api.controllers.DocumentationController
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.{HttpGet, HttpPost}
+import uk.gov.hmrc.mobilemessages.tasks.ServiceLocatorRegistrationTask
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -39,11 +40,11 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
 
   override def configure(): Unit = {
 
-    //bind(classOf[ServiceLocatorConnector]).to(classOf[ApiServiceLocatorConnector])
+    bind(classOf[ServiceLocatorConnector]).to(classOf[ApiServiceLocatorConnector])
     bind(classOf[HttpGet]).to(classOf[WSHttpImpl])
     bind(classOf[HttpPost]).to(classOf[WSHttpImpl])
     bind(classOf[HttpClient]).to(classOf[WSHttpImpl])
-    //bind(classOf[ServiceLocatorRegistrationTask]).asEagerSingleton()
+    bind(classOf[ServiceLocatorRegistrationTask]).asEagerSingleton()
 
     bind(classOf[Audit]).to(classOf[MicroserviceAudit])
     bind(classOf[AuthConnector]).to(classOf[DefaultAuthConnector])
@@ -51,7 +52,7 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
 
     bindConfigInt("controllers.confidenceLevel")
     bind(classOf[String]).annotatedWith(named("auth")).toInstance(baseUrl("auth"))
-
+    bind(classOf[String]).annotatedWith(Names.named("messages")).toInstance(baseUrl("message"))
     bind(classOf[String]).annotatedWith(Names.named("appName")).toProvider(AppNameProvider)
   }
 
