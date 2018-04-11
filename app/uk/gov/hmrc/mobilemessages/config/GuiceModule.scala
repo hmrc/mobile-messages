@@ -53,12 +53,11 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
     bindConfigInt("controllers.confidenceLevel")
     bind(classOf[String]).annotatedWith(named("auth")).toInstance(baseUrl("auth"))
     bind(classOf[String]).annotatedWith(named("messages")).toInstance(baseUrl("message"))
-    bind(classOf[String]).annotatedWith(named("appName")).toProvider(AppNameProvider)
   }
 
-  private object AppNameProvider extends Provider[String] {
-    def get(): String = AppName(configuration).appName
-  }
+  @Provides
+  @Named("appName")
+  def appName: String = AppName(configuration).appName
 
   @Provides
   @Named("baseUrl")
