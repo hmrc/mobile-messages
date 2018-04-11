@@ -35,7 +35,7 @@ import uk.gov.hmrc.time.DateTimeUtils
 import scala.concurrent.{ExecutionContext, Future}
 
 class MessageConnector @Inject()(@Named("messages") val messageBaseUrl: String,
-                                 val http: HttpGet with HttpPost,
+                                 val http: CoreGet with CorePost,
                                  override val runModeConfiguration: Configuration,
                                  environment: Environment)
   extends SessionCookieEncryptionSupport with HttpErrorFunctions with ServicesConfig {
@@ -62,7 +62,7 @@ class MessageConnector @Inject()(@Named("messages") val messageBaseUrl: String,
     val keys = Seq(SessionKeys.authToken -> encode(authToken.value, UTF_8), SessionKeys.userId -> userId.authId)
 
     val session: (String, String) = withSession(keys: _ *)
-    implicit val updatedHc: HeaderCarrier = hc.withExtraHeaders(session)
+    implicit val updatedHc = hc.withExtraHeaders(session)
 
     http.GET[HttpResponse](message.renderUrl).map(response => Html(response.body))
   }

@@ -26,7 +26,7 @@ import play.api.{Configuration, Environment}
 import uk.gov.hmrc.api.connector.ServiceLocatorConnector
 import uk.gov.hmrc.api.controllers.DocumentationController
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.http.{HttpGet, HttpPost}
+import uk.gov.hmrc.http.{CoreGet, CorePost, HttpGet, HttpPost}
 import uk.gov.hmrc.mobilemessages.tasks.ServiceLocatorRegistrationTask
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
@@ -41,8 +41,8 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
   override def configure(): Unit = {
 
     bind(classOf[ServiceLocatorConnector]).to(classOf[ApiServiceLocatorConnector])
-    bind(classOf[HttpGet]).to(classOf[WSHttpImpl])
-    bind(classOf[HttpPost]).to(classOf[WSHttpImpl])
+    bind(classOf[CoreGet]).to(classOf[WSHttpImpl])
+    bind(classOf[CorePost]).to(classOf[WSHttpImpl])
     bind(classOf[HttpClient]).to(classOf[WSHttpImpl])
     bind(classOf[ServiceLocatorRegistrationTask]).asEagerSingleton()
 

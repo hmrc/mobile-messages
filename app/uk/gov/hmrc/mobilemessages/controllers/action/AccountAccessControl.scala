@@ -43,7 +43,7 @@ class NinoNotFoundOnAccount(message: String) extends HttpException(message, 401)
 class AccountWithLowCL(message: String) extends HttpException(message, 401)
 
 class AccountAccessControl @Inject()(val authConnector: AuthConnector,
-                                     val http: HttpGet,
+                                     val http: CoreGet,
                                      @Named("auth") val authUrl: String,
                                      @Named("controllers.confidenceLevel") val serviceConfidenceLevel: Int) extends ActionBuilder[AuthenticatedRequest] with Results with AuthorisedFunctions {
 
