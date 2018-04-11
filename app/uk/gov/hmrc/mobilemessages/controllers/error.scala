@@ -30,19 +30,19 @@ case object ErrorUnauthorizedNoNino extends ErrorResponse(401, "UNAUTHORIZED", "
 case object ForbiddenAccess extends ErrorResponse(403, "UNAUTHORIZED", "Access denied!")
 
 trait ErrorHandling {
-  self:BaseController =>
+  self: BaseController =>
 
   import play.api.libs.json.Json
   import play.api.{Logger, mvc}
   import uk.gov.hmrc.api.controllers.{ErrorInternalServerError, ErrorNotFound, ErrorUnauthorizedLowCL}
 
-  def errorWrapper(func: => Future[mvc.Result])(implicit hc:HeaderCarrier, ec: ExecutionContext): Future[Result] = {
+  def errorWrapper(func: => Future[mvc.Result])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result] = {
     func.recover {
-      case ex:NotFoundException => Status(ErrorNotFound.httpStatusCode)(Json.toJson(ErrorNotFound))
+      case _: NotFoundException => Status(ErrorNotFound.httpStatusCode)(Json.toJson(ErrorNotFound))
 
-      case ex:UnauthorizedException => Unauthorized(Json.toJson(ErrorUnauthorizedNoNino))
+      case _: UnauthorizedException => Unauthorized(Json.toJson(ErrorUnauthorizedNoNino))
 
-      case ex:ForbiddenException => Unauthorized(Json.toJson(ErrorUnauthorizedLowCL))
+      case _: ForbiddenException => Unauthorized(Json.toJson(ErrorUnauthorizedLowCL))
 
       case e: Throwable =>
         Logger.error(s"Internal server error: ${e.getMessage}", e)
