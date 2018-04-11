@@ -18,8 +18,8 @@ package uk.gov.hmrc.mobilemessages.config
 
 import javax.inject.Provider
 
-import com.google.inject.AbstractModule
-import com.google.inject.name.Names
+import com.google.inject.{AbstractModule, Provides}
+import com.google.inject.name.{Named, Names}
 import com.google.inject.name.Names.named
 import play.api.Mode.Mode
 import play.api.{Configuration, Environment}
@@ -52,13 +52,17 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
 
     bindConfigInt("controllers.confidenceLevel")
     bind(classOf[String]).annotatedWith(named("auth")).toInstance(baseUrl("auth"))
-    bind(classOf[String]).annotatedWith(Names.named("messages")).toInstance(baseUrl("message"))
-    bind(classOf[String]).annotatedWith(Names.named("appName")).toProvider(AppNameProvider)
+    bind(classOf[String]).annotatedWith(named("messages")).toInstance(baseUrl("message"))
+    bind(classOf[String]).annotatedWith(named("appName")).toProvider(AppNameProvider)
   }
 
   private object AppNameProvider extends Provider[String] {
     def get(): String = AppName(configuration).appName
   }
+
+  @Provides
+  @Named("baseUrl")
+  def getBaseUrl: String => String = baseUrl
 
   /**
     * Binds a configuration value using the `path` as the name for the binding.

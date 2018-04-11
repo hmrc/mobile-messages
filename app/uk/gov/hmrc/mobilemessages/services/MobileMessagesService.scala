@@ -51,11 +51,13 @@ class LiveMobileMessagesService @Inject()(val messageConnector: MessageConnector
 
   override def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] =
     withAudit("readMessageContent", Map.empty) {
-      messageConnector.getMessageBy(messageId) flatMap { message =>
-        messageConnector.render(message, hc) map { renderedMessage =>
-          markAsReadIfUnread.apply(message)
-          renderedMessage
-        }
+      messageConnector.getMessageBy(messageId) flatMap {
+        message =>
+          messageConnector.render(message, hc) map {
+            renderedMessage =>
+              markAsReadIfUnread.apply(message)
+              renderedMessage
+          }
       }
     }
 
