@@ -77,5 +77,4 @@ class SandboxMobileMessagesService extends MobileMessagesService with FileResour
   override def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
     Future.successful(newTaxStatement)
   }
-
 }

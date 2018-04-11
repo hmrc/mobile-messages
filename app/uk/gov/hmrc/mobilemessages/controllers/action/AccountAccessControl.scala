@@ -31,8 +31,8 @@ import uk.gov.hmrc.http.{Request => _, _}
 import uk.gov.hmrc.mobilemessages.controllers.{ErrorUnauthorizedNoNino, ForbiddenAccess}
 import uk.gov.hmrc.play.HeaderCarrierConverter.fromHeadersAndSession
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
 
 final case class AuthenticatedRequest[A](authority: Option[Authority], request: Request[A]) extends WrappedRequest(request)
 
@@ -49,8 +49,8 @@ class AccountAccessControl @Inject()(val authConnector: AuthConnector,
 
   val missingNinoException = new UnauthorizedException("The user must have a National Insurance Number to access this service")
 
-  def invokeBlock[A](request: Request[A], block: AuthenticatedRequest[A] => Future[Result]) = {
-    implicit val hc = fromHeadersAndSession(request.headers, None)
+  def invokeBlock[A](request: Request[A], block: AuthenticatedRequest[A] => Future[Result]): Future[Result] = {
+    implicit val hc: HeaderCarrier = fromHeadersAndSession(request.headers, None)
 
     grantAccess().flatMap {
       authority => {
@@ -106,7 +106,7 @@ class AccountAccessControlWithHeaderCheck @Inject()(val accessControl: AccountAc
 
   override def validateAccept(rules: Option[String] => Boolean) = new ActionBuilder[AuthenticatedRequest] {
 
-    def invokeBlock[A](request: Request[A], block: AuthenticatedRequest[A] => Future[Result]) = {
+    def invokeBlock[A](request: Request[A], block: AuthenticatedRequest[A] => Future[Result]): Future[Result] = {
       if (rules(request.headers.get("Accept"))) {
         if (checkAccess) accessControl.invokeBlock(request, block)
         else block(AuthenticatedRequest(None, request))

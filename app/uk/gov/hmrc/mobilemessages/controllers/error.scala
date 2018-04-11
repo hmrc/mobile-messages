@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilemessages.controllers
 
+import play.api.mvc.Result
 import uk.gov.hmrc.api.controllers.ErrorResponse
 import uk.gov.hmrc.http.{ForbiddenException, HeaderCarrier, NotFoundException, UnauthorizedException}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
@@ -35,7 +36,7 @@ trait ErrorHandling {
   import play.api.{Logger, mvc}
   import uk.gov.hmrc.api.controllers.{ErrorInternalServerError, ErrorNotFound, ErrorUnauthorizedLowCL}
 
-  def errorWrapper(func: => Future[mvc.Result])(implicit hc:HeaderCarrier, ec: ExecutionContext) = {
+  def errorWrapper(func: => Future[mvc.Result])(implicit hc:HeaderCarrier, ec: ExecutionContext): Future[Result] = {
     func.recover {
       case ex:NotFoundException => Status(ErrorNotFound.httpStatusCode)(Json.toJson(ErrorNotFound))
 

@@ -27,18 +27,18 @@ object UpstreamMessageHeadersResponse {
   import play.api.libs.functional.syntax._
   import play.api.libs.json._
 
-  private implicit val dateTimeForm = RestFormats.dateTimeFormats
+  private implicit val dateTimeForm: Format[DateTime] = RestFormats.dateTimeFormats
 
   implicit val messageHeaderReads: Reads[MessageHeader] = (
-      (__ \ "id").read[String] and
-        (__ \ "subject").read[String] and
-        (__ \ "validFrom").read[LocalDate] and
-        (__ \ "readTime").readNullable[DateTime] and
-        (__ \ "sentInError").read[Boolean]
-      ) ((id, subject, validFrom, readTime, sentInError) =>
-          MessageHeader(MessageId(id), subject, validFrom, readTime, sentInError)
+    (__ \ "id").read[String] and
+      (__ \ "subject").read[String] and
+      (__ \ "validFrom").read[LocalDate] and
+      (__ \ "readTime").readNullable[DateTime] and
+      (__ \ "sentInError").read[Boolean]
+    ) ((id, subject, validFrom, readTime, sentInError) =>
+    MessageHeader(MessageId(id), subject, validFrom, readTime, sentInError)
   )
 
-  implicit val reads = Json.reads[UpstreamMessageHeadersResponse]
+  implicit val reads: Reads[UpstreamMessageHeadersResponse] = Json.reads[UpstreamMessageHeadersResponse]
 
 }

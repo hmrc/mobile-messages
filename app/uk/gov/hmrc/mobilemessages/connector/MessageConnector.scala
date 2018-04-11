@@ -21,6 +21,7 @@ import javax.inject.{Inject, Named}
 
 import org.apache.commons.codec.CharEncoding.UTF_8
 import org.joda.time.DateTime
+import play.api.Mode.Mode
 import play.api.{Configuration, Environment}
 import play.twirl.api.Html
 import uk.gov.hmrc.http._
@@ -39,11 +40,9 @@ class MessageConnector @Inject()(@Named("messages") val messageBaseUrl: String,
                                  environment: Environment)
   extends SessionCookieEncryptionSupport with HttpErrorFunctions with ServicesConfig {
 
-  override protected def mode = environment.mode
+  override protected def mode: Mode = environment.mode
 
   implicit val now: DateTime = DateTimeUtils.now
-
-  def exception(key: String) = throw new Exception(s"Failed to find $key")
 
   def messages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = {
     http.GET[UpstreamMessageHeadersResponse](s"$messageBaseUrl/messages").

@@ -24,15 +24,15 @@ import play.api.mvc.BodyParsers
 import play.twirl.api.Html
 import uk.gov.hmrc.api.controllers._
 import uk.gov.hmrc.crypto.{CryptoWithKeysFromConfig, Decrypter, Encrypter}
-import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck}
+import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck, Authority}
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
-import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.HeaderCarrierConverter._
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 import scala.concurrent.Future
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 trait MobileMessagesController extends BaseController with HeaderValidator with ErrorHandling {
 
@@ -42,7 +42,7 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
 
   final def getMessages(journeyId: Option[String] = None) = accessControl.validateAccept(acceptHeaderValidationRules).async {
     implicit authenticated =>
-      implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(authenticated.request.headers, None)
+      implicit val hc = fromHeadersAndSession(authenticated.request.headers, None)
       errorWrapper(service.readAndUnreadMessages().map((messageHeaders: Seq[MessageHeader]) =>
         Ok(Json.toJson(MessageHeaderResponseBody.fromAll(messageHeaders)(crypto)))
       ))
@@ -50,7 +50,7 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
 
   final def read(journeyId: Option[String] = None) = accessControl.validateAccept(acceptHeaderValidationRules).async(BodyParsers.parse.json) {
     implicit authenticated =>
-      implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(authenticated.request.headers, None)
+      implicit val hc = fromHeadersAndSession(authenticated.request.headers, None)
 
       authenticated.request.body.validate[RenderMessageRequest].fold(
         errors => {
@@ -58,7 +58,7 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
           Future.successful(BadRequest(Json.toJson(ErrorGenericBadRequest(errors))))
         },
         renderMessageRequest => {
-          implicit val auth = authenticated.authority
+          implicit val auth: Option[Authority] = authenticated.authority
           errorWrapper(service.readMessageContent(renderMessageRequest.toMessageIdUsing(crypto)).
             map((as: Html) => Ok(as)))
         }
