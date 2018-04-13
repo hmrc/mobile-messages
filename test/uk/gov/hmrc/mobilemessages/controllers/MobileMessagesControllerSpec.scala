@@ -16,24 +16,33 @@
 
 package uk.gov.hmrc.mobilemessages.controllers
 
-import org.scalatest.concurrent.ScalaFutures
-import play.api.libs.json.{Json, Reads}
+import org.mockito.Matchers.any
+import org.mockito.Mockito.when
+import play.api.libs.json.{JsValue, Json, Reads}
 import play.api.mvc.Result
 import play.api.test.FakeApplication
 import play.api.test.Helpers._
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.mobilemessages.controllers.action.Authority
 import uk.gov.hmrc.mobilemessages.controllers.model.MessageHeaderResponseBody
+import uk.gov.hmrc.mobilemessages.domain.MessageId
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class MobileMessagesReadControllerSpec extends UnitSpec with WithFakeApplication with ScalaFutures with StubApplicationConfiguration {
+class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication with StubApplicationConfiguration {
+
+  implicit val reads: Reads[MessageHeaderResponseBody] = Json.reads[MessageHeaderResponseBody]
 
   override lazy val fakeApplication = FakeApplication(additionalConfiguration = config)
 
-  "messages Live read" should {
+  "read messages Live" should {
 
     "read a valid html response from the read service" in new Success {
+      when(testMMService.readMessageContent(any[MessageId])(any[HeaderCarrier], any[ExecutionContext], any[Option[Authority]]))
+        .thenReturn(Future successful html)
+
       val result: Result = await(controller.read()(readTimeRequest))
 
       status(result) shouldBe 200
@@ -41,30 +50,32 @@ class MobileMessagesReadControllerSpec extends UnitSpec with WithFakeApplication
     }
 
     "read a valid html response from the read service when a journeyId is supplied" in new Success {
-      private val read: Future[Result] = controller.read(journeyId)(readTimeRequest)
-      val result: Result = await(read)
+      when(testMMService.readMessageContent(any[MessageId])(any[HeaderCarrier], any[ExecutionContext], any[Option[Authority]]))
+        .thenReturn(Future successful html)
+
+      val result: Result = await(controller.read(journeyId)(readTimeRequest))
 
       status(result) shouldBe 200
       contentAsString(result) shouldBe html.toString()
     }
 
     "return unauthorized when authority record does not contain a NINO" in new AuthWithoutNino {
-      val result = await(controller.read()(readTimeRequest))
+      val result: Result = await(controller.read()(readTimeRequest))
 
       status(result) shouldBe 401
     }
 
     "return status code 406 when the headers are invalid" in new Success {
-      val result = await(controller.read()(readTimeRequestNoHeaders))
+      val result: Result = await(controller.read()(readTimeRequestNoHeaders))
 
       status(result) shouldBe 406
     }
   }
 
-  "messages Sandbox read" should {
+  "read messages Sandbox" should {
 
     "return the messages" in new SandboxSuccess {
-      val result = await(controller.read()(readTimeRequest))
+      val result: Result = await(controller.read()(readTimeRequest))
 
       status(result) shouldBe 200
 
@@ -72,17 +83,11 @@ class MobileMessagesReadControllerSpec extends UnitSpec with WithFakeApplication
     }
   }
 
-}
-
-class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication with ScalaFutures with StubApplicationConfiguration {
-
-  implicit val reads: Reads[MessageHeaderResponseBody] = Json.reads[MessageHeaderResponseBody]
-
-  override lazy val fakeApplication = FakeApplication(additionalConfiguration = config)
-
-  "messages Live" should {
+  "getMessages Live" should {
 
     "return an empty list of messages successfully" in new Success {
+      when(testMMService.readAndUnreadMessages()(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future successful Seq.empty)
 
       val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
 
@@ -92,6 +97,8 @@ class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication wit
 
 
     "return an empty list of messages successfully when journeyId is supplied" in new Success {
+      when(testMMService.readAndUnreadMessages()(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future successful Seq.empty)
 
       val result: Result = await(controller.getMessages(journeyId)(emptyRequestWithAcceptHeader))
 
@@ -108,32 +115,38 @@ class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication wit
     }
 
     "return forbidden when authority record does not have correct confidence level" in new AuthWithLowCL {
-      val result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
+      val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
 
       status(result) shouldBe 403
     }
 
     "return unauthorized when authority record does not contain a NINO" in new AuthWithoutNino {
-      val result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
+      val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
 
       status(result) shouldBe 401
     }
 
     "return status code 406 when the headers are invalid" in new Success {
-      val result = await(controller.getMessages()(emptyRequest))
+      val result: Result = await(controller.getMessages()(emptyRequest))
 
       status(result) shouldBe 406
     }
   }
 
-  "messages Sandbox" should {
+  "getMessages Sandbox" should {
 
     "return the messages" in new SandboxSuccess {
+
+      import scala.language.postfixOps
+
       val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
 
       status(result) shouldBe 200
 
-      contentAsJson(result) shouldBe Json.parse(messages)
+      val jsonResponse: JsValue = contentAsJson(result)
+      val restTime: Long = (jsonResponse \ 0 \ "readTime").as[Long]
+      jsonResponse shouldBe Json.parse(messages(restTime))
+
     }
   }
 }

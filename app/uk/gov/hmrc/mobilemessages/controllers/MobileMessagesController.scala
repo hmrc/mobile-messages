@@ -43,8 +43,9 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
   final def getMessages(journeyId: Option[String] = None) = accessControl.validateAccept(acceptHeaderValidationRules).async {
     implicit authenticated =>
       implicit val hc = fromHeadersAndSession(authenticated.request.headers, None)
-      errorWrapper(service.readAndUnreadMessages().map((messageHeaders: Seq[MessageHeader]) =>
-        Ok(Json.toJson(MessageHeaderResponseBody.fromAll(messageHeaders)(crypto)))
+      errorWrapper(service.readAndUnreadMessages().map(
+        (messageHeaders: Seq[MessageHeader]) =>
+          Ok(Json.toJson(MessageHeaderResponseBody.fromAll(messageHeaders)(crypto)))
       ))
   }
 
@@ -59,8 +60,14 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
         },
         renderMessageRequest => {
           implicit val auth: Option[Authority] = authenticated.authority
-          errorWrapper(service.readMessageContent(renderMessageRequest.toMessageIdUsing(crypto)).
-            map((as: Html) => Ok(as)))
+          errorWrapper{
+            val renderCrypto = renderMessageRequest.toMessageIdUsing(crypto)
+            service.readMessageContent(
+              renderMessageRequest.toMessageIdUsing(crypto))
+              .map{
+                (as: Html) =>
+                  as
+                  Ok(as)}}
         }
       )
   }

@@ -31,11 +31,16 @@ import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse, Upstream5xxResponse}
 import uk.gov.hmrc.mobilemessages.acceptance.microservices.{MessageRendererServiceMock, MessageServiceMock}
 import uk.gov.hmrc.mobilemessages.acceptance.utils.WiremockServiceLocatorSugar
-import uk.gov.hmrc.mobilemessages.connector.model.ResourceActionLocation
+import uk.gov.hmrc.mobilemessages.config.WSHttp
+import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageHeadersResponse}
 import uk.gov.hmrc.mobilemessages.controllers.StubApplicationConfiguration
 import uk.gov.hmrc.mobilemessages.controllers.action.Authority
 import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
+import org.mockito.Matchers.any
+import org.mockito.Mockito.when
+import play.api.test.Helpers.SERVICE_UNAVAILABLE
+import play.api.mvc.Result
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -96,6 +101,7 @@ class MessagesConnectorSpec
 
     lazy val html = Html.apply("<div>some snippet</div>")
     val responseRenderer = RenderMessageLocation("sa-message-renderer", "http://somelocation")
+    val mockWsHttp: WSHttp = mock[WSHttp]
 
 
     val message = new MessageServiceMock(authToken)
@@ -119,18 +125,28 @@ class MessagesConnectorSpec
     val messageToBeMarkedAsReadBody = message.bodyToBeMarkedAsReadWith(id = "id48")
     //val messageToBeMarkedAsRead = message.convertedFrom(messageToBeMarkedAsReadBody).asInstanceOf[UnreadMessage]
     lazy val ReadSuccessResult = Future.successful(HttpResponse(200, None, Map.empty, Some(html.toString())))
+    lazy val ReadSuccessEmptyResult = Future.successful(HttpResponse(200, None, Map.empty, None))
     lazy val PostSuccessResult = Future.successful(HttpResponse(200, Some(toJson(responseRenderer))))
     lazy val PostConflictResult = Future.successful(HttpResponse(409, Some(toJson(responseRenderer))))
+    lazy val BadRequestResult = Future.successful(HttpResponse(400, None))
+    lazy val ServiceUnavailableResult = Future.successful(HttpResponse(500, None))
 
     implicit val authUser: Option[Authority] = Some(Authority(Nino("CS700100A"), L200, "someId"))
 
-    val connector = mock[MessageConnector]
+    def testBaseUrl(serviceName: String): String = "someUrl"
+
+    def mockBaseUrl: String => String = testBaseUrl
+
+    val connector = new MessageConnector("messagesBaseUrl", mockWsHttp, mockBaseUrl)
 
   }
 
   "messagesConnector messages" should {
 
     "throw BadRequestException when a 400 response is returned" in new Setup {
+      when(mockWsHttp.GET[UpstreamMessageHeadersResponse](any[String])(any(), any(), any()))
+        .thenReturn(Future.failed(new BadRequestException("")))
+
       message.headersListFailsWith(status = 400)
       intercept[BadRequestException] {
         await(connector.messages())
@@ -138,6 +154,9 @@ class MessagesConnectorSpec
     }
 
     "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
+      when(mockWsHttp.GET[UpstreamMessageHeadersResponse](any[String])(any(), any(), any()))
+        .thenReturn(Future.failed(Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
+
       message.headersListFailsWith(status = 500)
       intercept[Upstream5xxResponse] {
         await(connector.messages())
@@ -145,18 +164,23 @@ class MessagesConnectorSpec
     }
 
     "return empty response when a 200 response is received with an empty payload" in new Setup {
+      when(mockWsHttp.GET[UpstreamMessageHeadersResponse](any[String])(any(), any(), any()))
+        .thenReturn(Future successful UpstreamMessageHeadersResponse(Seq.empty))
+
       message.headersListReturns(Seq.empty)
       await(connector.messages()) shouldBe Seq.empty
     }
 
     "return a list of items when a 200 response is received with a payload" in new Setup {
-      message.headersListReturns(
-        Seq(
-          message.headerWith(id = "someId1"),
-          message.headerWith(id = "someId2"),
-          message.headerWith(id = "someId3")
-        )
-      )
+      val messagesHeaders = Seq(
+        message.headerWith(id = "someId1"),
+        message.headerWith(id = "someId2"),
+        message.headerWith(id = "someId3"))
+
+      when(mockWsHttp.GET[UpstreamMessageHeadersResponse](any[String])(any(), any(), any()))
+        .thenReturn(Future successful UpstreamMessageHeadersResponse(messagesHeaders))
+
+
       await(connector.messages()) shouldBe Seq(
         message.headerWith(id = "someId1"),
         message.headerWith(id = "someId2"),
@@ -168,29 +192,38 @@ class MessagesConnectorSpec
 
   "messagesConnector render message" should {
 
-//    "throw BadRequestException when a 400 response is returned" in new Setup {
-//      testMessageRenderer.failsWith(status = 400, path = renderPath)
-//      intercept[BadRequestException] {
-//        await(connector.render(message.convertedFrom(messageBodyToRender), hc))
-//      }
-//    }
-//
-//    "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
-//      testMessageRenderer.failsWith(status = 500, path = renderPath)
-//      intercept[Upstream5xxResponse] {
-//        await(connector.render(message.convertedFrom(messageBodyToRender), hc))
-//      }
-//    }
-//
-//    s"return empty response when a 200 response is received with an empty payload" in new Setup {
-//      testMessageRenderer.successfullyRenders(messageBodyToRender, overrideBody = Some(""))
-//      await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body shouldBe ""
-//    }
-//
-//    "return a rendered message when a 200 response is received with a payload" in new Setup {
-//      testMessageRenderer.successfullyRenders(messageBodyToRender)
-//      await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body shouldBe testMessageRenderer.rendered(messageBodyToRender)
-//    }
+        "throw BadRequestException when a 400 response is returned" in new Setup {
+          when(mockWsHttp.GET[HttpResponse](any[String])(any(), any(), any())).thenReturn(BadRequestResult)
+
+          testMessageRenderer.failsWith(status = 400, path = renderPath)
+          intercept[BadRequestException] {
+            await(connector.render(message.convertedFrom(messageBodyToRender), hc))
+          }
+        }
+
+        "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
+          when(mockWsHttp.GET[HttpResponse](any[String])(any(), any(), any())).thenReturn(ServiceUnavailableResult)
+
+          //testMessageRenderer.failsWith(status = 500, path = renderPath)
+          //intercept[Upstream5xxResponse] {
+            val result: Html = await(connector.render(message.convertedFrom(messageBodyToRender), hc))
+          result
+          //}
+        }
+
+        "return empty response when a 200 response is received with an empty payload" in new Setup {
+          when(mockWsHttp.GET[HttpResponse](any[String])(any(), any(), any())).thenReturn(ReadSuccessEmptyResult)
+
+          testMessageRenderer.successfullyRenders(messageBodyToRender, overrideBody = Some(""))
+          await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body shouldBe ""
+        }
+
+        "return a rendered message when a 200 response is received with a payload" in new Setup {
+          when(mockWsHttp.GET[HttpResponse](any[String])(any(), any(), any())).thenReturn(PostSuccessResult)
+
+          testMessageRenderer.successfullyRenders(messageBodyToRender)
+          await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body shouldBe testMessageRenderer.rendered(messageBodyToRender)
+        }
   }
 
   "messagesConnector get message by id" should {
@@ -216,33 +249,33 @@ class MessagesConnectorSpec
       }
     }
 
-//    "return a message when a 200 response is received with a payload" in new Setup {
-//      message.getByIdReturns(message.bodyWith(id = messageId.value))
-//      await(connector.getMessageBy(messageId)) shouldBe message.convertedFrom(
-//        message.bodyWith(id = messageId.value)
-//      )
-//    }
+    //    "return a message when a 200 response is received with a payload" in new Setup {
+    //      message.getByIdReturns(message.bodyWith(id = messageId.value))
+    //      await(connector.getMessageBy(messageId)) shouldBe message.convertedFrom(
+    //        message.bodyWith(id = messageId.value)
+    //      )
+    //    }
   }
 
   "messagesConnector mark message as read" should {
 
-//    "throw BadRequestException when a 400 response is returned" in new Setup {
-//      message.markAsReadFailsWith(status = 400, messageToBeMarkedAsReadBody)
-//      intercept[BadRequestException] {
-//        await(connector.markAsRead(messageToBeMarkedAsRead))
-//      }
-//    }
+    //    "throw BadRequestException when a 400 response is returned" in new Setup {
+    //      message.markAsReadFailsWith(status = 400, messageToBeMarkedAsReadBody)
+    //      intercept[BadRequestException] {
+    //        await(connector.markAsRead(messageToBeMarkedAsRead))
+    //      }
+    //    }
 
-//    "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
-//      message.markAsReadFailsWith(status = 500, messageToBeMarkedAsReadBody)
-//      intercept[Upstream5xxResponse] {
-//        await(connector.markAsRead(messageToBeMarkedAsRead))
-//      }
-//    }
-//
-//    "return a message when a 200 response is received with a payload" in new Setup {
-//      message.markAsReadSucceedsFor(messageToBeMarkedAsReadBody)
-//      connector.markAsRead(messageToBeMarkedAsRead).futureValue.status shouldBe 200
-//    }
+    //    "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
+    //      message.markAsReadFailsWith(status = 500, messageToBeMarkedAsReadBody)
+    //      intercept[Upstream5xxResponse] {
+    //        await(connector.markAsRead(messageToBeMarkedAsRead))
+    //      }
+    //    }
+    //
+    //    "return a message when a 200 response is received with a payload" in new Setup {
+    //      message.markAsReadSucceedsFor(messageToBeMarkedAsReadBody)
+    //      connector.markAsRead(messageToBeMarkedAsRead).futureValue.status shouldBe 200
+    //    }
   }
 }

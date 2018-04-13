@@ -18,7 +18,7 @@ object AppDependencies {
   private val wireMockVersion = "2.3.1"
   private val hmrcTestVersion = "3.0.0"
   private val cucumberVersion = "1.2.5"
-  private val mockitoVersion = "2.11.0"
+  private val mockitoVersion = "2.0.2-beta"
   private val scalatestplusPlayVersion = "2.0.1"
 
   val compile = Seq(
@@ -61,7 +61,7 @@ object AppDependencies {
         "info.cukes" %% "cucumber-scala" % cucumberVersion % scope,
         "info.cukes" % "cucumber-junit" % cucumberVersion % scope,
         "com.github.tomakehurst" % "wiremock" % wireMockVersion % scope,
-        "org.mockito" % "mockito-core" % mockitoVersion % scope,
+        "org.mockito" % "mockito-all" % mockitoVersion % scope,
         "org.scalatestplus.play" %% "scalatestplus-play" % scalatestplusPlayVersion % scope
       )
     }.test
