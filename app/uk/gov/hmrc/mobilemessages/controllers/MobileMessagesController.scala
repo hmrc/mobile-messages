@@ -60,14 +60,10 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
         },
         renderMessageRequest => {
           implicit val auth: Option[Authority] = authenticated.authority
-          errorWrapper{
-            val renderCrypto = renderMessageRequest.toMessageIdUsing(crypto)
-            service.readMessageContent(
-              renderMessageRequest.toMessageIdUsing(crypto))
-              .map{
-                (as: Html) =>
-                  as
-                  Ok(as)}}
+          errorWrapper {
+            service.readMessageContent(renderMessageRequest.toMessageIdUsing(crypto))
+              .map((as: Html) => Ok(as))
+          }
         }
       )
   }

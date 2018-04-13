@@ -16,14 +16,16 @@
 
 package uk.gov.hmrc.mobilemessages.connector
 
-import com.fasterxml.jackson.databind.JsonMappingException
 import com.github.tomakehurst.wiremock.client.WireMock
+import org.mockito.Matchers.any
+import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
-import play.api.libs.json.Json
-import play.api.libs.json.Json.{parse, toJson}
+import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.Json.toJson
 import play.api.test.FakeApplication
+import play.api.test.Helpers.SERVICE_UNAVAILABLE
 import play.twirl.api.Html
 import uk.gov.hmrc.auth.core.ConfidenceLevel.L200
 import uk.gov.hmrc.domain.Nino
@@ -32,15 +34,11 @@ import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse, Upstr
 import uk.gov.hmrc.mobilemessages.acceptance.microservices.{MessageRendererServiceMock, MessageServiceMock}
 import uk.gov.hmrc.mobilemessages.acceptance.utils.WiremockServiceLocatorSugar
 import uk.gov.hmrc.mobilemessages.config.WSHttp
-import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageHeadersResponse}
+import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageHeadersResponse, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.controllers.StubApplicationConfiguration
 import uk.gov.hmrc.mobilemessages.controllers.action.Authority
 import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
-import org.mockito.Matchers.any
-import org.mockito.Mockito.when
-import play.api.test.Helpers.SERVICE_UNAVAILABLE
-import play.api.mvc.Result
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -55,85 +53,49 @@ class MessagesConnectorSpec
     with BeforeAndAfterEach {
 
 
-  override def beforeAll() = {
+  override def beforeAll(): Unit = {
     super.beforeAll()
     startMockServer()
   }
 
-  override def afterAll() = {
+  override def afterAll(): Unit = {
     super.afterAll()
     stopMockServer()
   }
 
 
-  override protected def afterEach() = {
+  override protected def afterEach(): Unit = {
     super.afterEach()
     WireMock.reset()
   }
 
-  override lazy val fakeApplication = FakeApplication(additionalConfiguration = additionalConfig)
-
-  def testRendererServiceName = "test-renderer-service"
-
-  val additionalConfig = Map[String, Any](
-    "auditing.enabled" -> false,
-    "microservice.services.datastream.host" -> "localhost",
-    "microservice.services.datastream.port" -> s"$stubPort",
-    "microservice.services.datastream.enabled" -> false,
-    "microservice.services.message.host" -> "localhost",
-    "microservice.services.message.port" -> s"$stubPort",
-    s"microservice.services.$testRendererServiceName.host" -> "localhost",
-    s"microservice.services.$testRendererServiceName.port" -> s"$stubPort",
-    "microservice.services.service-locator.enabled" -> false,
-    "microservice.services.service-locator.host" -> "localhost",
-    "microservice.services.service-locator.port" -> s"$stubPort",
-    "appName" -> "mobile-messages",
-    "microservice.services.auth.host" -> "localhost",
-    "microservice.services.auth.port" -> s"$stubPort",
-    "microservice.services.ntc.host" -> "localhost",
-    "microservice.services.ntc.port" -> s"$stubPort"
-  )
+  override lazy val fakeApplication = FakeApplication(additionalConfiguration = config)
 
   private trait Setup extends MockitoSugar {
     private val authToken = "authToken"
-    implicit lazy val hc = HeaderCarrier(Some(Authorization(authToken)))
-    implicit val formats = Json.format[RenderMessageLocation]
+    implicit lazy val hc: HeaderCarrier = HeaderCarrier(Some(Authorization(authToken)))
+    implicit val formats: OFormat[RenderMessageLocation] = Json.format[RenderMessageLocation]
 
     lazy val html = Html.apply("<div>some snippet</div>")
     val responseRenderer = RenderMessageLocation("sa-message-renderer", "http://somelocation")
     val mockWsHttp: WSHttp = mock[WSHttp]
 
-
     val message = new MessageServiceMock(authToken)
     val testMessageRenderer = new MessageRendererServiceMock(authToken, stubPort, "testService")
 
-    lazy val successfulEmptyResponse = HttpResponse(200, responseString = Some(""))
-
-    lazy val successfulEmptyMessageHeadersResposne = HttpResponse(200, Some(parse(message.jsonRepresentationOf(Seq.empty))))
-
     val messageId = MessageId("id123")
-    lazy val successfulSingleMessageResponse = HttpResponse(
-      200,
-      Some(parse(
-        message.jsonRepresentationOf(
-          message.bodyWith(id = "id123")
-        )))
-    )
 
     val renderPath = "/some/render/path"
-    val messageBodyToRender = message.bodyWith(id = "id1", renderUrl = ResourceActionLocation(testRendererServiceName, renderPath))
-    val messageToBeMarkedAsReadBody = message.bodyToBeMarkedAsReadWith(id = "id48")
-    //val messageToBeMarkedAsRead = message.convertedFrom(messageToBeMarkedAsReadBody).asInstanceOf[UnreadMessage]
-    lazy val ReadSuccessResult = Future.successful(HttpResponse(200, None, Map.empty, Some(html.toString())))
+    val messageBodyToRender: UpstreamMessageResponse =
+      message.bodyWith(id = "id1", renderUrl = ResourceActionLocation("test-renderer-service", renderPath))
+    val messageToBeMarkedAsReadBody: UpstreamMessageResponse = message.bodyToBeMarkedAsReadWith(id = "id48")
+    val messageToBeMarkedAsRead: UnreadMessage = message.convertedFrom(messageToBeMarkedAsReadBody).asInstanceOf[UnreadMessage]
     lazy val ReadSuccessEmptyResult = Future.successful(HttpResponse(200, None, Map.empty, None))
-    lazy val PostSuccessResult = Future.successful(HttpResponse(200, Some(toJson(responseRenderer))))
-    lazy val PostConflictResult = Future.successful(HttpResponse(409, Some(toJson(responseRenderer))))
-    lazy val BadRequestResult = Future.successful(HttpResponse(400, None))
-    lazy val ServiceUnavailableResult = Future.successful(HttpResponse(500, None))
-
+    lazy val PostSuccessResult = Future.successful(HttpResponse(200, Some(toJson(html.body))))
+    lazy val PostSuccessRendererResult = Future.successful(HttpResponse(200, Some(toJson(responseRenderer))))
     implicit val authUser: Option[Authority] = Some(Authority(Nino("CS700100A"), L200, "someId"))
 
-    def testBaseUrl(serviceName: String): String = "someUrl"
+    def testBaseUrl(serviceName: String): String = "http://localhost:8089"
 
     def mockBaseUrl: String => String = testBaseUrl
 
@@ -192,90 +154,93 @@ class MessagesConnectorSpec
 
   "messagesConnector render message" should {
 
-        "throw BadRequestException when a 400 response is returned" in new Setup {
-          when(mockWsHttp.GET[HttpResponse](any[String])(any(), any(), any())).thenReturn(BadRequestResult)
+    "throw BadRequestException when a 400 response is returned" in new Setup {
+      when(mockWsHttp.GET[HttpResponse](any[String])(any(), any(), any()))
+        .thenReturn(Future.failed(new BadRequestException("")))
 
-          testMessageRenderer.failsWith(status = 400, path = renderPath)
-          intercept[BadRequestException] {
-            await(connector.render(message.convertedFrom(messageBodyToRender), hc))
-          }
-        }
+      intercept[BadRequestException] {
+        await(connector.render(message.convertedFrom(messageBodyToRender), hc))
+      }
+    }
 
-        "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
-          when(mockWsHttp.GET[HttpResponse](any[String])(any(), any(), any())).thenReturn(ServiceUnavailableResult)
+    "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
+      when(mockWsHttp.GET[HttpResponse](any[String])(any(), any(), any()))
+        .thenReturn(Future.failed(Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
 
-          //testMessageRenderer.failsWith(status = 500, path = renderPath)
-          //intercept[Upstream5xxResponse] {
-            val result: Html = await(connector.render(message.convertedFrom(messageBodyToRender), hc))
-          result
-          //}
-        }
+      intercept[Upstream5xxResponse] {
+        await(connector.render(message.convertedFrom(messageBodyToRender), hc))
+      }
+    }
 
-        "return empty response when a 200 response is received with an empty payload" in new Setup {
-          when(mockWsHttp.GET[HttpResponse](any[String])(any(), any(), any())).thenReturn(ReadSuccessEmptyResult)
+    "return empty response when a 200 response is received with an empty payload" in new Setup {
+      when(mockWsHttp.GET[HttpResponse](any[String])(any(), any(), any())).thenReturn(ReadSuccessEmptyResult)
 
-          testMessageRenderer.successfullyRenders(messageBodyToRender, overrideBody = Some(""))
-          await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body shouldBe ""
-        }
+      testMessageRenderer.successfullyRenders(messageBodyToRender, overrideBody = Some(""))
+      await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body shouldBe ""
+    }
 
-        "return a rendered message when a 200 response is received with a payload" in new Setup {
-          when(mockWsHttp.GET[HttpResponse](any[String])(any(), any(), any())).thenReturn(PostSuccessResult)
+    "return a rendered message when a 200 response is received with a payload" in new Setup {
+      when(mockWsHttp.GET[HttpResponse](any[String])(any(), any(), any())).thenReturn(PostSuccessResult)
 
-          testMessageRenderer.successfullyRenders(messageBodyToRender)
-          await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body shouldBe testMessageRenderer.rendered(messageBodyToRender)
-        }
+      testMessageRenderer.successfullyRenders(messageBodyToRender)
+      await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body should include(s"${html.body}")
+    }
   }
 
   "messagesConnector get message by id" should {
 
     "throw BadRequestException when a 400 response is returned" in new Setup {
-      message.getByIdFailsWith(status = 400, messageId = messageId)
+      when(mockWsHttp.GET[UpstreamMessageResponse](any[String])(any(), any(), any()))
+        .thenReturn(Future.failed(new BadRequestException("")))
+
       intercept[BadRequestException] {
         await(connector.getMessageBy(messageId))
       }
     }
 
     "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
-      message.getByIdFailsWith(status = 500, messageId = messageId)
+      when(mockWsHttp.GET[UpstreamMessageResponse](any[String])(any(), any(), any()))
+        .thenReturn(Future.failed(Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
+
       intercept[Upstream5xxResponse] {
         await(connector.getMessageBy(messageId))
       }
     }
 
-    "throw JsonMappingException when a 200 response is received with an empty payload" in new Setup {
-      message.getByIdFailsWith(status = 200, messageId = messageId)
-      intercept[JsonMappingException] {
-        await(connector.getMessageBy(messageId))
-      }
-    }
+    "return a message when a 200 response is received with a payload" in new Setup {
+      when(mockWsHttp.GET[UpstreamMessageResponse](any[String])(any(), any(), any()))
+        .thenReturn(Future successful message.bodyWith(id = messageId.value))
 
-    //    "return a message when a 200 response is received with a payload" in new Setup {
-    //      message.getByIdReturns(message.bodyWith(id = messageId.value))
-    //      await(connector.getMessageBy(messageId)) shouldBe message.convertedFrom(
-    //        message.bodyWith(id = messageId.value)
-    //      )
-    //    }
+      await(connector.getMessageBy(messageId)) shouldBe message.convertedFrom(
+        message.bodyWith(id = messageId.value)
+      )
+    }
   }
 
   "messagesConnector mark message as read" should {
 
-    //    "throw BadRequestException when a 400 response is returned" in new Setup {
-    //      message.markAsReadFailsWith(status = 400, messageToBeMarkedAsReadBody)
-    //      intercept[BadRequestException] {
-    //        await(connector.markAsRead(messageToBeMarkedAsRead))
-    //      }
-    //    }
+    "throw BadRequestException when a 400 response is returned" in new Setup {
+      when(mockWsHttp.POSTEmpty[HttpResponse](any[String])(any(), any(), any()))
+        .thenReturn(Future.failed(new BadRequestException("")))
 
-    //    "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
-    //      message.markAsReadFailsWith(status = 500, messageToBeMarkedAsReadBody)
-    //      intercept[Upstream5xxResponse] {
-    //        await(connector.markAsRead(messageToBeMarkedAsRead))
-    //      }
-    //    }
-    //
-    //    "return a message when a 200 response is received with a payload" in new Setup {
-    //      message.markAsReadSucceedsFor(messageToBeMarkedAsReadBody)
-    //      connector.markAsRead(messageToBeMarkedAsRead).futureValue.status shouldBe 200
-    //    }
+      intercept[BadRequestException] {
+        await(connector.markAsRead(messageToBeMarkedAsRead))
+      }
+    }
+
+    "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
+      when(mockWsHttp.POSTEmpty[HttpResponse](any[String])(any(), any(), any()))
+        .thenReturn(Future.failed(Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
+
+      intercept[Upstream5xxResponse] {
+        await(connector.markAsRead(messageToBeMarkedAsRead))
+      }
+    }
+
+    "return a message when a 200 response is received with a payload" in new Setup {
+      when(mockWsHttp.POSTEmpty[HttpResponse](any[String])(any(), any(), any())).thenReturn(PostSuccessRendererResult)
+
+      connector.markAsRead(messageToBeMarkedAsRead).futureValue.status shouldBe 200
+    }
   }
 }
