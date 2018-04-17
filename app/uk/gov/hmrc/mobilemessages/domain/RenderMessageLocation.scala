@@ -19,17 +19,19 @@ package uk.gov.hmrc.mobilemessages.domain
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import play.api.Logger
+import play.api.libs.json.OFormat
 
-final case class RenderMessageLocation(service : String, url : String)
+final case class RenderMessageLocation(service: String, url: String)
 
-class RenderMessageLocationImpl @Inject()(@Named("baseUrl") _baseUrl: String => String){
+class RenderMessageLocationImpl @Inject()(@Named("baseUrl") _baseUrl: String => String) {
+
   import play.api.libs.json.Json
 
-  implicit def toUrl(renderMessageLocation: RenderMessageLocation) : String = {
+  implicit def toUrl(renderMessageLocation: RenderMessageLocation): String = {
     val url = s"${_baseUrl(renderMessageLocation.service)}${renderMessageLocation.url}"
     Logger.info(s"Sending request to $url")
     url
   }
 
-  implicit val formats = Json.format[RenderMessageLocation]
+  implicit val formats: OFormat[RenderMessageLocation] = Json.format[RenderMessageLocation]
 }

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.mobilemessages.controllers.model
 
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.crypto.{Crypted, Decrypter}
 import uk.gov.hmrc.mobilemessages.domain.MessageId
 
@@ -28,5 +28,5 @@ final case class RenderMessageRequest(url: String) {
 }
 
 object RenderMessageRequest {
-  implicit val formats = Json.format[RenderMessageRequest]
+  implicit val formats: OFormat[RenderMessageRequest] = Json.format[RenderMessageRequest]
 }

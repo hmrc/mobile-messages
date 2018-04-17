@@ -37,8 +37,8 @@ class RoutingHttpRequestHandler @Inject()(router: Router, errorHandler: HttpErro
 
   lazy val routing: Option[(String, String, String)] = {
     (header, regex, prefix) match {
-      case (Some(a:String), Some(b:String), Some(c:String)) ⇒ Some((a, b, c))
-      case _ ⇒ None
+      case (Some(a: String), Some(b: String), Some(c: String)) => Some((a, b, c))
+      case _ => None
     }
   }
 
@@ -46,7 +46,7 @@ class RoutingHttpRequestHandler @Inject()(router: Router, errorHandler: HttpErro
     super.routeRequest(overrideRouting(request))
   }
 
-  def overrideRouting(request: RequestHeader) : RequestHeader = {
+  def overrideRouting(request: RequestHeader): RequestHeader = {
     routing.fold(request) { routing =>
       request.headers.get(routing._1) match {
         case Some(value) =>

@@ -18,7 +18,7 @@ package uk.gov.hmrc.mobilemessages.controllers
 
 trait StubApplicationConfiguration {
 
-  val config = Map[String, Any](
+  val config: Map[String, Any] = Map[String, Any](
     "auditing.enabled" -> false,
     "microservice.services.datastream.host" -> "localhost",
     "microservice.services.datastream.port" -> "1234",

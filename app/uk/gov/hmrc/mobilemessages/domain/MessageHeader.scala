@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilemessages.domain
 import org.joda.time.{DateTime, LocalDate}
 
 final case class MessageHeader(id: MessageId,
-                         subject: String,
-                         validFrom: LocalDate,
-                         readTime: Option[DateTime],
-                         sentInError: Boolean)
+                               subject: String,
+                               validFrom: LocalDate,
+                               readTime: Option[DateTime],
+                               sentInError: Boolean)

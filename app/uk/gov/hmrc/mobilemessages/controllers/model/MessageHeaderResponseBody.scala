@@ -30,7 +30,7 @@ final case class MessageHeaderResponseBody(id: String,
 
 object MessageHeaderResponseBody {
 
-  import play.api.libs.json.{Json, _}
+  import play.api.libs.json._
 
   implicit val writes: Writes[MessageHeaderResponseBody] = Json.writes[MessageHeaderResponseBody]
 

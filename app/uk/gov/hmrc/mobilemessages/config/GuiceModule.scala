@@ -16,17 +16,15 @@
 
 package uk.gov.hmrc.mobilemessages.config
 
-import javax.inject.Provider
-
-import com.google.inject.{AbstractModule, Provides}
-import com.google.inject.name.{Named, Names}
+import com.google.inject.name.Named
 import com.google.inject.name.Names.named
+import com.google.inject.{AbstractModule, Provides}
 import play.api.Mode.Mode
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.api.connector.ServiceLocatorConnector
 import uk.gov.hmrc.api.controllers.DocumentationController
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.http.{CoreGet, CorePost, HttpGet, HttpPost}
+import uk.gov.hmrc.http.{CoreGet, CorePost}
 import uk.gov.hmrc.mobilemessages.tasks.ServiceLocatorRegistrationTask
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
@@ -39,7 +37,6 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
   override protected lazy val runModeConfiguration: Configuration = configuration
 
   override def configure(): Unit = {
-
     bind(classOf[ServiceLocatorConnector]).to(classOf[ApiServiceLocatorConnector])
     bind(classOf[CoreGet]).to(classOf[WSHttpImpl])
     bind(classOf[CorePost]).to(classOf[WSHttpImpl])

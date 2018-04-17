@@ -76,13 +76,13 @@ class TestMobileMessagesService(override val appNameConfiguration: Configuration
     Future.successful(AuditResult.Success)
   }
 
-  override val accountAccessControl = testAccessControl
-  override val messageConnector = mobileMessageConnector
+  override val accountAccessControl: TestAccessControl = testAccessControl
+  override val messageConnector: MessageConnector = mobileMessageConnector
   override val auditConnector: AuditConnector = testAuditConnector
 }
 
 class TestSandboxMobileMessagesService(val appNameConfiguration: Configuration, testAccessControl: TestAccessControl,
-                                mobileMessageConnector: MessageConnector, testAuditConnector: AuditConnector) extends SandboxMobileMessagesService {
+                                       mobileMessageConnector: MessageConnector, testAuditConnector: AuditConnector) extends SandboxMobileMessagesService {
   override val saUtr = SaUtr("1234567890")
 }
 
@@ -95,7 +95,7 @@ trait TimeSetup {
 }
 
 trait Setup extends MockitoSugar with TimeSetup {
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   val journeyId = Option(randomUUID().toString)
 
@@ -108,6 +108,7 @@ trait Setup extends MockitoSugar with TimeSetup {
 
   val msgId1 = "543e8c6001000001003e4a9e"
   val msgId2 = "643e8c5f01000001003e4a8f"
+
   def messages(readTime: Long): String =
     s"""[{"id":"$msgId1","subject":"You have a new tax statement","validFrom":"${timeNow.minusDays(3).toLocalDate}","readTime":$readTime,"readTimeUrl":"${encrypted(msgId1)}","sentInError":false},
        |{"id":"$msgId2","subject":"Stopping Self Assessment","validFrom":"${timeNow.toLocalDate}","readTimeUrl":"${encrypted(msgId2)}","sentInError":false}]""".stripMargin
@@ -134,17 +135,17 @@ trait Setup extends MockitoSugar with TimeSetup {
   val testServiceConfidenceLevel: Int = 200
 
   def testBaseUrl(serviceName: String): String = "someUrl"
-  def mockBaseUrl: String => String = testBaseUrl
 
+  def mockBaseUrl: String => String = testBaseUrl
 
 
   /**
     * def baseUrl(serviceName: String) = {
-    val protocol = getConfString(s"$serviceName.protocol",defaultProtocol)
-    val host = getConfString(s"$serviceName.host", throw new RuntimeException(s"Could not find config $serviceName.host"))
-    val port = getConfInt(s"$serviceName.port", throw new RuntimeException(s"Could not find config $serviceName.port"))
-    s"$protocol://$host:$port"
-  }
+    * val protocol = getConfString(s"$serviceName.protocol",defaultProtocol)
+    * val host = getConfString(s"$serviceName.host", throw new RuntimeException(s"Could not find config $serviceName.host"))
+    * val port = getConfInt(s"$serviceName.port", throw new RuntimeException(s"Could not find config $serviceName.port"))
+    * s"$protocol://$host:$port"
+    * }
     */
 
   val messageServiceHeadersResponse = Seq(
@@ -152,15 +153,13 @@ trait Setup extends MockitoSugar with TimeSetup {
     message.headerWith(id = "id2"),
     message.headerWith(id = "id3")
   )
-  val getMessagesResponseItemsList = messageServiceHeadersResponse.
+  val getMessagesResponseItemsList: Seq[MessageHeaderResponseBody] = messageServiceHeadersResponse.
     map(messageHeaderResponseBodyFrom)
 
-//  val sampleMessage = message.convertedFrom(message.bodyWith(id = "id1"))
-
-  val acceptHeader = "Accept" -> "application/vnd.hmrc.1.0+json"
+  val acceptHeader: (String, String) = "Accept" -> "application/vnd.hmrc.1.0+json"
   val emptyRequest = FakeRequest()
 
-  def fakeRequest(body: JsValue) = FakeRequest(POST, "url").
+  def fakeRequest(body: JsValue): FakeRequest[JsValue] = FakeRequest(POST, "url").
     withBody(body).
     withHeaders("Content-Type" -> "application/json")
 

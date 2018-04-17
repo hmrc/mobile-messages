@@ -17,7 +17,7 @@ class AccountAccessControlISpec extends BaseISpec with Eventually with MockitoSu
   val saUtr = SaUtr("1872796160")
   val nino = Nino("CS100700A")
 
-  val testAccountAccessControl = app.injector.instanceOf[AccountAccessControl]
+  val testAccountAccessControl: AccountAccessControl = app.injector.instanceOf[AccountAccessControl]
 
   "grantAccess" should {
     "error with unauthorised when account has low CL" in {
@@ -35,7 +35,7 @@ class AccountAccessControlISpec extends BaseISpec with Eventually with MockitoSu
     }
 
     "fail to return authority when no NINO exists" in {
-      authRecordExistsWithoutNino
+      authRecordExistsWithoutNino()
 
       intercept[UnauthorizedException] {
         await(testAccountAccessControl.grantAccess())
@@ -43,7 +43,7 @@ class AccountAccessControlISpec extends BaseISpec with Eventually with MockitoSu
     }
 
     "fail if no auth/authority returns unauthorised" in {
-      unauthorised
+      unauthorised()
 
       intercept[Upstream4xxResponse] {
         await(testAccountAccessControl.grantAccess())

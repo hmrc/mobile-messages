@@ -18,8 +18,9 @@ package uk.gov.hmrc.mobilemessages.domain
 
 final case class MessageId(value: String)
 
-trait Message{
+trait Message {
   def id: MessageId
+
   def renderUrl: String
 }
 
@@ -27,4 +28,4 @@ final case class ReadMessage(override val id: MessageId, override val renderUrl:
   extends Message
 
 final case class UnreadMessage(override val id: MessageId, override val renderUrl: String, markAsReadUrl: String)
-   extends Message
+  extends Message

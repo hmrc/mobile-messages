@@ -8,10 +8,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
 import uk.gov.hmrc.play.test.UnitSpec
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 import scala.language.postfixOps
-
 
 class BaseISpec extends UnitSpec with Matchers with OptionValues with WsScalaTestClient with GuiceOneServerPerSuite with WireMockSupport {
   override implicit lazy val app: Application = appBuilder.build()
@@ -29,8 +26,4 @@ class BaseISpec extends UnitSpec with Matchers with OptionValues with WsScalaTes
       )
 
   protected implicit lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
-
-//  implicit val defaultTimeout: FiniteDuration = 5 seconds
-
-//  def await[A](future: Future[A])(implicit timeout: Duration): A = Await.result(future, timeout)
 }

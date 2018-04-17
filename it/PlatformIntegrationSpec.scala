@@ -17,7 +17,6 @@
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.google.inject.AbstractModule
-import it.utils.WiremockServiceLocatorSugar
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.time.{Millis, Span}
@@ -28,10 +27,10 @@ import play.api.{Configuration, Environment}
 import uk.gov.hmrc.api.config.ServiceLocatorConfig
 import uk.gov.hmrc.api.connector.ServiceLocatorConnector
 import uk.gov.hmrc.api.controllers.DocumentationController
-import uk.gov.hmrc.http.{CorePost, HeaderCarrier, HttpPost}
+import uk.gov.hmrc.http.{CorePost, HeaderCarrier}
 import uk.gov.hmrc.play.bootstrap.config.AppName
 import uk.gov.hmrc.play.http.ws.WSHttp
-import utils.BaseISpec
+import utils.{BaseISpec, WiremockServiceLocatorSugar}
 
 import scala.concurrent.Future
 

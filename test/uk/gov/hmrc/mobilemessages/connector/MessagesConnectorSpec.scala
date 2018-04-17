@@ -22,8 +22,8 @@ import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
-import play.api.libs.json.{Json, OFormat}
 import play.api.libs.json.Json.toJson
+import play.api.libs.json.{Json, OFormat}
 import play.api.test.FakeApplication
 import play.api.test.Helpers.SERVICE_UNAVAILABLE
 import play.twirl.api.Html
@@ -93,6 +93,7 @@ class MessagesConnectorSpec
     implicit val authUser: Option[Authority] = Some(Authority(Nino("CS700100A"), L200, "someId"))
 
     def testBaseUrl(serviceName: String): String = "http://localhost:8089"
+
     def mockBaseUrl: String => String = testBaseUrl
 
     val connector = new MessageConnector("messagesBaseUrl", mockWsHttp, mockBaseUrl)

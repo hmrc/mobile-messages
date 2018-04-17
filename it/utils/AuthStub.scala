@@ -15,7 +15,7 @@ object AuthStub {
       aResponse().withStatus(200).withBody(obj("confidenceLevel" -> confidenceLevel.level, "nino" -> nino.nino).toString)))
   }
 
-  def authRecordExistsWithoutNino: Unit = {
+  def authRecordExistsWithoutNino(): Unit = {
     stubFor(get(urlEqualTo("/auth/authority")).willReturn(aResponse().withStatus(200).withBody(obj("uri" -> "uri").toString())))
 
     stubFor(post(urlEqualTo("/auth/authorise")).withRequestBody(equalToJson(
@@ -23,7 +23,7 @@ object AuthStub {
         aResponse().withStatus(200).withBody(obj("confidenceLevel" -> L200.level).toString)))
   }
 
-  def unauthorised: Unit = {
+  def unauthorised(): Unit = {
     stubFor(get(urlEqualTo("/auth/authority")).willReturn(aResponse().withStatus(401)))
   }
 }

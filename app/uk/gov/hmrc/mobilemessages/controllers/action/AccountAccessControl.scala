@@ -76,12 +76,12 @@ class AccountAccessControl @Inject()(val authConnector: AuthConnector,
   def grantAccess()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Authority] = {
     getAuthorityRecord.flatMap { authRecord: AuthorityRecord =>
       authorised().retrieve(nino and confidenceLevel) {
-        case Some(foundNino) ~ foundConfidenceLevel ⇒
+        case Some(foundNino) ~ foundConfidenceLevel =>
           if (foundNino.isEmpty) throw missingNinoException
           else if (serviceConfidenceLevel > foundConfidenceLevel.level)
             throw new ForbiddenException("The user does not have sufficient permissions to access this service")
           else Future successful Authority(Nino(foundNino), foundConfidenceLevel, authRecord.uri)
-        case None ~ _ ⇒
+        case None ~ _ =>
           throw missingNinoException
       }
     }

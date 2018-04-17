@@ -33,13 +33,15 @@ object DomainGenerator {
   val saUtrGenerator = new SaUtrGenerator()
 
   def nextNino: Nino = generator.nextNino
+
   def nextSaUtr: SaUtr = saUtrGenerator.nextSaUtr
 
   val nino: Nino = nextNino
   val saUtr: SaUtr = nextSaUtr
 
   val readMessageId = MessageId("543e8c6001000001003e4a9e")
-  def readMessageHeader(saUtr : SaUtr = nextSaUtr): MessageHeader = {
+
+  def readMessageHeader(saUtr: SaUtr = nextSaUtr): MessageHeader = {
     MessageHeader(readMessageId,
       "You have a new tax statement",
       dateTime.minusDays(3).toLocalDate,
@@ -48,6 +50,7 @@ object DomainGenerator {
   }
 
   val unreadMessageId = MessageId("643e8c5f01000001003e4a8f")
+
   def unreadMessageHeader(saUtr: SaUtr = nextSaUtr): MessageHeader = MessageHeader(unreadMessageId,
     "Stopping Self Assessment",
     dateTime.toLocalDate,

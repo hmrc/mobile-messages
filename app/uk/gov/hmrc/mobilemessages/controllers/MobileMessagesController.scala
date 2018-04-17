@@ -20,10 +20,11 @@ import javax.inject.Inject
 
 import play.api.Logger
 import play.api.libs.json._
-import play.api.mvc.BodyParsers
+import play.api.mvc.{Action, AnyContent, BodyParsers}
 import play.twirl.api.Html
 import uk.gov.hmrc.api.controllers._
 import uk.gov.hmrc.crypto.{CryptoWithKeysFromConfig, Decrypter, Encrypter}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck, Authority}
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
@@ -40,33 +41,35 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
   val accessControl: AccountAccessControlWithHeaderCheck
   val crypto: Encrypter with Decrypter
 
-  final def getMessages(journeyId: Option[String] = None) = accessControl.validateAccept(acceptHeaderValidationRules).async {
-    implicit authenticated =>
-      implicit val hc = fromHeadersAndSession(authenticated.request.headers, None)
-      errorWrapper(service.readAndUnreadMessages().map(
-        (messageHeaders: Seq[MessageHeader]) =>
-          Ok(Json.toJson(MessageHeaderResponseBody.fromAll(messageHeaders)(crypto)))
-      ))
-  }
+  final def getMessages(journeyId: Option[String] = None): Action[AnyContent] =
+    accessControl.validateAccept(acceptHeaderValidationRules).async {
+      implicit authenticated =>
+        implicit val hc: HeaderCarrier = fromHeadersAndSession(authenticated.request.headers, None)
+        errorWrapper(service.readAndUnreadMessages().map(
+          (messageHeaders: Seq[MessageHeader]) =>
+            Ok(Json.toJson(MessageHeaderResponseBody.fromAll(messageHeaders)(crypto)))
+        ))
+    }
 
-  final def read(journeyId: Option[String] = None) = accessControl.validateAccept(acceptHeaderValidationRules).async(BodyParsers.parse.json) {
-    implicit authenticated =>
-      implicit val hc = fromHeadersAndSession(authenticated.request.headers, None)
+  final def read(journeyId: Option[String] = None): Action[JsValue] =
+    accessControl.validateAccept(acceptHeaderValidationRules).async(BodyParsers.parse.json) {
+      implicit authenticated =>
+        implicit val hc: HeaderCarrier = fromHeadersAndSession(authenticated.request.headers, None)
 
-      authenticated.request.body.validate[RenderMessageRequest].fold(
-        errors => {
-          Logger.warn("Received JSON error with read endpoint: " + errors)
-          Future.successful(BadRequest(Json.toJson(ErrorGenericBadRequest(errors))))
-        },
-        renderMessageRequest => {
-          implicit val auth: Option[Authority] = authenticated.authority
-          errorWrapper {
-            service.readMessageContent(renderMessageRequest.toMessageIdUsing(crypto))
-              .map((as: Html) => Ok(as))
+        authenticated.request.body.validate[RenderMessageRequest].fold(
+          errors => {
+            Logger.warn("Received JSON error with read endpoint: " + errors)
+            Future.successful(BadRequest(Json.toJson(ErrorGenericBadRequest(errors))))
+          },
+          renderMessageRequest => {
+            implicit val auth: Option[Authority] = authenticated.authority
+            errorWrapper {
+              service.readMessageContent(renderMessageRequest.toMessageIdUsing(crypto))
+                .map((as: Html) => Ok(as))
+            }
           }
-        }
-      )
-  }
+        )
+    }
 }
 
 class SandboxMobileMessagesController @Inject()(val service: SandboxMobileMessagesService,
