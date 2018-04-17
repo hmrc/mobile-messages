@@ -31,7 +31,6 @@ import uk.gov.hmrc.auth.core.ConfidenceLevel.L200
 import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 import uk.gov.hmrc.domain.{Nino, SaUtr}
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.mobilemessages.acceptance.microservices.MessageServiceMock
 import uk.gov.hmrc.mobilemessages.config.WSHttp
 import uk.gov.hmrc.mobilemessages.connector.MessageConnector
 import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControl, AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck, Authority}
@@ -39,7 +38,7 @@ import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, 
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, ReadMessage}
 import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
-import uk.gov.hmrc.mobilemessages.utils.UnitTestCrypto
+import uk.gov.hmrc.mobilemessages.utils.{MessageServiceMock, UnitTestCrypto}
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.time.DateTimeUtils
 

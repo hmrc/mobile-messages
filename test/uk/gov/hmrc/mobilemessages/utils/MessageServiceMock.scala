@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.acceptance.microservices
+package uk.gov.hmrc.mobilemessages.utils
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import org.joda.time.{DateTime, LocalDate}
 import play.api.Play
 import play.api.http.HeaderNames
-import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageResponse, ResourceActionLocation}
+import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.mobilemessages.utils.ConfigHelper.microserviceConfigPathFor
 

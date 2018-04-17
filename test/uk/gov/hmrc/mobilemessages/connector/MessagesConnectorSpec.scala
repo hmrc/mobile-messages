@@ -31,13 +31,12 @@ import uk.gov.hmrc.auth.core.ConfidenceLevel.L200
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse, Upstream5xxResponse}
-import uk.gov.hmrc.mobilemessages.acceptance.microservices.{MessageRendererServiceMock, MessageServiceMock}
-import uk.gov.hmrc.mobilemessages.acceptance.utils.WiremockServiceLocatorSugar
 import uk.gov.hmrc.mobilemessages.config.WSHttp
 import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageHeadersResponse, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.controllers.StubApplicationConfiguration
 import uk.gov.hmrc.mobilemessages.controllers.action.Authority
 import uk.gov.hmrc.mobilemessages.domain._
+import uk.gov.hmrc.mobilemessages.utils.{MessageServiceMock, WiremockServiceLocatorSugar}
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -81,8 +80,6 @@ class MessagesConnectorSpec
     val mockWsHttp: WSHttp = mock[WSHttp]
 
     val message = new MessageServiceMock(authToken)
-    val testMessageRenderer = new MessageRendererServiceMock(authToken, stubPort, "testService")
-
     val messageId = MessageId("id123")
 
     val renderPath = "/some/render/path"
@@ -96,7 +93,6 @@ class MessagesConnectorSpec
     implicit val authUser: Option[Authority] = Some(Authority(Nino("CS700100A"), L200, "someId"))
 
     def testBaseUrl(serviceName: String): String = "http://localhost:8089"
-
     def mockBaseUrl: String => String = testBaseUrl
 
     val connector = new MessageConnector("messagesBaseUrl", mockWsHttp, mockBaseUrl)
@@ -109,7 +105,6 @@ class MessagesConnectorSpec
       when(mockWsHttp.GET[UpstreamMessageHeadersResponse](any[String])(any(), any(), any()))
         .thenReturn(Future.failed(new BadRequestException("")))
 
-      message.headersListFailsWith(status = 400)
       intercept[BadRequestException] {
         await(connector.messages())
       }
@@ -119,7 +114,6 @@ class MessagesConnectorSpec
       when(mockWsHttp.GET[UpstreamMessageHeadersResponse](any[String])(any(), any(), any()))
         .thenReturn(Future.failed(Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
 
-      message.headersListFailsWith(status = 500)
       intercept[Upstream5xxResponse] {
         await(connector.messages())
       }
@@ -129,7 +123,6 @@ class MessagesConnectorSpec
       when(mockWsHttp.GET[UpstreamMessageHeadersResponse](any[String])(any(), any(), any()))
         .thenReturn(Future successful UpstreamMessageHeadersResponse(Seq.empty))
 
-      message.headersListReturns(Seq.empty)
       await(connector.messages()) shouldBe Seq.empty
     }
 
@@ -175,14 +168,12 @@ class MessagesConnectorSpec
     "return empty response when a 200 response is received with an empty payload" in new Setup {
       when(mockWsHttp.GET[HttpResponse](any[String])(any(), any(), any())).thenReturn(ReadSuccessEmptyResult)
 
-      testMessageRenderer.successfullyRenders(messageBodyToRender, overrideBody = Some(""))
       await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body shouldBe ""
     }
 
     "return a rendered message when a 200 response is received with a payload" in new Setup {
       when(mockWsHttp.GET[HttpResponse](any[String])(any(), any(), any())).thenReturn(PostSuccessResult)
 
-      testMessageRenderer.successfullyRenders(messageBodyToRender)
       await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body should include(s"${html.body}")
     }
   }
