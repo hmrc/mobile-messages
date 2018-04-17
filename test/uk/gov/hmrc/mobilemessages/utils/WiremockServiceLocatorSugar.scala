@@ -44,8 +44,6 @@ trait WiremockServiceLocatorSugar {
 
   def stopMockServer(): Unit = {
     wireMockServer.stop()
-    // A cleaner solution to reset the mappings, but only works with wiremock "1.57" (at the moment version 1.48 is pulled)
-    //wireMockServer.resetMappings()
   }
 
   def stubRegisterEndpoint(status: Int): StubMapping = stubFor(post(urlMatching("/registration")).willReturn(aResponse().withStatus(status)))
