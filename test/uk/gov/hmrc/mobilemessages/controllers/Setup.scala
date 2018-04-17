@@ -138,16 +138,6 @@ trait Setup extends MockitoSugar with TimeSetup {
 
   def mockBaseUrl: String => String = testBaseUrl
 
-
-  /**
-    * def baseUrl(serviceName: String) = {
-    * val protocol = getConfString(s"$serviceName.protocol",defaultProtocol)
-    * val host = getConfString(s"$serviceName.host", throw new RuntimeException(s"Could not find config $serviceName.host"))
-    * val port = getConfInt(s"$serviceName.port", throw new RuntimeException(s"Could not find config $serviceName.port"))
-    * s"$protocol://$host:$port"
-    * }
-    */
-
   val messageServiceHeadersResponse = Seq(
     message.headerWith(id = "id1"),
     message.headerWith(id = "id2"),
