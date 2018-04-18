@@ -4,10 +4,10 @@ object AppDependencies {
   import play.core.PlayVersion
   import play.sbt.PlayImport._
 
-  private val microserviceBootstrapVersion = "6.11.0"
-  private val authClientVersion = "2.4.0"
-  private val domainVersion = "5.0.0"
-  private val playHmrcApiVersion = "2.0.0"
+  private val bootstrapPlayVersion = "1.5.0"
+  private val authClientVersion = "2.6.0"
+  private val domainVersion = "5.1.0"
+  private val playHmrcApiVersion = "2.1.0"
 
   private val reactiveCircuitBreaker = "3.2.0"
   private val emailAddress = "2.1.0"
@@ -18,12 +18,12 @@ object AppDependencies {
   private val wireMockVersion = "2.3.1"
   private val hmrcTestVersion = "3.0.0"
   private val cucumberVersion = "1.2.5"
-  private val mockitoVersion = "2.11.0"
+  private val mockitoVersion = "2.0.2-beta"
   private val scalatestplusPlayVersion = "2.0.1"
 
   val compile = Seq(
     ws,
-    "uk.gov.hmrc" %% "microservice-bootstrap" % microserviceBootstrapVersion,
+    "uk.gov.hmrc" %% "bootstrap-play-25" % bootstrapPlayVersion,
     "uk.gov.hmrc" %% "auth-client" % authClientVersion,
     "uk.gov.hmrc" %% "play-hmrc-api" % playHmrcApiVersion,
     "uk.gov.hmrc" %% "domain" % domainVersion,
@@ -61,7 +61,7 @@ object AppDependencies {
         "info.cukes" %% "cucumber-scala" % cucumberVersion % scope,
         "info.cukes" % "cucumber-junit" % cucumberVersion % scope,
         "com.github.tomakehurst" % "wiremock" % wireMockVersion % scope,
-        "org.mockito" % "mockito-core" % mockitoVersion % scope,
+        "org.mockito" % "mockito-all" % mockitoVersion % scope,
         "org.scalatestplus.play" %% "scalatestplus-play" % scalatestplusPlayVersion % scope
       )
     }.test

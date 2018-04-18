@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.acceptance.microservices
+package uk.gov.hmrc.mobilemessages.utils
 
-import com.github.tomakehurst.wiremock.client.WireMock._
 import org.joda.time.{DateTime, LocalDate}
 import play.api.Play
-import play.api.http.HeaderNames
-import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageResponse, ResourceActionLocation}
+import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.mobilemessages.utils.ConfigHelper.microserviceConfigPathFor
 
 class MessageServiceMock(authToken: String) {
 
-  def fullUrlFor(serviceName: String, path: String) = {
+  def fullUrlFor(serviceName: String, path: String): String = {
     val port = Play.current.configuration.getString(s"${microserviceConfigPathFor(serviceName)}.port").get
     val host = Play.current.configuration.getString(s"${microserviceConfigPathFor(serviceName)}.host").get
     s"http://$host:$port$path"
@@ -47,90 +45,13 @@ class MessageServiceMock(authToken: String) {
     }
   }
 
-  def getByIdReturns(message: UpstreamMessageResponse): Unit = {
-    givenThat(get(urlEqualTo(s"/messages/${message.id}")).
-      withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)).
-      willReturn(aResponse().
-        withBody(
-          jsonRepresentationOf(message)
-        )))
-  }
-
-  def getByIdFailsWith(status: Int, body: String = "", messageId: MessageId): Unit = {
-    givenThat(get(urlEqualTo(s"/messages/${messageId.value}")).
-      withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)).
-      willReturn(aResponse().
-        withStatus(status).
-        withBody(
-          body
-        )))
-  }
-
-  def headersListReturns(messageHeaders: Seq[MessageHeader]): Unit = {
-    givenThat(get(urlEqualTo(s"/messages")).
-      withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)).
-      willReturn(aResponse().
-        withBody(
-          jsonRepresentationOf(messageHeaders)
-        )))
-  }
-
-  def headersListFailsWith(status: Int, body: String = ""): Unit = {
-    givenThat(get(urlEqualTo(s"/messages")).
-      withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)).
-      willReturn(aResponse().
-        withStatus(status).
-        withBody(
-          body
-        )))
-  }
-
-  def markAsReadSucceedsFor(messageBody: UpstreamMessageResponse): Unit = {
-    givenThat(post(urlEqualTo(messageBody.markAsReadUrl.get.url)).
-      withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)).
-      willReturn(aResponse().withStatus(200)))
-  }
-
-  def legacyMarkAsReadSucceedsFor(messageBody: UpstreamMessageResponse, status: Int = 200): Unit = {
-    givenThat(post(urlEqualTo(messageBody.markAsReadUrl.get.url)).
-      withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)).
-      willReturn(aResponse().withStatus(status).withBody(
-        s"""
-           | {
-           |   "service": "${messageBody.renderUrl.service}",
-           |   "url": "${messageBody.renderUrl.url}"
-           | }
-        """.stripMargin
-      )))
-  }
-
-  def markAsReadFailsWith(status: Int, messageBody: UpstreamMessageResponse): Unit = {
-    givenThat(post(urlEqualTo(messageBody.markAsReadUrl.get.url)).
-      withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)).
-      willReturn(aResponse().withStatus(status)))
-  }
-
-  def assertMarkAsReadHasBeenCalledFor(messageBody: UpstreamMessageResponse): Unit = {
-    verify(postRequestedFor(urlEqualTo(messageBody.markAsReadUrl.get.url))
-      .withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)))
-  }
-
-  def assertMarkAsReadHasNeverBeenCalledFor(messageBody: UpstreamMessageResponse): Unit = {
-    verify(0, postRequestedFor(urlEqualTo(messageBody.markAsReadUrl.get.url))
-      .withHeader(HeaderNames.AUTHORIZATION, equalTo(authToken)))
-  }
-
-  def assertMarkAsReadHasNeverBeenCalled(): Unit = {
-    verify(0, postRequestedFor(urlMatching("/*")))
-  }
-
   def bodyWith(id: String,
                renderUrl: ResourceActionLocation = ResourceActionLocation("sa-message-renderer", "/utr/render"),
-               markAsReadUrl: Option[ResourceActionLocation] = None) = {
+               markAsReadUrl: Option[ResourceActionLocation] = None): UpstreamMessageResponse = {
     UpstreamMessageResponse(id, renderUrl, markAsReadUrl)
   }
 
-  def bodyToBeMarkedAsReadWith(id: String) = {
+  def bodyToBeMarkedAsReadWith(id: String): UpstreamMessageResponse = {
     bodyWith(id = id, markAsReadUrl = Some(ResourceActionLocation("message", s"/messages/$id/read-time")))
   }
 
@@ -138,11 +59,11 @@ class MessageServiceMock(authToken: String) {
                  subject: String = "message subject",
                  validFrom: LocalDate = new LocalDate(29348L),
                  readTime: Option[DateTime] = None,
-                 sentInError: Boolean = false) = {
+                 sentInError: Boolean = false): MessageHeader = {
     MessageHeader(MessageId(id), subject, validFrom, readTime, sentInError)
   }
 
-  def jsonRepresentationOf(message: UpstreamMessageResponse) = {
+  def jsonRepresentationOf(message: UpstreamMessageResponse): String = {
     if (message.markAsReadUrl.isDefined) {
       s"""
          |    {
@@ -171,7 +92,7 @@ class MessageServiceMock(authToken: String) {
 
   }
 
-  def jsonRepresentationOf(messageHeaders: Seq[MessageHeader]) = {
+  def jsonRepresentationOf(messageHeaders: Seq[MessageHeader]): String = {
     s"""
        | {
        | "items":[

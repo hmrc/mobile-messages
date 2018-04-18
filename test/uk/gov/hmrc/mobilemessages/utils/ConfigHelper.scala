@@ -18,8 +18,7 @@ package uk.gov.hmrc.mobilemessages.utils
 
 object ConfigHelper {
 
-  def microserviceConfigPathFor(serviceName: String) = {
+  def microserviceConfigPathFor(serviceName: String): String = {
     s"microservice.services.$serviceName"
   }
-
 }

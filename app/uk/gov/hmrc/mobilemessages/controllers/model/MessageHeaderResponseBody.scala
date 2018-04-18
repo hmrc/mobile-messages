@@ -22,15 +22,15 @@ import uk.gov.hmrc.crypto.{Encrypter, PlainText}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 
 final case class MessageHeaderResponseBody(id: String,
-                                     subject: String,
-                                     validFrom: LocalDate,
-                                     readTime: Option[DateTime],
-                                     readTimeUrl: String,
-                                     sentInError: Boolean)
+                                           subject: String,
+                                           validFrom: LocalDate,
+                                           readTime: Option[DateTime],
+                                           readTimeUrl: String,
+                                           sentInError: Boolean)
 
 object MessageHeaderResponseBody {
 
-  import play.api.libs.json.{Json, _}
+  import play.api.libs.json._
 
   implicit val writes: Writes[MessageHeaderResponseBody] = Json.writes[MessageHeaderResponseBody]
 
@@ -38,7 +38,7 @@ object MessageHeaderResponseBody {
     messageHeaders.map(from(_)(encrypter))
   }
 
-  def from(messageHeader: MessageHeader)(encrypter: Encrypter) = {
+  def from(messageHeader: MessageHeader)(encrypter: Encrypter): MessageHeaderResponseBody = {
     MessageHeaderResponseBody(
       messageHeader.id.value,
       messageHeader.subject,

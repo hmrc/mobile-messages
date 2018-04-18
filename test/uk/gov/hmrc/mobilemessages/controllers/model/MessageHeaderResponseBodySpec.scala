@@ -17,10 +17,9 @@
 package uk.gov.hmrc.mobilemessages.controllers.model
 
 import org.joda.time.{DateTime, DateTimeZone}
-import uk.gov.hmrc.mobilemessages.acceptance.microservices.MessageServiceMock
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
-import uk.gov.hmrc.mobilemessages.utils.UnitTestCrypto
+import uk.gov.hmrc.mobilemessages.utils.{MessageServiceMock, UnitTestCrypto}
 import uk.gov.hmrc.play.test.UnitSpec
 
 class MessageHeaderResponseBodySpec extends UnitSpec {

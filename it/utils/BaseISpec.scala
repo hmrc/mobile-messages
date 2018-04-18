@@ -1,18 +1,16 @@
 package utils
 
-import org.scalatest.{Matchers, OptionValues, WordSpec}
+import org.scalatest.{Matchers, OptionValues}
 import org.scalatestplus.play.WsScalaTestClient
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
+import uk.gov.hmrc.play.test.UnitSpec
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 import scala.language.postfixOps
 
-
-class BaseISpec  extends WordSpec with Matchers with OptionValues with WsScalaTestClient with GuiceOneServerPerSuite with WireMockSupport {
+class BaseISpec extends UnitSpec with Matchers with OptionValues with WsScalaTestClient with GuiceOneServerPerSuite with WireMockSupport {
   override implicit lazy val app: Application = appBuilder.build()
 
   protected def appBuilder: GuiceApplicationBuilder =
@@ -28,8 +26,4 @@ class BaseISpec  extends WordSpec with Matchers with OptionValues with WsScalaTe
       )
 
   protected implicit lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
-
-  implicit val defaultTimeout: FiniteDuration = 5 seconds
-
-  def await[A](future: Future[A])(implicit timeout: Duration): A = Await.result(future, timeout)
 }

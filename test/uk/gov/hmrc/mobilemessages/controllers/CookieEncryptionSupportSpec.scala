@@ -26,12 +26,12 @@ class CookieEncryptionSupportSpec extends UnitSpec with ScalaFutures with StubAp
 
     "successfully encrypt and decrypt" in new Success {
 
-      val crypto = new SessionCookieEncryptionSupport {}
+      val crypto: SessionCookieEncryptionSupport = new SessionCookieEncryptionSupport {}
 
       val data = Map(("some key1", "some value1"), ("some key2", "some value2"))
       val result: (String, String) = crypto.withSession(data.toList: _ *)
-      val len = s"${crypto.mtdpSessionCookie}=".length
-      val encryptedResult = result._2.substring(len + 1, result._2.length - 1)
+      val len: Int = s"${crypto.mtdpSessionCookie}=".length
+      val encryptedResult: String = result._2.substring(len + 1, result._2.length - 1)
 
       val decryptedMap: Map[String, String] = crypto.sessionOf(encryptedResult)
       decryptedMap shouldBe data
@@ -39,7 +39,7 @@ class CookieEncryptionSupportSpec extends UnitSpec with ScalaFutures with StubAp
 
     "fail to decrypt when an invalid payload is supplied for decryption" in new Success {
 
-      val crypto = new SessionCookieEncryptionSupport {}
+      val crypto: SessionCookieEncryptionSupport = new SessionCookieEncryptionSupport {}
 
       val data = Map(("some key1", "some value1"), ("some key2", "some value2"))
       val result: (String, String) = crypto.withSession(data.toList: _ *)

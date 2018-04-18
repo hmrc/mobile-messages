@@ -31,13 +31,13 @@ class ResourceActionLocationSpec extends UnitSpec {
 
       val expectedUrl = "http://localhost:3030/path/to/resource"
 
-      ResourceActionLocation("service", "/path/to/resource").toUrlUsing(servicesConfigMock) shouldBe expectedUrl
-      ResourceActionLocation("service", "path/to/resource").toUrlUsing(servicesConfigMock) shouldBe expectedUrl
+      ResourceActionLocation("service", "/path/to/resource").toUrlUsing(servicesConfigMock.baseUrl("service")) shouldBe expectedUrl
+      ResourceActionLocation("service", "path/to/resource").toUrlUsing(servicesConfigMock.baseUrl("service")) shouldBe expectedUrl
 
       when(servicesConfigMock.baseUrl("service")).thenReturn("http://localhost:3030/")
 
-      ResourceActionLocation("service", "/path/to/resource").toUrlUsing(servicesConfigMock) shouldBe expectedUrl
-      ResourceActionLocation("service", "path/to/resource").toUrlUsing(servicesConfigMock) shouldBe expectedUrl
+      ResourceActionLocation("service", "/path/to/resource").toUrlUsing(servicesConfigMock.baseUrl("service")) shouldBe expectedUrl
+      ResourceActionLocation("service", "path/to/resource").toUrlUsing(servicesConfigMock.baseUrl("service")) shouldBe expectedUrl
     }
   }
 }

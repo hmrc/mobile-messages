@@ -14,41 +14,48 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.acceptance.microservices
+package uk.gov.hmrc.mobilemessages.utils
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
+import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.apache.http.HttpHeaders
+import play.api.libs.json.Json
+import uk.gov.hmrc.api.domain.Registration
 import uk.gov.hmrc.mobilemessages.connector.model.UpstreamMessageResponse
+import uk.gov.hmrc.play.it.Port.randomAvailable
 
-class MessageRendererServiceMock(authToken: String, val servicePort: Int, serviceName: String) {
+trait WiremockServiceLocatorSugar {
+  val stubPort: Int = randomAvailable
+  val stubHost: String = "localhost"
+  lazy val wireMockUrl = s"http://$stubHost:$stubPort"
+  lazy val wireMockServer = new WireMockServer(wireMockConfig().port(stubPort))
+  private val service = new WireMock(stubPort)
 
-  private lazy val wireMockServer = new WireMockServer(wireMockConfig().port(servicePort))
-  private val service = new WireMock(servicePort)
+  def regPayloadStringFor(serviceName: String, serviceUrl: String): String =
+    Json.toJson(Registration(serviceName, serviceUrl, Some(Map("third-party-api" -> "true")))).toString
 
-  def start() = {
+  def startMockServer(): Unit = {
     wireMockServer.start()
+    WireMock.configureFor(stubHost, stubPort)
   }
 
-  def stop() = {
+  def stopMockServer(): Unit = {
     wireMockServer.stop()
   }
 
-  def reset() = {
-    wireMockServer.resetMappings()
-    wireMockServer.resetRequests()
-  }
+  def stubRegisterEndpoint(status: Int): StubMapping = stubFor(post(urlMatching("/registration")).willReturn(aResponse().withStatus(status)))
 
-  def successfullyRenders(messageBody: UpstreamMessageResponse, overrideBody: Option[String] = None): Unit = {
+  def successfullyRenders(messageBody: UpstreamMessageResponse, overrideBody: Option[String] = None, serviceName: String, authToken: String): Unit = {
     service.register(get(urlEqualTo(messageBody.renderUrl.url)).
       withHeader(HttpHeaders.AUTHORIZATION, equalTo(authToken)).
       willReturn(aResponse().
-      withBody(if (overrideBody.isDefined) overrideBody.get else rendered(messageBody))))
+        withBody(if (overrideBody.isDefined) overrideBody.get else rendered(messageBody, serviceName))))
   }
 
-  def failsWith(status: Int, body: String = "", path: String): Unit = {
+  def failsWith(status: Int, body: String = "", path: String, authToken: String): Unit = {
     service.register(get(urlEqualTo(path)).
       withHeader(HttpHeaders.AUTHORIZATION, equalTo(authToken)).
       willReturn(aResponse().
@@ -56,7 +63,7 @@ class MessageRendererServiceMock(authToken: String, val servicePort: Int, servic
         withBody(body)))
   }
 
-  def rendered(messageBody: UpstreamMessageResponse) = {
+  def rendered(messageBody: UpstreamMessageResponse, serviceName: String): String = {
     s"""
        |<div>This is a message with id: ${messageBody.id} rendered by $serviceName</div>
      """.stripMargin

@@ -24,7 +24,7 @@ class UnitTestCrypto extends AesCrypto {
 }
 
 object EncryptionUtils {
-  def encrypted(value: String, encrypter: Encrypter = new UnitTestCrypto) = {
+  def encrypted(value: String, encrypter: Encrypter = new UnitTestCrypto): String = {
     Base64.encode(encrypter.encrypt(PlainText(value)).value.getBytes)
   }
 }
