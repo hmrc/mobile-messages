@@ -14,44 +14,41 @@
  * limitations under the License.
  */
 
-//package uk.gov.hmrc.mobilemessages.connector
-//
-//import com.github.tomakehurst.wiremock.client.WireMock
-//import org.mockito.Matchers.any
-//import org.mockito.Mockito.when
-//import org.scalatest.concurrent.ScalaFutures
-//import org.scalatest.mockito.MockitoSugar
-//import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
-//import play.api.libs.json.Json.toJson
-//import play.api.libs.json.{Json, OFormat}
-//import play.api.test.FakeApplication
-//import play.api.test.Helpers.SERVICE_UNAVAILABLE
-//import play.twirl.api.Html
-//import uk.gov.hmrc.auth.core.ConfidenceLevel.L200
-//import uk.gov.hmrc.domain.Nino
-//import uk.gov.hmrc.http.logging.Authorization
-//import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse, Upstream5xxResponse}
-//import uk.gov.hmrc.mobilemessages.config.WSHttp
-//import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageHeadersResponse, UpstreamMessageResponse}
-//import uk.gov.hmrc.mobilemessages.stubs.StubApplicationConfiguration
-//import uk.gov.hmrc.mobilemessages.controllers.action.Authority
-//import uk.gov.hmrc.mobilemessages.domain._
-//import uk.gov.hmrc.mobilemessages.utils.{MessageServiceMock, WiremockServiceLocatorSugar}
-//import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
-//
-//import scala.concurrent.ExecutionContext.Implicits.global
-//import scala.concurrent.Future
-//
-//class MessagesConnectorSpec
-//  extends UnitSpec
-//    with WithFakeApplication
-//    with ScalaFutures
-//    with StubApplicationConfiguration
-//    with WiremockServiceLocatorSugar
-//    with BeforeAndAfterAll
-//    with BeforeAndAfterEach {
-//
-//
+package uk.gov.hmrc.mobilemessages.connector
+
+import com.github.tomakehurst.wiremock.client.WireMock
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import play.api.libs.json.Json.toJson
+import play.api.libs.json.{Json, OFormat}
+import play.api.test.FakeApplication
+import play.api.test.Helpers.SERVICE_UNAVAILABLE
+import play.twirl.api.Html
+import uk.gov.hmrc.auth.core.ConfidenceLevel.L200
+import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.http.logging.Authorization
+import uk.gov.hmrc.http._
+import uk.gov.hmrc.mobilemessages.config.WSHttp
+import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageHeadersResponse, UpstreamMessageResponse}
+import uk.gov.hmrc.mobilemessages.controllers.Setup
+import uk.gov.hmrc.mobilemessages.stubs.StubApplicationConfiguration
+import uk.gov.hmrc.mobilemessages.controllers.auth.{Authority, AuthorityRecord}
+import uk.gov.hmrc.mobilemessages.domain._
+import uk.gov.hmrc.mobilemessages.utils.MessageServiceMock
+import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
+
+class MessagesConnectorSpec
+  extends UnitSpec
+    with Setup
+    with ScalaFutures
+    with BeforeAndAfterAll
+    with BeforeAndAfterEach {
+
+
 //  override def beforeAll(): Unit = {
 //    super.beforeAll()
 //    startMockServer()
@@ -67,9 +64,9 @@
 //    super.afterEach()
 //    WireMock.reset()
 //  }
-//
+
 //  override lazy val fakeApplication = FakeApplication(additionalConfiguration = config)
-//
+
 //  private trait Setup extends MockitoSugar {
 //    private val authToken = "authToken"
 //    implicit lazy val hc: HeaderCarrier = HeaderCarrier(Some(Authorization(authToken)))
@@ -99,18 +96,29 @@
 //    val connector = new MessageConnector("messagesBaseUrl", mockWsHttp, mockBaseUrl)
 //
 //  }
-//
-//  "messagesConnector messages" should {
-//
-//    "throw BadRequestException when a 400 response is returned" in new Setup {
+
+//  (http.GET(_: String)(_: HttpReads[UpstreamMessageHeadersResponse], _: HeaderCarrier, _: ExecutionContext))
+//    .expects(*, *, *, *).returns(Future successful UpstreamMessageHeadersResponse(messageServiceHeadersResponse))
+
+  def testBaseUrl(serviceName: String): String = "http://localhost:8089"
+  def mockBaseUrl: String => String = testBaseUrl
+
+  val connector: MessageConnector = new MessageConnector("messagesBaseUrl", http, mockBaseUrl)
+
+  "messagesConnector messages" should {
+
+    "throw BadRequestException when a 400 response is returned" in {
 //      when(mockWsHttp.GET[UpstreamMessageHeadersResponse](any[String])(any(), any(), any()))
 //        .thenReturn(Future.failed(new BadRequestException("")))
-//
-//      intercept[BadRequestException] {
-//        await(connector.messages())
-//      }
-//    }
-//
+
+      (http.GET(_: String)(_: HttpReads[UpstreamMessageHeadersResponse], _: HeaderCarrier, _: ExecutionContext))
+        .expects(*, *, *, *).returns(Future failed new BadRequestException(""))
+
+      intercept[BadRequestException] {
+        await(connector.messages())
+      }
+    }
+
 //    "throw Upstream5xxResponse when a 500 response is returned" in new Setup {
 //      when(mockWsHttp.GET[UpstreamMessageHeadersResponse](any[String])(any(), any(), any()))
 //        .thenReturn(Future.failed(Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
@@ -143,10 +151,10 @@
 //        message.headerWith(id = "someId3")
 //      )
 //    }
-//
-//  }
-//
-//  "messagesConnector render message" should {
+
+  }
+
+  "messagesConnector render message" should {
 //
 //    "throw BadRequestException when a 400 response is returned" in new Setup {
 //      when(mockWsHttp.GET[HttpResponse](any[String])(any(), any(), any()))
@@ -177,10 +185,10 @@
 //
 //      await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body should include(s"${html.body}")
 //    }
-//  }
-//
-//  "messagesConnector get message by id" should {
-//
+  }
+
+  "messagesConnector get message by id" should {
+
 //    "throw BadRequestException when a 400 response is returned" in new Setup {
 //      when(mockWsHttp.GET[UpstreamMessageResponse](any[String])(any(), any(), any()))
 //        .thenReturn(Future.failed(new BadRequestException("")))
@@ -207,10 +215,10 @@
 //        message.bodyWith(id = messageId.value)
 //      )
 //    }
-//  }
-//
-//  "messagesConnector mark message as read" should {
-//
+  }
+
+  "messagesConnector mark message as read" should {
+
 //    "throw BadRequestException when a 400 response is returned" in new Setup {
 //      when(mockWsHttp.POSTEmpty[HttpResponse](any[String])(any(), any(), any()))
 //        .thenReturn(Future.failed(new BadRequestException("")))
@@ -234,5 +242,5 @@
 //
 //      connector.markAsRead(messageToBeMarkedAsRead).futureValue.status shouldBe 200
 //    }
-//  }
-//}
+  }
+}

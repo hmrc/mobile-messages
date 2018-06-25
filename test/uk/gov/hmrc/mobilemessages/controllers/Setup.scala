@@ -27,7 +27,8 @@ import play.twirl.api.Html
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.crypto.CryptoWithKeysFromConfig
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.{CoreGet, HeaderCarrier}
+import uk.gov.hmrc.http.logging.Authorization
+import uk.gov.hmrc.http.{CoreGet, CorePost, HeaderCarrier}
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 import uk.gov.hmrc.mobilemessages.services.LiveMobileMessagesService
@@ -46,8 +47,8 @@ trait Setup extends AuthorisationStub with StubApplicationConfiguration with Wit
   lazy val readTimeRequestNoAcceptHeader: FakeRequest[JsValue] = fakeRequest(Json.toJson(RenderMessageRequest(encrypted("543e8c6001000001003e4a9e"))))
 
   implicit val reads: Reads[MessageHeaderResponseBody] = Json.reads[MessageHeaderResponseBody]
-  implicit val hc: HeaderCarrier = HeaderCarrier()
-  implicit val http: CoreGet = mock[CoreGet]
+  implicit val hc: HeaderCarrier = HeaderCarrier(Some(Authorization("authToken")))
+  implicit val http: CoreGet with CorePost = mock[CoreGet with CorePost]
   implicit val authConnector: AuthConnector = mock[AuthConnector]
 
   val nino = Nino("CS700100A")
