@@ -31,7 +31,7 @@ import uk.gov.hmrc.http.{CoreGet, HeaderCarrier}
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 import uk.gov.hmrc.mobilemessages.services.LiveMobileMessagesService
-import uk.gov.hmrc.mobilemessages.stubs.AuthorisationStub
+import uk.gov.hmrc.mobilemessages.stubs.{AuthorisationStub, StubApplicationConfiguration}
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 import uk.gov.hmrc.mobilemessages.utils.MessageServiceMock
 import uk.gov.hmrc.play.test.WithFakeApplication

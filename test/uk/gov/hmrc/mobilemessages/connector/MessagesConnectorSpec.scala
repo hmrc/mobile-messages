@@ -33,7 +33,7 @@
 //import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse, Upstream5xxResponse}
 //import uk.gov.hmrc.mobilemessages.config.WSHttp
 //import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageHeadersResponse, UpstreamMessageResponse}
-//import uk.gov.hmrc.mobilemessages.controllers.StubApplicationConfiguration
+//import uk.gov.hmrc.mobilemessages.stubs.StubApplicationConfiguration
 //import uk.gov.hmrc.mobilemessages.controllers.action.Authority
 //import uk.gov.hmrc.mobilemessages.domain._
 //import uk.gov.hmrc.mobilemessages.utils.{MessageServiceMock, WiremockServiceLocatorSugar}

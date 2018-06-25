@@ -17,6 +17,7 @@
 package uk.gov.hmrc.mobilemessages.controllers
 
 import uk.gov.hmrc.mobilemessages.connector.SessionCookieEncryptionSupport
+import uk.gov.hmrc.mobilemessages.stubs.StubApplicationConfiguration
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
 class CookieEncryptionSupportSpec extends UnitSpec with StubApplicationConfiguration with WithFakeApplication {

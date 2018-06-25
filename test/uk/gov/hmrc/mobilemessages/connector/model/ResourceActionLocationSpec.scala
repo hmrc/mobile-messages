@@ -14,30 +14,24 @@
  * limitations under the License.
  */
 
-//package uk.gov.hmrc.mobilemessages.connector.model
-//
-//import org.mockito.Mockito.when
-//import org.scalatest.mockito.MockitoSugar
-//import uk.gov.hmrc.play.config.ServicesConfig
-//import uk.gov.hmrc.play.test.UnitSpec
-//
-//class ResourceActionLocationSpec extends UnitSpec {
-//
-//  "to Url method" should {
-//
-//    "append path to url correctly" in {
-//      val servicesConfigMock = MockitoSugar.mock[ServicesConfig]
-//      when(servicesConfigMock.baseUrl("service")).thenReturn("http://localhost:3030")
-//
-//      val expectedUrl = "http://localhost:3030/path/to/resource"
-//
-//      ResourceActionLocation("service", "/path/to/resource").toUrlUsing(servicesConfigMock.baseUrl("service")) shouldBe expectedUrl
-//      ResourceActionLocation("service", "path/to/resource").toUrlUsing(servicesConfigMock.baseUrl("service")) shouldBe expectedUrl
-//
-//      when(servicesConfigMock.baseUrl("service")).thenReturn("http://localhost:3030/")
-//
-//      ResourceActionLocation("service", "/path/to/resource").toUrlUsing(servicesConfigMock.baseUrl("service")) shouldBe expectedUrl
-//      ResourceActionLocation("service", "path/to/resource").toUrlUsing(servicesConfigMock.baseUrl("service")) shouldBe expectedUrl
-//    }
-//  }
-//}
+package uk.gov.hmrc.mobilemessages.connector.model
+
+import org.scalamock.scalatest.MockFactory
+import uk.gov.hmrc.play.config.ServicesConfig
+import uk.gov.hmrc.play.test.UnitSpec
+
+class ResourceActionLocationSpec extends UnitSpec with MockFactory {
+
+  "to Url method" should {
+
+    "append path to url correctly" in {
+      val servicesConfigMock = mock[ServicesConfig]
+      (servicesConfigMock.baseUrl(_: String)).expects("service").returns("http://localhost:3030").repeat(2)
+
+      val expectedUrl = "http://localhost:3030/path/to/resource"
+
+      ResourceActionLocation("service", "/path/to/resource").toUrlUsing(servicesConfigMock.baseUrl("service")) shouldBe expectedUrl
+      ResourceActionLocation("service", "path/to/resource").toUrlUsing(servicesConfigMock.baseUrl("service")) shouldBe expectedUrl
+    }
+  }
+}
