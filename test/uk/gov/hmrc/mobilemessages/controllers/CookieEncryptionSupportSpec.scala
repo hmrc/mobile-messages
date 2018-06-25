@@ -16,15 +16,14 @@
 
 package uk.gov.hmrc.mobilemessages.controllers
 
-import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.mobilemessages.connector.SessionCookieEncryptionSupport
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
-class CookieEncryptionSupportSpec extends UnitSpec with ScalaFutures with StubApplicationConfiguration with WithFakeApplication {
+class CookieEncryptionSupportSpec extends UnitSpec with StubApplicationConfiguration with WithFakeApplication {
 
   "encrypt/decrypt cookie" should {
 
-    "successfully encrypt and decrypt" in new Success {
+    "successfully encrypt and decrypt" in {
 
       val crypto: SessionCookieEncryptionSupport = new SessionCookieEncryptionSupport {}
 
@@ -37,7 +36,7 @@ class CookieEncryptionSupportSpec extends UnitSpec with ScalaFutures with StubAp
       decryptedMap shouldBe data
     }
 
-    "fail to decrypt when an invalid payload is supplied for decryption" in new Success {
+    "fail to decrypt when an invalid payload is supplied for decryption" in {
 
       val crypto: SessionCookieEncryptionSupport = new SessionCookieEncryptionSupport {}
 

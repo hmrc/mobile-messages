@@ -16,78 +16,39 @@
 
 package uk.gov.hmrc.mobilemessages.controllers
 
-import org.mockito.Matchers.any
-import org.mockito.Mockito.when
-import play.api.libs.json.{JsValue, Json, Reads}
+import org.scalamock.scalatest.MockFactory
 import play.api.mvc.Result
-import play.api.test.FakeApplication
+import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import play.twirl.api.Html
+import uk.gov.hmrc.auth.core.ConfidenceLevel.{L100, L200}
+import uk.gov.hmrc.auth.core.syntax.retrieved._
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilemessages.controllers.action.Authority
+import uk.gov.hmrc.mobilemessages.controllers.auth.{Authority, AuthorityRecord}
 import uk.gov.hmrc.mobilemessages.controllers.model.MessageHeaderResponseBody
-import uk.gov.hmrc.mobilemessages.domain.MessageId
-import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs
-import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
+import uk.gov.hmrc.mobilemessages.domain._
+import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication with StubApplicationConfiguration {
+class MobileMessagesControllerSpec
+  extends UnitSpec with MockFactory with Setup {
 
-  implicit val reads: Reads[MessageHeaderResponseBody] = Json.reads[MessageHeaderResponseBody]
+  val controller = new LiveMobileMessagesController(service, authConnector, http, L200.level, "authUrl", encrypter)
 
-  override lazy val fakeApplication = FakeApplication(additionalConfiguration = config)
+  def readAndUnreadMessagesMock(response: Seq[MessageHeader]): Unit =
+    (service.readAndUnreadMessages()(_: HeaderCarrier, _: ExecutionContext)).expects(*, *).returns(Future successful response)
 
-  "read messages Live" should {
+  def readMessageContentMock(response: Html): Unit =
+    (service.readMessageContent(_: MessageId)(_: HeaderCarrier, _: ExecutionContext, _: Option[Authority]))
+      .expects(*, *, *, *).returns(Future successful response)
 
-    "read a valid html response from the read service" in new Success {
-      when(testMMService.readMessageContent(any[MessageId])(any[HeaderCarrier], any[ExecutionContext], any[Option[Authority]]))
-        .thenReturn(Future successful html)
+  "getMessages() Live" should {
 
-      val result: Result = await(controller.read()(readTimeRequest))
-
-      status(result) shouldBe 200
-      contentAsString(result) shouldBe html.toString()
-    }
-
-    "read a valid html response from the read service when a journeyId is supplied" in new Success {
-      when(testMMService.readMessageContent(any[MessageId])(any[HeaderCarrier], any[ExecutionContext], any[Option[Authority]]))
-        .thenReturn(Future successful html)
-
-      val result: Result = await(controller.read(journeyId)(readTimeRequest))
-
-      status(result) shouldBe 200
-      contentAsString(result) shouldBe html.toString()
-    }
-
-    "return unauthorized when authority record does not contain a NINO" in new AuthWithoutNino {
-      val result: Result = await(controller.read()(readTimeRequest))
-
-      status(result) shouldBe 401
-    }
-
-    "return status code 406 when the headers are invalid" in new Success {
-      val result: Result = await(controller.read()(readTimeRequestNoHeaders))
-
-      status(result) shouldBe 406
-    }
-  }
-
-  "read messages Sandbox" should {
-
-    "return the messages" in new SandboxSuccess {
-      val result: Result = await(controller.read()(readTimeRequest))
-
-      status(result) shouldBe 200
-
-      contentAsString(result) shouldEqual MessageContentPartialStubs.newTaxStatement.toString()
-    }
-  }
-
-  "getMessages Live" should {
-
-    "return an empty list of messages successfully" in new Success {
-      when(testMMService.readAndUnreadMessages()(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future successful Seq.empty)
+    "return an empty list of messages successfully" in {
+      stubAuthorisationGrantAccess(Some(nino.nino) and L200)
+      stubAuthoritySuccess(AuthorityRecord("uri"))
+      readAndUnreadMessagesMock(Seq.empty)
 
       val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
 
@@ -96,9 +57,10 @@ class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication wit
     }
 
 
-    "return an empty list of messages successfully when journeyId is supplied" in new Success {
-      when(testMMService.readAndUnreadMessages()(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future successful Seq.empty)
+    "return an empty list of messages successfully when journeyId is supplied" in {
+      stubAuthorisationGrantAccess(Some(nino.nino) and L200)
+      stubAuthoritySuccess(AuthorityRecord("uri"))
+      readAndUnreadMessagesMock(Seq.empty)
 
       val result: Result = await(controller.getMessages(journeyId)(emptyRequestWithAcceptHeader))
 
@@ -106,47 +68,133 @@ class MobileMessagesControllerSpec extends UnitSpec with WithFakeApplication wit
       contentAsJson(result).as[Seq[MessageHeaderResponseBody]] shouldBe Seq.empty[MessageHeaderResponseBody]
     }
 
-    "return a list of messages successfully" in new SuccessWithMessages {
+    "return a list of messages successfully" in {
+      stubAuthorisationGrantAccess(Some(nino.nino) and L200)
+      stubAuthoritySuccess(AuthorityRecord("uri"))
+      readAndUnreadMessagesMock(messageServiceHeadersResponse)
 
       val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
 
       status(result) shouldBe 200
-      contentAsJson(result).as[Seq[MessageHeaderResponseBody]] shouldBe getMessagesResponseItemsList
+      contentAsJson(result).as[Seq[MessageHeaderResponseBody]] shouldBe getMessageResponseItemList
     }
 
-    "return forbidden when authority record does not have correct confidence level" in new AuthWithLowCL {
+    "return forbidden when authority record does not have correct confidence level" in {
+      stubAuthorisationGrantAccess(Some(nino.nino) and L100)
+      stubAuthoritySuccess(AuthorityRecord("uri"))
+
       val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
 
       status(result) shouldBe 403
     }
 
-    "return unauthorized when authority record does not contain a NINO" in new AuthWithoutNino {
+    "return forbidden when authority record does not contain a NINO" in {
+      stubAuthorisationGrantAccess(None and L200)
+      stubAuthoritySuccess(AuthorityRecord("uri"))
+
+      val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
+
+      status(result) shouldBe 403
+    }
+
+    "return status code 406 when the headers are invalid" in {
+      val result: Result = await(controller.getMessages()(FakeRequest()))
+
+      status(result) shouldBe 406
+    }
+
+    "return unauthorized when unable to retrieve authority record uri" in {
+      stubAuthorityFailure()
+
       val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
 
       status(result) shouldBe 401
     }
+  }
 
-    "return status code 406 when the headers are invalid" in new Success {
-      val result: Result = await(controller.getMessages()(emptyRequest))
+  "read() Live" should {
+
+    "read a valid html response from the read service" in {
+      stubAuthorisationGrantAccess(Some(nino.nino) and L200)
+      stubAuthoritySuccess(AuthorityRecord("uri"))
+      readMessageContentMock(html)
+
+      val result: Result = await(controller.read()(readTimeRequest))
+
+      status(result) shouldBe 200
+      contentAsString(result) shouldBe html.toString()
+    }
+
+    "read a valid html response from the read service when a journeyId is supplied" in {
+      stubAuthorisationGrantAccess(Some(nino.nino) and L200)
+      stubAuthoritySuccess(AuthorityRecord("uri"))
+      readMessageContentMock(html)
+
+      val result: Result = await(controller.read(journeyId)(readTimeRequest))
+
+      status(result) shouldBe 200
+      contentAsString(result) shouldBe html.toString()
+    }
+
+    "return forbidden when authority record does not have correct confidence level" in {
+      stubAuthorisationGrantAccess(Some(nino.nino) and L100)
+      stubAuthoritySuccess(AuthorityRecord("uri"))
+
+      val result: Result = await(controller.read(journeyId)(readTimeRequest))
+
+      status(result) shouldBe 403
+    }
+
+    "return forbidden when authority record does not contain a NINO" in {
+      stubAuthorisationGrantAccess(None and L200)
+      stubAuthoritySuccess(AuthorityRecord("uri"))
+
+      val result: Result = await(controller.read(journeyId)(readTimeRequest))
+
+      status(result) shouldBe 403
+    }
+
+    "return status code 406 when the headers are invalid" in {
+      val result: Result = await(controller.read(journeyId)(readTimeRequestNoAcceptHeader))
 
       status(result) shouldBe 406
+    }
+
+    "return unauthorized when unable to retrieve authority record uri" in {
+      stubAuthorityFailure()
+
+      val result: Result = await(controller.read(journeyId)(readTimeRequest))
+
+      status(result) shouldBe 401
     }
   }
 
   "getMessages Sandbox" should {
 
-    "return the messages" in new SandboxSuccess {
-
-      import scala.language.postfixOps
-
-      val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
-
-      status(result) shouldBe 200
-
-      val jsonResponse: JsValue = contentAsJson(result)
-      val restTime: Long = (jsonResponse \ 0 \ "readTime").as[Long]
-      jsonResponse shouldBe Json.parse(messages(restTime))
-
-    }
+    //    "return the messages" in new SandboxSuccess {
+    //
+    //      import scala.language.postfixOps
+    //
+    //      val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
+    //
+    //      status(result) shouldBe 200
+    //
+    //      val jsonResponse: JsValue = contentAsJson(result)
+    //      val restTime: Long = (jsonResponse \ 0 \ "readTime").as[Long]
+    //      jsonResponse shouldBe Json.parse(messages(restTime))
+    //
+    //    }
   }
+
+  "read messages Sandbox" should {
+
+    //    "return the messages" in new SandboxSuccess {
+    //      val result: Result = await(controller.read()(readTimeRequest))
+    //
+    //      status(result) shouldBe 200
+    //
+    //      contentAsString(result) shouldEqual MessageContentPartialStubs.newTaxStatement.toString()
+    //    }
+  }
+
 }

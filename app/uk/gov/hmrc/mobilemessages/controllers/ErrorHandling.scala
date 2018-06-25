@@ -18,16 +18,20 @@ package uk.gov.hmrc.mobilemessages.controllers
 
 import play.api.mvc.Result
 import uk.gov.hmrc.api.controllers.ErrorResponse
-import uk.gov.hmrc.http.{ForbiddenException, HeaderCarrier, NotFoundException, UnauthorizedException}
+import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case object ErrorNinoInvalid extends ErrorResponse(400, "NINO_INVALID", "The provided NINO is invalid")
+class GrantAccessException(message: String) extends HttpException(message, 403)
 
-case object ErrorUnauthorizedNoNino extends ErrorResponse(401, "UNAUTHORIZED", "NINO does not exist on account")
+class NinoNotFoundOnAccount extends GrantAccessException("Unauthorised! NINO not found on account!")
 
-case object ForbiddenAccess extends ErrorResponse(403, "UNAUTHORIZED", "Access denied!")
+class AccountWithLowCL extends GrantAccessException("Unauthorised! Account with low CL!")
+
+case object ErrorUnauthorizedMicroService extends ErrorResponse(401, "UNAUTHORIZED", "Unauthorized")
+
+case object ErrorForbidden extends ErrorResponse(403, "FORBIDDEN", "Forbidden")
 
 trait ErrorHandling {
   self: BaseController =>
@@ -40,7 +44,7 @@ trait ErrorHandling {
     func.recover {
       case _: NotFoundException => Status(ErrorNotFound.httpStatusCode)(Json.toJson(ErrorNotFound))
 
-      case _: UnauthorizedException => Unauthorized(Json.toJson(ErrorUnauthorizedNoNino))
+      case _: UnauthorizedException => Unauthorized(Json.toJson(ErrorUnauthorizedMicroService))
 
       case _: ForbiddenException => Unauthorized(Json.toJson(ErrorUnauthorizedLowCL))
 

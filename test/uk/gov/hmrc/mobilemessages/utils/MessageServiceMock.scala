@@ -16,17 +16,16 @@
 
 package uk.gov.hmrc.mobilemessages.utils
 
-import org.joda.time.{DateTime, LocalDate}
+import org.joda.time._
 import play.api.Play
 import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.domain._
-import uk.gov.hmrc.mobilemessages.utils.ConfigHelper.microserviceConfigPathFor
 
 class MessageServiceMock(authToken: String) {
 
   def fullUrlFor(serviceName: String, path: String): String = {
-    val port = Play.current.configuration.getString(s"${microserviceConfigPathFor(serviceName)}.port").get
-    val host = Play.current.configuration.getString(s"${microserviceConfigPathFor(serviceName)}.host").get
+    val port = Play.current.configuration.getString(s"microservice.services.$serviceName.port").get
+    val host = Play.current.configuration.getString(s"microservice.services.$serviceName.host").get
     s"http://$host:$port$path"
   }
 

@@ -16,16 +16,17 @@
 
 package uk.gov.hmrc.mobilemessages.controllers
 
-import javax.inject.Inject
-
+import com.google.inject.Singleton
+import javax.inject.{Inject, Named}
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, BodyParsers}
 import play.twirl.api.Html
 import uk.gov.hmrc.api.controllers._
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.crypto.{CryptoWithKeysFromConfig, Decrypter, Encrypter}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck, Authority}
+import uk.gov.hmrc.http.{CoreGet, HeaderCarrier}
+import uk.gov.hmrc.mobilemessages.controllers.auth.{AccessControl, Authority}
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
@@ -35,14 +36,13 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetai
 
 import scala.concurrent.Future
 
-trait MobileMessagesController extends BaseController with HeaderValidator with ErrorHandling {
+trait MobileMessagesController extends BaseController with HeaderValidator with ErrorHandling with AccessControl {
 
   val service: MobileMessagesService
-  val accessControl: AccountAccessControlWithHeaderCheck
   val crypto: Encrypter with Decrypter
 
   final def getMessages(journeyId: Option[String] = None): Action[AnyContent] =
-    accessControl.validateAccept(acceptHeaderValidationRules).async {
+    validateAcceptWithAuth(acceptHeaderValidationRules).async {
       implicit authenticated =>
         implicit val hc: HeaderCarrier = fromHeadersAndSession(authenticated.request.headers, None)
         errorWrapper(service.readAndUnreadMessages().map(
@@ -52,7 +52,7 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
     }
 
   final def read(journeyId: Option[String] = None): Action[JsValue] =
-    accessControl.validateAccept(acceptHeaderValidationRules).async(BodyParsers.parse.json) {
+    validateAcceptWithAuth(acceptHeaderValidationRules).async(BodyParsers.parse.json) {
       implicit authenticated =>
         implicit val hc: HeaderCarrier = fromHeadersAndSession(authenticated.request.headers, None)
 
@@ -72,16 +72,22 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
     }
 }
 
-class SandboxMobileMessagesController @Inject()(val service: SandboxMobileMessagesService,
-                                                val accessControl: AccountAccessControlCheckAccessOff)
-  extends MobileMessagesController {
-  val crypto: Encrypter with Decrypter =
-    CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption")
+@Singleton
+class SandboxMobileMessagesController @Inject()(override val service: SandboxMobileMessagesService,
+                                                override val authConnector: AuthConnector,
+                                                override val http: CoreGet,
+                                                @Named("controllers.confidenceLevel") override val confLevel: Int,
+                                                @Named("auth") val authUrl: String,
+                                                val crypto: Encrypter with Decrypter =
+                                                CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption")) extends MobileMessagesController {
+  override lazy val requiresAuth: Boolean = false
 }
 
-class LiveMobileMessagesController @Inject()(val service: LiveMobileMessagesService,
-                                             val accessControl: AccountAccessControlWithHeaderCheck)
-  extends MobileMessagesController {
-  val crypto: Encrypter with Decrypter =
-    CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption")
-}
+@Singleton
+class LiveMobileMessagesController @Inject()(override val service: LiveMobileMessagesService,
+                                             override val authConnector: AuthConnector,
+                                             override val http: CoreGet,
+                                             @Named("controllers.confidenceLevel") override val confLevel: Int,
+                                             @Named("auth") val authUrl: String,
+                                             val crypto: Encrypter with Decrypter =
+                                             CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption")) extends MobileMessagesController
