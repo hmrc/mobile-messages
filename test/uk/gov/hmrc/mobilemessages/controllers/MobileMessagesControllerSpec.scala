@@ -97,6 +97,15 @@ class MobileMessagesControllerSpec
       status(result) shouldBe 403
     }
 
+    "return unauthorized when auth call fails" in {
+      stubAuthoritySuccess(AuthorityRecord("uri"))
+      stubAuthorisationUnauthorised()
+
+      val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
+
+      status(result) shouldBe 401
+    }
+
     "return status code 406 when the headers are invalid" in {
       val result: Result = await(controller.getMessages()(FakeRequest()))
 
@@ -152,6 +161,15 @@ class MobileMessagesControllerSpec
       val result: Result = await(controller.read(journeyId)(readTimeRequest))
 
       status(result) shouldBe 403
+    }
+
+    "return unauthorized when auth call fails" in {
+      stubAuthorisationUnauthorised()
+      stubAuthoritySuccess(AuthorityRecord("uri"))
+
+      val result: Result = await(controller.read(journeyId)(readTimeRequest))
+
+      status(result) shouldBe 401
     }
 
     "return status code 406 when the headers are invalid" in {
