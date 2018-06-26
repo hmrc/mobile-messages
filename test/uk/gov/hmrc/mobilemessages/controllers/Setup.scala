@@ -27,10 +27,11 @@ import play.twirl.api.Html
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.crypto.CryptoWithKeysFromConfig
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.http.{CoreGet, CorePost, HeaderCarrier}
+import uk.gov.hmrc.mobilemessages.config.WSHttpImpl
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
-import uk.gov.hmrc.mobilemessages.domain.MessageHeader
+import uk.gov.hmrc.mobilemessages.domain.{MessageHeader, MessageId}
 import uk.gov.hmrc.mobilemessages.services.LiveMobileMessagesService
 import uk.gov.hmrc.mobilemessages.stubs.{AuthorisationStub, StubApplicationConfiguration}
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
@@ -48,7 +49,7 @@ trait Setup extends AuthorisationStub with StubApplicationConfiguration with Wit
 
   implicit val reads: Reads[MessageHeaderResponseBody] = Json.reads[MessageHeaderResponseBody]
   implicit val hc: HeaderCarrier = HeaderCarrier(Some(Authorization("authToken")))
-  implicit val http: CoreGet with CorePost = mock[CoreGet with CorePost]
+  implicit val http: WSHttpImpl = mock[WSHttpImpl]
   implicit val authConnector: AuthConnector = mock[AuthConnector]
 
   val nino = Nino("CS700100A")
@@ -61,6 +62,8 @@ trait Setup extends AuthorisationStub with StubApplicationConfiguration with Wit
   }
 
   val message = new MessageServiceMock("authToken")
+
+  val messageId = MessageId("id123")
 
   val messageServiceHeadersResponse: Seq[MessageHeader] = Seq(
     message.headerWith(id = "id1"),

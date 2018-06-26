@@ -39,7 +39,7 @@ class MessageConnector @Inject()(@Named("messages") val messageBaseUrl: String,
   implicit val now: DateTime = DateTimeUtils.now
 
   def messages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
-    http.GET[UpstreamMessageHeadersResponse](s"$messageBaseUrl/messages").map(x => x.items)
+    http.GET[UpstreamMessageHeadersResponse](s"$messageBaseUrl/messages").map(_.items)
 
   def getMessageBy(id: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Message] =
     http.GET[UpstreamMessageResponse](s"$messageBaseUrl/messages/${id.value}").map(_.toMessageUsing(_baseUrl))
