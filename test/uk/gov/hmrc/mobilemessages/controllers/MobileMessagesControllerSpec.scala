@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilemessages.controllers
 
+import play.api.libs.json._
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -26,6 +27,8 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilemessages.controllers.auth.{Authority, AuthorityRecord}
 import uk.gov.hmrc.mobilemessages.controllers.model.MessageHeaderResponseBody
 import uk.gov.hmrc.mobilemessages.domain._
+import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
+import uk.gov.hmrc.mobilemessages.utils.Setup
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -33,14 +36,16 @@ import scala.concurrent.{ExecutionContext, Future}
 class MobileMessagesControllerSpec extends UnitSpec with Setup {
 
   def readAndUnreadMessagesMock(response: Seq[MessageHeader]): Unit =
-    (service.readAndUnreadMessages()(_: HeaderCarrier, _: ExecutionContext)).expects(*, *).returns(Future successful response)
+    (mockMobileMessagesService.readAndUnreadMessages()(_: HeaderCarrier, _: ExecutionContext)).expects(*, *).returns(Future successful response)
 
   def readMessageContentMock(response: Html): Unit =
-    (service.readMessageContent(_: MessageId)(_: HeaderCarrier, _: ExecutionContext, _: Option[Authority]))
+    (mockMobileMessagesService.readMessageContent(_: MessageId)(_: HeaderCarrier, _: ExecutionContext, _: Option[Authority]))
       .expects(*, *, *, *).returns(Future successful response)
 
+  val sandboxController = new SandboxMobileMessagesController()
+
   running(fakeApplication) {
-    val controller = new LiveMobileMessagesController(service, authConnector, http, L200.level, "authUrl")
+    val controller = new MobileMessagesController(mockMobileMessagesService, mockAuthConnector, mockHttp, L200.level, "authUrl")
 
     "getMessages() Live" should {
 
@@ -187,34 +192,31 @@ class MobileMessagesControllerSpec extends UnitSpec with Setup {
     }
   }
 
-  running(fakeApplication) {
-    val controller = new SandboxMobileMessagesController(sandboxService, authConnector, http, L200.level, "authUrl")
-    "getMessages Sandbox" should {
+  "getMessages() Sandbox" should {
 
-      "return the messages" in {
+    "return messages" in {
 
-        //        import scala.language.postfixOps
-        //
-        //        val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
-        //
-        //        status(result) shouldBe 200
-        //
-        //        val jsonResponse: JsValue = contentAsJson(result)
-        //        val restTime: Long = (jsonResponse \ 0 \ "readTime").as[Long]
-        //        jsonResponse shouldBe Json.parse(messages(restTime))
+      import scala.language.postfixOps
 
-      }
+      val result: Result = await(sandboxController.getMessages()(emptyRequestWithAcceptHeader))
+
+      status(result) shouldBe 200
+
+      val jsonResponse: JsValue = contentAsJson(result)
+      val restTime: Long = (jsonResponse \ 0 \ "readTime").as[Long]
+      jsonResponse shouldBe Json.parse(messages(restTime))
+
     }
+  }
 
-    "read messages Sandbox" should {
+  "read() Sandbox" should {
 
-      "return the messages" in {
-        //        val result: Result = await(controller.read()(readTimeRequest))
-        //
-        //        status(result) shouldBe 200
-        //
-        //        contentAsString(result) shouldEqual newTaxStatement.toString()
-      }
+    "return messages" in {
+      val result: Result = await(sandboxController.read()(readTimeRequest))
+
+      status(result) shouldBe 200
+
+      contentAsString(result) shouldEqual newTaxStatement.toString()
     }
   }
 }

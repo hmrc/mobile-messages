@@ -19,28 +19,19 @@ package uk.gov.hmrc.mobilemessages.services
 import com.google.inject._
 import play.api.Configuration
 import play.twirl.api.Html
-import uk.gov.hmrc.api.sandbox.FileResource
 import uk.gov.hmrc.api.service.Auditor
-import uk.gov.hmrc.domain.SaUtr
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilemessages.connector._
 import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
-import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait MobileMessagesService {
-  def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]]
-
-  def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html]
-}
-
 @Singleton
-class LiveMobileMessagesService @Inject()(val messageConnector: MessageConnector,
-                                          val auditConnector: AuditConnector,
-                                          val appNameConfiguration: Configuration) extends MobileMessagesService with Auditor {
+class MobileMessagesService @Inject()(val messageConnector: MessageConnector,
+                                      val auditConnector: AuditConnector,
+                                      val appNameConfiguration: Configuration) extends Auditor {
 
   def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = {
     withAudit("readAndUnreadMessages", Map.empty) {
@@ -60,23 +51,8 @@ class LiveMobileMessagesService @Inject()(val messageConnector: MessageConnector
       }
     }
 
-  def markAsReadIfUnread(implicit hc: HeaderCarrier, ec: ExecutionContext): Message => Unit = {
+  private def markAsReadIfUnread(implicit hc: HeaderCarrier, ec: ExecutionContext): Message => Unit = {
     case unreadMessage@UnreadMessage(_, _, _) => messageConnector.markAsRead(unreadMessage)
     case _ => ()
-  }
-}
-
-@Singleton
-class SandboxMobileMessagesService extends MobileMessagesService with FileResource {
-
-  import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator._
-
-  val saUtr: SaUtr = nextSaUtr
-
-  def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
-    Future.successful(Seq(readMessageHeader(saUtr), unreadMessageHeader(saUtr)))
-
-  def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
-    Future.successful(newTaxStatement)
   }
 }

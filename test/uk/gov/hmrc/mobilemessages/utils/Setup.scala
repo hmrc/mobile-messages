@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.controllers
+package uk.gov.hmrc.mobilemessages.utils
 
 import java.util.UUID.randomUUID
 
@@ -31,12 +31,13 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.mobilemessages.config.WSHttpImpl
+import uk.gov.hmrc.mobilemessages.connector.MessageConnector
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
 import uk.gov.hmrc.mobilemessages.domain.{MessageHeader, MessageId}
-import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, SandboxMobileMessagesService}
+import uk.gov.hmrc.mobilemessages.services.MobileMessagesService
 import uk.gov.hmrc.mobilemessages.stubs.{AuthorisationStub, MessagesStub, StubApplicationConfiguration}
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
-import uk.gov.hmrc.mobilemessages.utils.MessageServiceMock
+import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.test.WithFakeApplication
 import uk.gov.hmrc.time.DateTimeUtils
 
@@ -51,17 +52,19 @@ trait Setup extends AuthorisationStub with MessagesStub with WithFakeApplication
 
   implicit val reads: Reads[MessageHeaderResponseBody] = Json.reads[MessageHeaderResponseBody]
   implicit val hc: HeaderCarrier = HeaderCarrier(Some(Authorization("authToken")))
-  implicit val http: WSHttpImpl = mock[WSHttpImpl]
-  implicit val authConnector: AuthConnector = mock[AuthConnector]
+  implicit val mockHttp: WSHttpImpl = mock[WSHttpImpl]
+  implicit val mockAuthConnector: AuthConnector = mock[AuthConnector]
+  implicit val mockAuditConnector: AuditConnector = mock[AuditConnector]
+  implicit val mockMessageConnector: MessageConnector = mock[MessageConnector]
+
+  val configuration: Configuration = fakeApplication.injector.instanceOf[Configuration]
 
   val nino = Nino("CS700100A")
   val journeyId = Option(randomUUID().toString)
   val acceptHeader: (String, String) = "Accept" -> "application/vnd.hmrc.1.0+json"
 
-  val encrypter: CryptoWithKeysFromConfig = {
-    val configuration = fakeApplication.injector.instanceOf[Configuration]
+  val encrypter: CryptoWithKeysFromConfig =
     CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption", configuration)
-  }
 
   val message = new MessageServiceMock("authToken")
 
@@ -76,8 +79,7 @@ trait Setup extends AuthorisationStub with MessagesStub with WithFakeApplication
   val getMessageResponseItemList: Seq[MessageHeaderResponseBody] =
     MessageHeaderResponseBody.fromAll(messageHeaders = messageServiceHeadersResponse)(encrypter)
 
-  val service: LiveMobileMessagesService = mock[LiveMobileMessagesService]
-  val sandboxService: SandboxMobileMessagesService = mock[SandboxMobileMessagesService]
+  val mockMobileMessagesService: MobileMessagesService = mock[MobileMessagesService]
 
   def fakeRequest(body: JsValue): FakeRequest[JsValue] = FakeRequest(POST, "url").
     withBody(body).

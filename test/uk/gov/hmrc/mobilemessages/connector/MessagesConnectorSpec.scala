@@ -23,9 +23,9 @@ import uk.gov.hmrc.auth.core.ConfidenceLevel.L200
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageHeadersResponse, UpstreamMessageResponse}
-import uk.gov.hmrc.mobilemessages.controllers.Setup
 import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
 import uk.gov.hmrc.mobilemessages.domain._
+import uk.gov.hmrc.mobilemessages.utils.Setup
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -52,7 +52,7 @@ class MessagesConnectorSpec extends UnitSpec with Setup {
   lazy val PostSuccessResult: Future[AnyRef with HttpResponse] = Future.successful(HttpResponse(200, Some(toJson(html.body))))
   lazy val PostSuccessRendererResult: Future[AnyRef with HttpResponse] = Future.successful(HttpResponse(200, Some(toJson(responseRenderer))))
 
-  val connector: MessageConnector = new MessageConnector("messagesBaseUrl", http, mockBaseUrl)
+  val connector: MessageConnector = new MessageConnector("messagesBaseUrl", mockHttp, mockBaseUrl)
 
   private val upstream5xxResponse = Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)
   private val badRequestException = new BadRequestException("")
