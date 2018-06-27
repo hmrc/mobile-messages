@@ -29,11 +29,12 @@ import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class MessagesConnectorSpec extends UnitSpec with Setup {
 
   def testBaseUrl(serviceName: String): String = "http://localhost:8089"
+
   def mockBaseUrl: String => String = testBaseUrl
 
   implicit val formats: OFormat[RenderMessageLocation] = Json.format[RenderMessageLocation]
@@ -53,6 +54,9 @@ class MessagesConnectorSpec extends UnitSpec with Setup {
 
   val connector: MessageConnector = new MessageConnector("messagesBaseUrl", http, mockBaseUrl)
 
+  private val upstream5xxResponse = Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)
+  private val badRequestException = new BadRequestException("")
+
   "messages()" should {
 
     "return a list of items when a 200 response is received with a payload" in {
@@ -61,15 +65,13 @@ class MessagesConnectorSpec extends UnitSpec with Setup {
         message.headerWith(id = "someId2"),
         message.headerWith(id = "someId3"))
 
-      (http.GET(_: String)(_: HttpReads[UpstreamMessageHeadersResponse], _: HeaderCarrier, _: ExecutionContext))
-        .expects(*, *, *, *).returns(Future successful UpstreamMessageHeadersResponse(messagesHeaders))
+      messagesGetSuccess(UpstreamMessageHeadersResponse(messagesHeaders))
 
       await(connector.messages()) shouldBe messagesHeaders
     }
 
     "throw BadRequestException when a 400 response is returned" in {
-      (http.GET(_: String)(_: HttpReads[UpstreamMessageHeadersResponse], _: HeaderCarrier, _: ExecutionContext))
-        .expects(*, *, *, *).returns(Future failed new BadRequestException(""))
+      messagesGetFailure(badRequestException)
 
       intercept[BadRequestException] {
         await(connector.messages())
@@ -77,8 +79,7 @@ class MessagesConnectorSpec extends UnitSpec with Setup {
     }
 
     "throw Upstream5xxResponse when a 500 response is returned" in {
-      (http.GET(_: String)(_: HttpReads[UpstreamMessageHeadersResponse], _: HeaderCarrier, _: ExecutionContext))
-        .expects(*, *, *, *).returns(Future failed Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE))
+      messagesGetFailure(upstream5xxResponse)
 
       intercept[Upstream5xxResponse] {
         await(connector.messages())
@@ -86,8 +87,7 @@ class MessagesConnectorSpec extends UnitSpec with Setup {
     }
 
     "return empty response when a 200 response is received with an empty payload" in {
-      (http.GET(_: String)(_: HttpReads[UpstreamMessageHeadersResponse], _: HeaderCarrier, _: ExecutionContext))
-        .expects(*, *, *, *).returns(Future successful UpstreamMessageHeadersResponse(Seq.empty))
+      messagesGetSuccess(UpstreamMessageHeadersResponse(Seq.empty))
 
       await(connector.messages()) shouldBe Seq.empty
     }
@@ -96,8 +96,7 @@ class MessagesConnectorSpec extends UnitSpec with Setup {
   "getMessageBy(messageId)" should {
 
     "return a message when a 200 response is received with a payload" in {
-      (http.GET(_: String)(_: HttpReads[UpstreamMessageResponse], _: HeaderCarrier, _: ExecutionContext))
-        .expects(*, *, *, *).returns(Future successful message.bodyWith(id = messageId.value))
+      messageByGetSuccess(message.bodyWith(id = messageId.value))
 
       await(connector.getMessageBy(messageId)) shouldBe message.convertedFrom(
         message.bodyWith(id = messageId.value)
@@ -105,8 +104,7 @@ class MessagesConnectorSpec extends UnitSpec with Setup {
     }
 
     "throw BadRequestException when a 400 response is returned" in {
-      (http.GET(_: String)(_: HttpReads[UpstreamMessageResponse], _: HeaderCarrier, _: ExecutionContext))
-        .expects(*, *, *, *).returns(Future failed new BadRequestException(""))
+      messageByGetFailure(badRequestException)
 
       intercept[BadRequestException] {
         await(connector.getMessageBy(messageId))
@@ -114,8 +112,7 @@ class MessagesConnectorSpec extends UnitSpec with Setup {
     }
 
     "throw Upstream5xxResponse when a 500 response is returned" in {
-      (http.GET(_: String)(_: HttpReads[UpstreamMessageResponse], _: HeaderCarrier, _: ExecutionContext))
-        .expects(*, *, *, *).returns(Future failed Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE))
+      messageByGetFailure(upstream5xxResponse)
 
       intercept[Upstream5xxResponse] {
         await(connector.getMessageBy(messageId))
@@ -126,22 +123,19 @@ class MessagesConnectorSpec extends UnitSpec with Setup {
   "render()" should {
 
     "return empty response when a 200 response is received with an empty payload" in {
-      (http.GET(_: String)(_: HttpReads[HttpResponse], _: HeaderCarrier, _: ExecutionContext))
-        .expects(*, *, *, *).returns(ReadSuccessEmptyResult)
+      renderGetSuccess(ReadSuccessEmptyResult)
 
       await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body shouldBe ""
     }
 
     "return a rendered message when a 200 response is received with a payload" in {
-      (http.GET(_: String)(_: HttpReads[HttpResponse], _: HeaderCarrier, _: ExecutionContext))
-        .expects(*, *, *, *).returns(PostSuccessResult)
+      renderGetSuccess(PostSuccessResult)
 
       await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body should include(s"${html.body}")
     }
 
     "throw BadRequestException when a 400 response is returned" in {
-      (http.GET(_: String)(_: HttpReads[HttpResponse], _: HeaderCarrier, _: ExecutionContext))
-        .expects(*, *, *, *).returns(Future failed new BadRequestException(""))
+      renderGetFailure(badRequestException)
 
       intercept[BadRequestException] {
         await(connector.render(message.convertedFrom(messageBodyToRender), hc))
@@ -149,8 +143,7 @@ class MessagesConnectorSpec extends UnitSpec with Setup {
     }
 
     "throw Upstream5xxResponse when a 500 response is returned" in {
-      (http.GET(_: String)(_: HttpReads[HttpResponse], _: HeaderCarrier, _: ExecutionContext))
-        .expects(*, *, *, *).returns(Future failed Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE))
+      renderGetFailure(upstream5xxResponse)
 
       intercept[Upstream5xxResponse] {
         await(connector.render(message.convertedFrom(messageBodyToRender), hc))
@@ -161,15 +154,13 @@ class MessagesConnectorSpec extends UnitSpec with Setup {
   "markAsRead()" should {
 
     "return a message when a 200 response is received with a payload" in {
-      (http.POSTEmpty(_: String)(_: HttpReads[HttpResponse], _: HeaderCarrier, _: ExecutionContext))
-        .expects(*, *, *, *).returns(PostSuccessRendererResult)
+      markAsReadPostSuccess(PostSuccessRendererResult)
 
       await(connector.markAsRead(messageToBeMarkedAsRead)).status shouldBe 200
     }
 
     "throw BadRequestException when a 400 response is returned" in {
-      (http.POSTEmpty(_: String)(_: HttpReads[HttpResponse], _: HeaderCarrier, _: ExecutionContext))
-        .expects(*, *, *, *).returns(Future failed new BadRequestException(""))
+      markAsReadPostFailure(badRequestException)
 
       intercept[BadRequestException] {
         await(connector.markAsRead(messageToBeMarkedAsRead))
@@ -177,8 +168,7 @@ class MessagesConnectorSpec extends UnitSpec with Setup {
     }
 
     "throw Upstream5xxResponse when a 500 response is returned" in {
-      (http.POSTEmpty(_: String)(_: HttpReads[HttpResponse], _: HeaderCarrier, _: ExecutionContext))
-        .expects(*, *, *, *).returns(Future failed Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE))
+      markAsReadPostFailure(upstream5xxResponse)
 
       intercept[Upstream5xxResponse] {
         await(connector.markAsRead(messageToBeMarkedAsRead))

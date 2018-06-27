@@ -1,4 +1,4 @@
-# MOBILE-MESSAGES
+# mobile-messages
 
 [![Build Status](https://travis-ci.org/hmrc/mobile-messages.svg?branch=master)](https://travis-ci.org/hmrc/customer-profile) [ ![Download](https://api.bintray.com/packages/hmrc/releases/mobile-messages/images/download.svg) ](https://bintray.com/hmrc/releases/mobile-messages/_latestVersion)
 

@@ -77,10 +77,10 @@ class SandboxMobileMessagesController @Inject()(override val service: SandboxMob
                                                 override val authConnector: AuthConnector,
                                                 override val http: CoreGet,
                                                 @Named("controllers.confidenceLevel") override val confLevel: Int,
-                                                @Named("auth") val authUrl: String,
-                                                val crypto: Encrypter with Decrypter =
-                                                CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption")) extends MobileMessagesController {
+                                                @Named("auth") val authUrl: String) extends MobileMessagesController {
   override lazy val requiresAuth: Boolean = false
+  val crypto: Encrypter with Decrypter =
+    CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption")
 }
 
 @Singleton
@@ -88,6 +88,7 @@ class LiveMobileMessagesController @Inject()(override val service: LiveMobileMes
                                              override val authConnector: AuthConnector,
                                              override val http: CoreGet,
                                              @Named("controllers.confidenceLevel") override val confLevel: Int,
-                                             @Named("auth") val authUrl: String,
-                                             val crypto: Encrypter with Decrypter =
-                                             CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption")) extends MobileMessagesController
+                                             @Named("auth") val authUrl: String) extends MobileMessagesController {
+  val crypto: Encrypter with Decrypter =
+    CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption")
+}

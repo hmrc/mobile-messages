@@ -1,3 +1,5 @@
+package uk.gov.hmrc.mobilemessages.tasks
+
 /*
  * Copyright 2016 HM Revenue & Customs
  *
@@ -28,9 +30,9 @@ import uk.gov.hmrc.api.config.ServiceLocatorConfig
 import uk.gov.hmrc.api.connector.ServiceLocatorConnector
 import uk.gov.hmrc.api.controllers.DocumentationController
 import uk.gov.hmrc.http.{CorePost, HeaderCarrier}
+import uk.gov.hmrc.mobilemessages.support.{BaseISpec, WiremockServiceLocatorSugar}
 import uk.gov.hmrc.play.bootstrap.config.AppName
 import uk.gov.hmrc.play.http.ws.WSHttp
-import utils.{BaseISpec, WiremockServiceLocatorSugar}
 
 import scala.concurrent.Future
 
