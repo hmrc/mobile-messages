@@ -86,6 +86,9 @@ class MobileMessagesController @Inject()(val service: MobileMessagesService,
 @Singleton
 class SandboxMobileMessagesController @Inject()() extends BaseController {
 
+  val crypto: Encrypter with Decrypter =
+    CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption")
+
   val saUtr: SaUtr = nextSaUtr
 
   def getMessages(journeyId: Option[String] = None): Action[AnyContent] = Action.async {

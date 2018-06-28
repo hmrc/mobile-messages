@@ -42,8 +42,6 @@ class MobileMessagesControllerSpec extends UnitSpec with Setup {
     (mockMobileMessagesService.readMessageContent(_: MessageId)(_: HeaderCarrier, _: ExecutionContext, _: Option[Authority]))
       .expects(*, *, *, *).returns(Future successful response)
 
-  val sandboxController = new SandboxMobileMessagesController()
-
   running(fakeApplication) {
     val controller = new MobileMessagesController(mockMobileMessagesService, mockAuthConnector, mockHttp, L200.level, "authUrl")
 
@@ -192,31 +190,35 @@ class MobileMessagesControllerSpec extends UnitSpec with Setup {
     }
   }
 
-  "getMessages() Sandbox" should {
+  running(fakeApplication) {
+    val controller = new SandboxMobileMessagesController()
 
-    "return messages" in {
+    "getMessages() Sandbox" should {
 
-      import scala.language.postfixOps
+      "return messages" in {
 
-      val result: Result = await(sandboxController.getMessages()(emptyRequestWithAcceptHeader))
+        import scala.language.postfixOps
 
-      status(result) shouldBe 200
+        val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
 
-      val jsonResponse: JsValue = contentAsJson(result)
-      val restTime: Long = (jsonResponse \ 0 \ "readTime").as[Long]
-      jsonResponse shouldBe Json.parse(messages(restTime))
+        status(result) shouldBe 200
 
+        val jsonResponse: JsValue = contentAsJson(result)
+        val restTime: Long = (jsonResponse \ 0 \ "readTime").as[Long]
+        jsonResponse shouldBe Json.parse(messages(restTime))
+
+      }
     }
-  }
 
-  "read() Sandbox" should {
+    "read() Sandbox" should {
 
-    "return messages" in {
-      val result: Result = await(sandboxController.read()(readTimeRequest))
+      "return messages" in {
+        val result: Result = await(controller.read()(readTimeRequest))
 
-      status(result) shouldBe 200
+        status(result) shouldBe 200
 
-      contentAsString(result) shouldEqual newTaxStatement.toString()
+        contentAsString(result) shouldEqual newTaxStatement.toString()
+      }
     }
   }
 }

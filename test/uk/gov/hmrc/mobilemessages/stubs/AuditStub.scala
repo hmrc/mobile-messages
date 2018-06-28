@@ -49,6 +49,6 @@ trait AuditStub extends MockFactory {
     stubAudit("readAndUnreadMessages")
 
   def stubAuditReadMessageContent()(implicit auditConnector: AuditConnector): Unit =
-    stubAudit("ReadMessageContent")
+    stubAudit("readMessageContent")
 
 }

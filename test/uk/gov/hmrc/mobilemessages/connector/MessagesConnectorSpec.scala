@@ -19,11 +19,8 @@ package uk.gov.hmrc.mobilemessages.connector
 import play.api.libs.json.Json.toJson
 import play.api.libs.json.{Json, OFormat}
 import play.api.test.Helpers.SERVICE_UNAVAILABLE
-import uk.gov.hmrc.auth.core.ConfidenceLevel.L200
-import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageHeadersResponse, UpstreamMessageResponse}
-import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
 import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.mobilemessages.utils.Setup
 import uk.gov.hmrc.play.test.UnitSpec
@@ -38,7 +35,6 @@ class MessagesConnectorSpec extends UnitSpec with Setup {
   def mockBaseUrl: String => String = testBaseUrl
 
   implicit val formats: OFormat[RenderMessageLocation] = Json.format[RenderMessageLocation]
-  implicit val authUser: Option[Authority] = Some(Authority(Nino("CS700100A"), L200, "someId"))
 
   val responseRenderer = RenderMessageLocation("sa-message-renderer", "http://somelocation")
   val renderPath = "/some/render/path"
@@ -48,7 +44,6 @@ class MessagesConnectorSpec extends UnitSpec with Setup {
   val messageToBeMarkedAsRead: UnreadMessage = UnreadMessage(MessageId(messageToBeMarkedAsReadBody.id),
     messageToBeMarkedAsReadBody.renderUrl.url, "markAsReadUrl")
 
-  lazy val ReadSuccessEmptyResult: Future[AnyRef with HttpResponse] = Future.successful(HttpResponse(200, None, Map.empty, None))
   lazy val PostSuccessResult: Future[AnyRef with HttpResponse] = Future.successful(HttpResponse(200, Some(toJson(html.body))))
   lazy val PostSuccessRendererResult: Future[AnyRef with HttpResponse] = Future.successful(HttpResponse(200, Some(toJson(responseRenderer))))
 
