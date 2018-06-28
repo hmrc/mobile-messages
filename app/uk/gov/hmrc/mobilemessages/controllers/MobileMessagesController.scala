@@ -31,7 +31,7 @@ import uk.gov.hmrc.mobilemessages.controllers.auth.{AccessControl, Authority}
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator.{nextSaUtr, readMessageHeader, unreadMessageHeader}
-import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs.newTaxStatement
+import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
 import uk.gov.hmrc.mobilemessages.services.MobileMessagesService
 import uk.gov.hmrc.play.HeaderCarrierConverter._
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
@@ -84,20 +84,35 @@ class MobileMessagesController @Inject()(val service: MobileMessagesService,
 }
 
 @Singleton
-class SandboxMobileMessagesController @Inject()() extends BaseController {
+class SandboxMobileMessagesController @Inject()() extends BaseController with HeaderValidator {
 
   val crypto: Encrypter with Decrypter =
     CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption")
 
   val saUtr: SaUtr = nextSaUtr
 
-  def getMessages(journeyId: Option[String] = None): Action[AnyContent] = Action.async {
-    implicit request =>
-      Future successful Ok(Json.toJson(MessageHeaderResponseBody.fromAll(Seq(readMessageHeader(saUtr), unreadMessageHeader(saUtr)))(crypto)))
-  }
+  def getMessages(journeyId: Option[String] = None): Action[AnyContent] =
+    validateAccept(acceptHeaderValidationRules).async {
+      implicit request =>
+        Future successful (request.headers.get("SANDBOX-CONTROL") match {
+          case Some("ERROR-401") => Unauthorized
+          case Some("ERROR-403") => Forbidden
+          case Some("ERROR-500") => InternalServerError
+          case _ => Ok(Json.toJson(MessageHeaderResponseBody.fromAll(Seq(readMessageHeader(saUtr), unreadMessageHeader(saUtr)))(crypto)))
+        })
+    }
 
-  def read(journeyId: Option[String] = None): Action[JsValue] = Action.async(BodyParsers.parse.json) {
-    implicit request =>
-      Future successful Ok(newTaxStatement)
-  }
+  def read(journeyId: Option[String] = None): Action[JsValue] =
+    validateAccept(acceptHeaderValidationRules).async(BodyParsers.parse.json) {
+      implicit request =>
+        Future successful (request.headers.get("SANDBOX-CONTROL") match {
+          case Some("ANNUAL-TAX-SUMMARY") => Ok(annualTaxSummary)
+          case Some("STOPPING-SA") => Ok(stoppingSA)
+          case Some("OVERDUE-PAYMENT") => Ok(overduePayment)
+          case Some("ERROR-401") => Unauthorized
+          case Some("ERROR-403") => Forbidden
+          case Some("ERROR-500") => InternalServerError
+          case _ => Ok(newTaxStatement)
+        })
+    }
 }
