@@ -18,19 +18,21 @@ Messages
 
 ```json
 [
-  { //read message, i.e has readTime value
-    "id" : "543e8c6001000001003e4a9e",
-    "subject" : "Your Tax Return",
-    "validFrom" : "2013-06-04",
-    "readTime": "2014-05-02T17:17:45.618Z",
-    "sentInError": false
-  },
-  { //unread message
-    "id" : "543e8c5f01000001003e4a9c",
-    "subject" : "Your Tax Return",
-    "validFrom" : "2013-06-04",
-    "sentInError": false
-  }
+    { //read message, i.e has readTime value
+        "id": "543e8c6001000001003e4a9e",
+        "subject": "You have a new tax statement",
+        "validFrom": "2018-06-25",
+        "readTime": 1530089941120,
+        "readTimeUrl": "U1d3ZExBdVZoL0RRbjFCekVnZ3pTMmNDaG1ULzNxZmcxV1Z4ZXVWY0FrRT0=",
+        "sentInError": false
+    },
+    { //unread message
+        "id": "643e8c5f01000001003e4a8f",
+        "subject": "Stopping Self Assessment",
+        "validFrom": "2018-06-28",
+        "readTimeUrl": "dFhvaGhaTEdJTG0wUXFRcEhRL3RUUHozYlpsSnA4NG1IdWpTb3k0MG1zND0=",
+        "sentInError": false
+    }
 ]
 ```
 

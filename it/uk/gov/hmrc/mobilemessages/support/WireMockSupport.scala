@@ -1,4 +1,4 @@
-package utils
+package uk.gov.hmrc.mobilemessages.support
 
 import java.net.URL
 

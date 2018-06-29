@@ -16,33 +16,42 @@
 
 package uk.gov.hmrc.mobilemessages.controllers
 
-import javax.inject.Inject
-
+import com.google.inject.Singleton
+import javax.inject.{Inject, Named}
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, BodyParsers}
 import play.twirl.api.Html
 import uk.gov.hmrc.api.controllers._
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.crypto.{CryptoWithKeysFromConfig, Decrypter, Encrypter}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilemessages.controllers.action.{AccountAccessControlCheckAccessOff, AccountAccessControlWithHeaderCheck, Authority}
+import uk.gov.hmrc.domain.SaUtr
+import uk.gov.hmrc.http.{CoreGet, HeaderCarrier}
+import uk.gov.hmrc.mobilemessages.controllers.auth.{AccessControl, Authority}
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
-import uk.gov.hmrc.mobilemessages.services.{LiveMobileMessagesService, MobileMessagesService, SandboxMobileMessagesService}
+import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator.{nextSaUtr, readMessageHeader, unreadMessageHeader}
+import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
+import uk.gov.hmrc.mobilemessages.services.MobileMessagesService
 import uk.gov.hmrc.play.HeaderCarrierConverter._
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 import scala.concurrent.Future
 
-trait MobileMessagesController extends BaseController with HeaderValidator with ErrorHandling {
+@Singleton
+class MobileMessagesController @Inject()(val service: MobileMessagesService,
+                                         override val authConnector: AuthConnector,
+                                         override val http: CoreGet,
+                                         @Named("controllers.confidenceLevel") override val confLevel: Int,
+                                         @Named("auth") val authUrl: String)
+  extends BaseController with HeaderValidator with ErrorHandling with AccessControl {
 
-  val service: MobileMessagesService
-  val accessControl: AccountAccessControlWithHeaderCheck
-  val crypto: Encrypter with Decrypter
+  val crypto: Encrypter with Decrypter =
+    CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption")
 
-  final def getMessages(journeyId: Option[String] = None): Action[AnyContent] =
-    accessControl.validateAccept(acceptHeaderValidationRules).async {
+  def getMessages(journeyId: Option[String] = None): Action[AnyContent] =
+    validateAcceptWithAuth(acceptHeaderValidationRules).async {
       implicit authenticated =>
         implicit val hc: HeaderCarrier = fromHeadersAndSession(authenticated.request.headers, None)
         errorWrapper(service.readAndUnreadMessages().map(
@@ -51,8 +60,8 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
         ))
     }
 
-  final def read(journeyId: Option[String] = None): Action[JsValue] =
-    accessControl.validateAccept(acceptHeaderValidationRules).async(BodyParsers.parse.json) {
+  def read(journeyId: Option[String] = None): Action[JsValue] =
+    validateAcceptWithAuth(acceptHeaderValidationRules).async(BodyParsers.parse.json) {
       implicit authenticated =>
         implicit val hc: HeaderCarrier = fromHeadersAndSession(authenticated.request.headers, None)
 
@@ -70,18 +79,40 @@ trait MobileMessagesController extends BaseController with HeaderValidator with 
           }
         )
     }
+
+
 }
 
-class SandboxMobileMessagesController @Inject()(val service: SandboxMobileMessagesService,
-                                                val accessControl: AccountAccessControlCheckAccessOff)
-  extends MobileMessagesController {
-  val crypto: Encrypter with Decrypter =
-    CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption")
-}
+@Singleton
+class SandboxMobileMessagesController @Inject()() extends BaseController with HeaderValidator {
 
-class LiveMobileMessagesController @Inject()(val service: LiveMobileMessagesService,
-                                             val accessControl: AccountAccessControlWithHeaderCheck)
-  extends MobileMessagesController {
   val crypto: Encrypter with Decrypter =
     CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption")
+
+  val saUtr: SaUtr = nextSaUtr
+
+  def getMessages(journeyId: Option[String] = None): Action[AnyContent] =
+    validateAccept(acceptHeaderValidationRules).async {
+      implicit request =>
+        Future successful (request.headers.get("SANDBOX-CONTROL") match {
+          case Some("ERROR-401") => Unauthorized
+          case Some("ERROR-403") => Forbidden
+          case Some("ERROR-500") => InternalServerError
+          case _ => Ok(Json.toJson(MessageHeaderResponseBody.fromAll(Seq(readMessageHeader(saUtr), unreadMessageHeader(saUtr)))(crypto)))
+        })
+    }
+
+  def read(journeyId: Option[String] = None): Action[JsValue] =
+    validateAccept(acceptHeaderValidationRules).async(BodyParsers.parse.json) {
+      implicit request =>
+        Future successful (request.headers.get("SANDBOX-CONTROL") match {
+          case Some("ANNUAL-TAX-SUMMARY") => Ok(annualTaxSummary)
+          case Some("STOPPING-SA") => Ok(stoppingSA)
+          case Some("OVERDUE-PAYMENT") => Ok(overduePayment)
+          case Some("ERROR-401") => Unauthorized
+          case Some("ERROR-403") => Forbidden
+          case Some("ERROR-500") => InternalServerError
+          case _ => Ok(newTaxStatement)
+        })
+    }
 }

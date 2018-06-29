@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.controllers
+package uk.gov.hmrc.mobilemessages.stubs
 
 trait StubApplicationConfiguration {
 
@@ -45,6 +45,6 @@ trait StubApplicationConfiguration {
     "router.prefix" -> "/sandbox",
     "router.regex" -> "X-MOBILE-USER-ID",
     "application.secret" -> "yNhI04vHs9<_HWbC`]20u`37=NGLGYY5:0Tg5?y`W<NoJnXWqmjcgZBec@rOxb^G",
-    "cookie.encryption.key" -> "gvBoGdgzqG1AarzF1LY0zQ=="
+    "cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW=="
   )
 }

@@ -17,15 +17,15 @@
 package uk.gov.hmrc.mobilemessages.connector
 
 import java.net.URLEncoder.encode
-import javax.inject.{Inject, Named}
 
+import javax.inject.{Inject, Named}
 import org.apache.commons.codec.CharEncoding.UTF_8
 import org.joda.time.DateTime
 import play.twirl.api.Html
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageHeadersResponse, UpstreamMessageResponse}
-import uk.gov.hmrc.mobilemessages.controllers.action.Authority
+import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
 import uk.gov.hmrc.time.DateTimeUtils
 
