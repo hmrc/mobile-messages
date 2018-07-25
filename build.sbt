@@ -52,7 +52,7 @@ resourceGenerators in Compile += Def.task {
 
 val metadataMfTask = taskKey[File]("metadata-mf")
 metadataMfTask := target.value / "metadata.mf"
-artifact in (Compile, metadataMfTask) ~= { (art:Artifact) =>
+artifact in (Compile, metadataMfTask) ~= { art:Artifact =>
   art.copy("metadata", "mf", "mf")
 }
 addArtifact(artifact in (Compile, metadataMfTask), metadataMfTask in Compile)
