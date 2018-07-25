@@ -59,11 +59,11 @@ class PlatformIntegrationSpec extends BaseISpec with Eventually with WiremockSer
   }
 
   trait Setup {
-    val documentationController = DocumentationController
+    val documentationController: DocumentationController.type = DocumentationController
     val request = FakeRequest()
 
-    implicit val system = ActorSystem()
-    implicit val materializer = ActorMaterializer()
+    implicit val system: ActorSystem = ActorSystem()
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
   }
 
   override protected def appBuilder: GuiceApplicationBuilder = super.appBuilder.configure(

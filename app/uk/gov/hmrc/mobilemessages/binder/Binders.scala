@@ -21,7 +21,7 @@ import uk.gov.hmrc.domain.Nino
 
 object Binders {
 
-  implicit def ninoBinder(implicit stringBinder: PathBindable[String]) = new PathBindable[Nino] {
+  implicit def ninoBinder(implicit stringBinder: PathBindable[String]): PathBindable[Nino] = new PathBindable[Nino] {
 
     def unbind(key: String, nino: Nino): String = stringBinder.unbind(key, nino.value)
 
