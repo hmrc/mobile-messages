@@ -22,14 +22,16 @@ import com.google.inject.{AbstractModule, Provides}
 import play.api.Mode.Mode
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.api.connector.ServiceLocatorConnector
-import uk.gov.hmrc.api.controllers.DocumentationController
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.{CoreGet, CorePost}
 import uk.gov.hmrc.mobilemessages.tasks.ServiceLocatorRegistrationTask
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.mobilemessages.controllers.api.ApiAccess
 import uk.gov.hmrc.play.config.{AppName, ServicesConfig}
+
+import scala.collection.JavaConverters._
 
 class GuiceModule(environment: Environment, configuration: Configuration) extends AbstractModule with ServicesConfig {
 
@@ -45,7 +47,9 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
 
     bind(classOf[Audit]).to(classOf[MicroserviceAudit])
     bind(classOf[AuthConnector]).to(classOf[DefaultAuthConnector])
-    bind(classOf[DocumentationController]).toInstance(DocumentationController)
+
+    bind(classOf[ApiAccess]).toInstance(
+      ApiAccess("PRIVATE", configuration.underlying.getStringList("api.access.white-list.applicationIds").asScala))
 
     bindConfigInt("controllers.confidenceLevel")
     bind(classOf[String]).annotatedWith(named("auth")).toInstance(baseUrl("auth"))
