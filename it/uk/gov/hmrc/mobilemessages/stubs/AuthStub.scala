@@ -8,7 +8,7 @@ import uk.gov.hmrc.auth.core.ConfidenceLevel.{L100, L200}
 import uk.gov.hmrc.domain.Nino
 
 object AuthStub {
-  private val accountsRequestJson: String = """{ "authorise": [], "retrieve": ["nino","confidenceLevel"] }""".stripMargin
+  private val accountsRequestJson: String = """{ "authorise": [], "retrieve": ["nino","confidenceLevel", "saUtr"] }""".stripMargin
   private val authorityUrl = "/auth/authority"
   private val authUrl = "/auth/authorise"
 
