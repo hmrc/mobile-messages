@@ -55,8 +55,10 @@ class MobileMessagesController @Inject()(val service: MobileMessagesService,
       implicit authenticated =>
         implicit val hc: HeaderCarrier = fromHeadersAndSession(authenticated.request.headers, None)
         errorWrapper(service.readAndUnreadMessages().map(
-          (messageHeaders: Seq[MessageHeader]) =>
+          (messageHeaders: Seq[MessageHeader]) => {
+            Logger.info(s"getMessages: found ${messageHeaders.length} messages" )
             Ok(Json.toJson(MessageHeaderResponseBody.fromAll(messageHeaders)(crypto)))
+          }
         ))
     }
 

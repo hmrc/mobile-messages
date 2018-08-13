@@ -21,7 +21,7 @@ import play.api.libs.json.Json.toJson
 import play.api.libs.json.{Json, OFormat, Reads}
 import play.api.mvc._
 import uk.gov.hmrc.api.controllers.{ErrorAcceptHeaderInvalid, HeaderValidator}
-import uk.gov.hmrc.auth.core.retrieve.Retrievals.{confidenceLevel, nino}
+import uk.gov.hmrc.auth.core.retrieve.Retrievals.{confidenceLevel, nino, saUtr}
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{AuthorisedFunctions, ConfidenceLevel}
 import uk.gov.hmrc.domain.Nino
@@ -57,12 +57,14 @@ trait Authorisation extends Results with AuthorisedFunctions {
 
   def grantAccess()(implicit hc: HeaderCarrier): Future[Authority] = {
     getAuthorityRecord.flatMap { authRecord: AuthorityRecord =>
-      authorised().retrieve(nino and confidenceLevel) {
-        case Some(foundNino) ~ foundConfidenceLevel =>
+      authorised().retrieve(nino and confidenceLevel and saUtr) {
+        case Some(foundNino) ~ foundConfidenceLevel ~ foundSAUtr =>
+          Logger.info(s"mobile messages for user with utr: ${foundSAUtr.getOrElse("not found")}" )
+
           if (foundNino.isEmpty) throw ninoNotFoundOnAccount
           if (confLevel > foundConfidenceLevel.level) throw lowConfidenceLevel
           Future successful Authority(Nino(foundNino), foundConfidenceLevel, authRecord.uri)
-        case None ~ _ =>
+        case None ~ _ ~ _ =>
           throw ninoNotFoundOnAccount
       }
     }
