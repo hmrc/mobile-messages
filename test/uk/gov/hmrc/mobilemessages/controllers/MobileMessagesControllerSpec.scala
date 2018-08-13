@@ -48,7 +48,7 @@ class MobileMessagesControllerSpec extends UnitSpec with Setup {
     "getMessages() Live" should {
 
       "return an empty list of messages successfully" in {
-        stubAuthorisationGrantAccess(Some(nino.nino) and L200 and None)
+        stubAuthorisationGrantAccess(Some(nino.nino) and L200)
         stubAuthoritySuccess(AuthorityRecord("uri"))
         readAndUnreadMessagesMock(Seq.empty)
 
@@ -60,7 +60,7 @@ class MobileMessagesControllerSpec extends UnitSpec with Setup {
 
 
       "return an empty list of messages successfully when journeyId is supplied" in {
-        stubAuthorisationGrantAccess(Some(nino.nino) and L200 and None)
+        stubAuthorisationGrantAccess(Some(nino.nino) and L200)
         stubAuthoritySuccess(AuthorityRecord("uri"))
         readAndUnreadMessagesMock(Seq.empty)
 
@@ -71,7 +71,7 @@ class MobileMessagesControllerSpec extends UnitSpec with Setup {
       }
 
       "return a list of messages successfully" in {
-        stubAuthorisationGrantAccess(Some(nino.nino) and L200 and None)
+        stubAuthorisationGrantAccess(Some(nino.nino) and L200)
         stubAuthoritySuccess(AuthorityRecord("uri"))
         readAndUnreadMessagesMock(messageServiceHeadersResponse)
 
@@ -82,7 +82,7 @@ class MobileMessagesControllerSpec extends UnitSpec with Setup {
       }
 
       "return forbidden when authority record does not have correct confidence level" in {
-        stubAuthorisationGrantAccess(Some(nino.nino) and L100 and None)
+        stubAuthorisationGrantAccess(Some(nino.nino) and L100)
         stubAuthoritySuccess(AuthorityRecord("uri"))
 
         val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
@@ -91,7 +91,7 @@ class MobileMessagesControllerSpec extends UnitSpec with Setup {
       }
 
       "return forbidden when authority record does not contain a NINO" in {
-        stubAuthorisationGrantAccess(None and L200 and None)
+        stubAuthorisationGrantAccess(None and L200)
         stubAuthoritySuccess(AuthorityRecord("uri"))
 
         val result: Result = await(controller.getMessages()(emptyRequestWithAcceptHeader))
@@ -126,7 +126,7 @@ class MobileMessagesControllerSpec extends UnitSpec with Setup {
     "read() Live" should {
 
       "read a valid html response from the read service" in {
-        stubAuthorisationGrantAccess(Some(nino.nino) and L200 and None)
+        stubAuthorisationGrantAccess(Some(nino.nino) and L200)
         stubAuthoritySuccess(AuthorityRecord("uri"))
         readMessageContentMock(html)
 
@@ -137,7 +137,7 @@ class MobileMessagesControllerSpec extends UnitSpec with Setup {
       }
 
       "read a valid html response from the read service when a journeyId is supplied" in {
-        stubAuthorisationGrantAccess(Some(nino.nino) and L200 and None)
+        stubAuthorisationGrantAccess(Some(nino.nino) and L200)
         stubAuthoritySuccess(AuthorityRecord("uri"))
         readMessageContentMock(html)
 
@@ -148,7 +148,7 @@ class MobileMessagesControllerSpec extends UnitSpec with Setup {
       }
 
       "return forbidden when authority record does not have correct confidence level" in {
-        stubAuthorisationGrantAccess(Some(nino.nino) and L100 and None)
+        stubAuthorisationGrantAccess(Some(nino.nino) and L100)
         stubAuthoritySuccess(AuthorityRecord("uri"))
 
         val result: Result = await(controller.read(journeyId)(readTimeRequest))
@@ -157,7 +157,7 @@ class MobileMessagesControllerSpec extends UnitSpec with Setup {
       }
 
       "return forbidden when authority record does not contain a NINO" in {
-        stubAuthorisationGrantAccess(None and L200 and None)
+        stubAuthorisationGrantAccess(None and L200)
         stubAuthoritySuccess(AuthorityRecord("uri"))
 
         val result: Result = await(controller.read(journeyId)(readTimeRequest))
