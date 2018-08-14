@@ -21,7 +21,7 @@ import play.api.libs.json.Json.toJson
 import play.api.libs.json.{Json, OFormat, Reads}
 import play.api.mvc._
 import uk.gov.hmrc.api.controllers.{ErrorAcceptHeaderInvalid, HeaderValidator}
-import uk.gov.hmrc.auth.core.retrieve.Retrievals.{confidenceLevel, nino, saUtr}
+import uk.gov.hmrc.auth.core.retrieve.Retrievals.{confidenceLevel, nino}
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{AuthorisedFunctions, ConfidenceLevel}
 import uk.gov.hmrc.domain.Nino
@@ -57,14 +57,12 @@ trait Authorisation extends Results with AuthorisedFunctions {
 
   def grantAccess()(implicit hc: HeaderCarrier): Future[Authority] = {
     getAuthorityRecord.flatMap { authRecord: AuthorityRecord =>
-      authorised().retrieve(nino and confidenceLevel and saUtr) {
-        case Some(foundNino) ~ foundConfidenceLevel ~ foundSAUtr =>
-          Logger.info(s"mobile messages for user with utr: ${foundSAUtr.getOrElse("not found")}" )
-
+      authorised().retrieve(nino and confidenceLevel) {
+        case Some(foundNino) ~ foundConfidenceLevel =>
           if (foundNino.isEmpty) throw ninoNotFoundOnAccount
           if (confLevel > foundConfidenceLevel.level) throw lowConfidenceLevel
           Future successful Authority(Nino(foundNino), foundConfidenceLevel, authRecord.uri)
-        case None ~ _ ~ _ =>
+        case None ~ _ =>
           throw ninoNotFoundOnAccount
       }
     }
@@ -99,8 +97,6 @@ trait AccessControl extends HeaderValidator with Authorisation {
   def validateAcceptWithAuth(rules: Option[String] => Boolean): ActionBuilder[AuthenticatedRequest] = new ActionBuilder[AuthenticatedRequest] {
 
     def invokeBlock[A](request: Request[A], block: AuthenticatedRequest[A] => Future[Result]): Future[Result] = {
-      Logger.info("invokeBlock")
-
       if (rules(request.headers.get("Accept"))) {
         if (requiresAuth) invokeAuthBlock(request, block)
         else block(AuthenticatedRequest(None, request))
