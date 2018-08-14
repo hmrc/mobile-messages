@@ -27,7 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait AuthorisationStub extends MockFactory {
 
-  type GrantAccess = Option[String] ~ ConfidenceLevel
+  type GrantAccess = Option[String] ~ ConfidenceLevel ~ Option[String]
 
   def stubAuthorisationGrantAccess(response: GrantAccess)(implicit authConnector: AuthConnector): Unit =
     (authConnector.authorise(_: Predicate, _: Retrieval[GrantAccess])(_:HeaderCarrier, _: ExecutionContext)).
