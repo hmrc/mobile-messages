@@ -51,15 +51,3 @@ class WSHttpImpl @Inject()(@Named("appName") val appName: String, val auditConne
 
 class MicroserviceAudit @Inject()(@Named("appName") val applicationName: String,
                                   val auditConnector: AuditConnector) extends Audit(applicationName, auditConnector)
-
-class ApiServiceLocatorConnector @Inject()(override val runModeConfiguration: Configuration, environment: Environment, wsHttp: WSHttpImpl)
-  extends ServiceLocatorConnector with ServiceLocatorConfig with AppName {
-  override val appUrl: String = runModeConfiguration.getString("appUrl").getOrElse(throw new RuntimeException("appUrl is not configured"))
-  override val serviceUrl: String = serviceLocatorUrl
-  override val handlerOK: () => Unit = () => Logger.info("Service is registered on the service locator")
-  override val handlerError: Throwable => Unit = e => Logger.error("Service could not register on the service locator", e)
-  override val metadata: Option[Map[String, String]] = Some(Map("third-party-api" → "true"))
-  override val http: CorePost = wsHttp
-  override def appNameConfiguration: Configuration = runModeConfiguration
-  override protected def mode: Mode = environment.mode
-}
