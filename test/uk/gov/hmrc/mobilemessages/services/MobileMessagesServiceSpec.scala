@@ -20,7 +20,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilemessages.connector.model.ResourceActionLocation
 import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageId, UnreadMessage}
-import uk.gov.hmrc.mobilemessages.stubs.AuditStub
+import uk.gov.hmrc.mobilemessages.mocks.AuditStub
 import uk.gov.hmrc.mobilemessages.utils.Setup
 import uk.gov.hmrc.play.test.UnitSpec
 

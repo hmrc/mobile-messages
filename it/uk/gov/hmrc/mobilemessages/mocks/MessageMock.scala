@@ -1,8 +1,8 @@
-package uk.gov.hmrc.mobilemessages.stubs
+package uk.gov.hmrc.mobilemessages.mocks
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 
-object MessageStub {
+object MessageMock {
   val messagesJson: String =
     """{
       |  "items": [
@@ -43,37 +43,37 @@ object MessageStub {
       aResponse().withStatus(500)))
   }
 
-  val messagesByJson: String =
-    """
+  def messagesResponse(service: String): String =
+    s"""
       |{
       |  "id": "url1",
       |  "renderUrl": {
-      |    "service": "service1",
+      |    "service": "$service",
       |    "url": "messagesByUrl"
       |  },
       |  "markAsReadUrl": {
-      |    "service": "service2",
+      |    "service": "$service",
       |    "url": "url2"
       |  }
       |}""".stripMargin
 
-  def messagesBySuccess(id: String): Unit =
+  def mmessageFound(id: String, service: String): Unit =
     stubFor(get(urlPathEqualTo(s"/messages/$id")).willReturn(
       aResponse().withStatus(200).withHeader("Content-Type", "application.json")
-        .withBody(messagesByJson)
+        .withBody(messagesResponse(service))
     ))
 
-  def messagesByNotFoundException(id: String): Unit =
+  def messagesNotFound(id: String): Unit =
     stubFor(get(urlPathEqualTo(s"/messages/$id")).willReturn(
       aResponse().withStatus(404)
     ))
 
-  def messagesByServiceUnavailableException(id: String): Unit =
+  def messagesServiceIsUnavailable(id: String): Unit =
     stubFor(get(urlPathEqualTo(s"/messages/$id")).willReturn(
       aResponse().withStatus(500)
     ))
 
-  def renderCallSuccess(): Unit =
+  def messageIsRenderedSuccessfully(): Unit =
     stubFor(get(urlPathEqualTo("/messagesByUrl")).willReturn(
       aResponse().withStatus(200)
     ))
