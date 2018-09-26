@@ -47,7 +47,13 @@ class MessagesConnectorSpec extends UnitSpec with Setup {
   lazy val PostSuccessResult: Future[AnyRef with HttpResponse] = Future.successful(HttpResponse(200, Some(toJson(html.body))))
   lazy val PostSuccessRendererResult: Future[AnyRef with HttpResponse] = Future.successful(HttpResponse(200, Some(toJson(responseRenderer))))
 
-  val connector: MessageConnector = new MessageConnector("messagesBaseUrl", mockHttp, mockBaseUrl)
+  lazy val connector: MessageConnector =
+    new MessageConnector(
+      message.fullUrlFor("message", ""),
+      message.fullUrlFor("sa-message-renderer", ""),
+      message.fullUrlFor("ats-message-renderer", ""),
+      message.fullUrlFor("secure-message-renderer", ""),
+      mockHttp)
 
   private val upstream5xxResponse = Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)
   private val badRequestException = new BadRequestException("")

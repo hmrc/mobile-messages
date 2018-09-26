@@ -26,17 +26,17 @@ final case class ResourceActionLocation(service: String, url: String) {
 final case class UpstreamMessageResponse(id: String,
                                          renderUrl: ResourceActionLocation,
                                          markAsReadUrl: Option[ResourceActionLocation]) {
-  def toMessageUsing(baseUrl: String => String): Message = {
+  def toMessageUsing(servicesToUrl: Map[String, String]): Message = {
     markAsReadUrl.fold[Message](
       ReadMessage(
         MessageId(id),
-        renderUrl.toUrlUsing(baseUrl(renderUrl.service))
+        renderUrl.toUrlUsing(servicesToUrl(renderUrl.service))
       )
     )(res =>
       UnreadMessage(
         MessageId(id),
-        renderUrl.toUrlUsing(baseUrl(renderUrl.service)),
-        res.toUrlUsing(baseUrl(res.service))
+        renderUrl.toUrlUsing(servicesToUrl(renderUrl.service)),
+        res.toUrlUsing(servicesToUrl(res.service))
       )
     )
   }
