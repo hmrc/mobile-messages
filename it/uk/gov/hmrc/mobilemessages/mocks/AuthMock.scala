@@ -1,4 +1,4 @@
-package uk.gov.hmrc.mobilemessages.stubs
+package uk.gov.hmrc.mobilemessages.mocks
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.libs.json.Json.obj
@@ -7,7 +7,7 @@ import uk.gov.hmrc.auth.core.ConfidenceLevel
 import uk.gov.hmrc.auth.core.ConfidenceLevel.{L100, L200}
 import uk.gov.hmrc.domain.Nino
 
-object AuthStub {
+object AuthMock {
   private val accountsRequestJson: String = """{ "authorise": [], "retrieve": ["nino","confidenceLevel"] }""".stripMargin
   private val authorityUrl = "/auth/authority"
   private val authUrl = "/auth/authorise"

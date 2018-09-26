@@ -1,7 +1,7 @@
 package uk.gov.hmrc.mobilemessages.tasks
 
 import com.github.tomakehurst.wiremock.client.WireMock.{equalTo, postRequestedFor, urlMatching, verify}
-import uk.gov.hmrc.mobilemessages.stubs.ServiceLocatorStub._
+import uk.gov.hmrc.mobilemessages.mocks.ServiceLocatorMock._
 import uk.gov.hmrc.mobilemessages.support.{BaseISpec, WiremockServiceLocatorSugar}
 
 class ServiceLocatorRegistrationTaskISpec extends BaseISpec with WiremockServiceLocatorSugar {

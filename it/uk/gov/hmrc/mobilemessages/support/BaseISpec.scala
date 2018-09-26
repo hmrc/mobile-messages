@@ -24,10 +24,12 @@ class BaseISpec extends UnitSpec with Matchers with OptionValues with WsScalaTes
     "microservice.services.service-locator.port" -> wireMockPort,
     "microservice.services.preferences.port" -> wireMockPort,
     "microservice.services.message.port" -> wireMockPort,
-    "microservice.services.service1.host" -> "localhost",
-    "microservice.services.service1.port" -> wireMockPort,
-    "microservice.services.service2.host" -> "localhost",
-    "microservice.services.service2.port" -> wireMockPort,
+    "microservice.services.sa-message-renderer.host" -> "localhost",
+    "microservice.services.sa-message-renderer.port" -> wireMockPort,
+    "microservice.services.ats-message-renderer.host" -> "localhost",
+    "microservice.services.ats-message-renderer.port" -> wireMockPort,
+    "microservice.services.secure-message-renderer.host" -> "localhost",
+    "microservice.services.secure-message-renderer.port" -> wireMockPort,
     "cookie.encryption.key" -> "gvBoGdgzqG1AarzF1LY0zQ=="
   )
 

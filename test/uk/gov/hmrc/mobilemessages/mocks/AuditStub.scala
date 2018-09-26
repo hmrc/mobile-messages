@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.stubs
+package uk.gov.hmrc.mobilemessages.mocks
 
 import org.scalamock.matchers.MatcherBase
 import org.scalamock.scalatest.MockFactory

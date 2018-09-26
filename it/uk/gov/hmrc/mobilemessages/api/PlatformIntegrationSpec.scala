@@ -8,7 +8,7 @@ import play.api.libs.json.{JsArray, JsValue}
 import play.api.libs.ws.WSResponse
 import play.api.test.PlayRunners
 import uk.gov.hmrc.mobilemessages.support.BaseISpec
-import uk.gov.hmrc.mobilemessages.stubs.ServiceLocatorStub._
+import uk.gov.hmrc.mobilemessages.mocks.ServiceLocatorMock._
 
 /**
   * Testcase to verify the capability of integration with the API platform.

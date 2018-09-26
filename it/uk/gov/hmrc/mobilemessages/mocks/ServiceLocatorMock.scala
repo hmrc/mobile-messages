@@ -1,11 +1,11 @@
-package uk.gov.hmrc.mobilemessages.stubs
+package uk.gov.hmrc.mobilemessages.mocks
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import play.api.libs.json.Json.toJson
 import uk.gov.hmrc.api.domain.Registration
 
-object ServiceLocatorStub {
+object ServiceLocatorMock {
 
   def registrationWillSucceed(): Unit = {
     stubFor(post(urlEqualTo("/registration"))

@@ -22,8 +22,8 @@ import javax.inject.{Inject, Named}
 import org.apache.commons.codec.CharEncoding.UTF_8
 import org.joda.time.DateTime
 import play.twirl.api.Html
-import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.logging.Authorization
+import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageHeadersResponse, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
@@ -32,17 +32,25 @@ import uk.gov.hmrc.time.DateTimeUtils
 import scala.concurrent.{ExecutionContext, Future}
 
 class MessageConnector @Inject()(@Named("messages") val messageBaseUrl: String,
-                                 val http: CoreGet with CorePost,
-                                 @Named("baseUrl") _baseUrl: String => String)
+                                 @Named("sa-message-renderer") val saMessageRendererBaseUrl: String,
+                                 @Named("ats-message-renderer") val atsMessageRendererBaseUrl: String,
+                                 @Named("secure-message-renderer") val secureMessageRendererBaseUrl: String,
+                                 val http: CoreGet with CorePost )
   extends SessionCookieEncryptionSupport with HttpErrorFunctions {
 
   implicit val now: DateTime = DateTimeUtils.now
+
+  lazy val servicesToUrl: Map[String, String] = Map(
+    "messages" -> messageBaseUrl,
+    "sa-message-renderer" -> saMessageRendererBaseUrl,
+    "ats-message-renderer" -> atsMessageRendererBaseUrl,
+    "secure-message-renderer" -> secureMessageRendererBaseUrl )
 
   def messages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
     http.GET[UpstreamMessageHeadersResponse](s"$messageBaseUrl/messages").map(_.items)
 
   def getMessageBy(id: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Message] =
-    http.GET[UpstreamMessageResponse](s"$messageBaseUrl/messages/${id.value}").map(_.toMessageUsing(_baseUrl))
+    http.GET[UpstreamMessageResponse](s"$messageBaseUrl/messages/${id.value}").map(_.toMessageUsing(servicesToUrl))
 
   def render(message: Message, hc: HeaderCarrier)(implicit ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
     val authToken: Authorization = hc.authorization.getOrElse(throw new IllegalArgumentException("Failed to find auth header!"))

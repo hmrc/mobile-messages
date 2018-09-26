@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.stubs
+package uk.gov.hmrc.mobilemessages.mocks
 
 trait StubApplicationConfiguration {
 
@@ -33,6 +33,10 @@ trait StubApplicationConfiguration {
     "microservice.services.ntc.port" -> "4567",
     "microservice.services.sa-message-renderer.host" -> "localhost",
     "microservice.services.sa-message-renderer.port" -> "8089",
+    "microservice.services.ats-message-renderer.host" -> "localhost",
+    "microservice.services.ats-message-renderer.port" -> "8089",
+    "microservice.services.secure-message-renderer.host" -> "localhost",
+    "microservice.services.secure-message-renderer.port" -> "8089",
     "microservice.services.test-renderer-service.host" -> "localhost",
     "microservice.services.test-renderer-service.port" -> "9999",
     "microservice.services.message.host" -> "localhost",
