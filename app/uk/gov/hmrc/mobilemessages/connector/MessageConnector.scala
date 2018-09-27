@@ -31,7 +31,7 @@ import uk.gov.hmrc.time.DateTimeUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class MessageConnector @Inject()(@Named("messages") val messageBaseUrl: String,
+class MessageConnector @Inject()(@Named("message") val messageBaseUrl: String,
                                  @Named("sa-message-renderer") val saMessageRendererBaseUrl: String,
                                  @Named("ats-message-renderer") val atsMessageRendererBaseUrl: String,
                                  @Named("secure-message-renderer") val secureMessageRendererBaseUrl: String,
@@ -41,7 +41,7 @@ class MessageConnector @Inject()(@Named("messages") val messageBaseUrl: String,
   implicit val now: DateTime = DateTimeUtils.now
 
   lazy val servicesToUrl: Map[String, String] = Map(
-    "messages" -> messageBaseUrl,
+    "message" -> messageBaseUrl,
     "sa-message-renderer" -> saMessageRendererBaseUrl,
     "ats-message-renderer" -> atsMessageRendererBaseUrl,
     "secure-message-renderer" -> secureMessageRendererBaseUrl )

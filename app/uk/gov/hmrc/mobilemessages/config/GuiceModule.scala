@@ -53,7 +53,7 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
 
     bindConfigInt("controllers.confidenceLevel")
     bind(classOf[String]).annotatedWith(named("auth")).toInstance(baseUrl("auth"))
-    bind(classOf[String]).annotatedWith(named("messages")).toInstance(baseUrl("message"))
+    bind(classOf[String]).annotatedWith(named("message")).toInstance(baseUrl("message"))
     bind(classOf[String]).annotatedWith(named("sa-message-renderer")).toInstance(baseUrl("sa-message-renderer"))
     bind(classOf[String]).annotatedWith(named("ats-message-renderer")).toInstance(baseUrl("ats-message-renderer"))
     bind(classOf[String]).annotatedWith(named("secure-message-renderer")).toInstance(baseUrl("secure-message-renderer"))
