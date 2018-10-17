@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilemessages.controllers.model
 
-import com.ning.http.util.Base64
+import org.apache.commons.codec.binary.Base64.encodeBase64String
 import org.joda.time.{DateTime, LocalDate}
 import uk.gov.hmrc.crypto.{Encrypter, PlainText}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
@@ -44,7 +44,7 @@ object MessageHeaderResponseBody {
       messageHeader.subject,
       messageHeader.validFrom,
       messageHeader.readTime,
-      Base64.encode(encrypter.encrypt(PlainText(messageHeader.id.value)).value.getBytes),
+      encodeBase64String(encrypter.encrypt(PlainText(messageHeader.id.value)).value.getBytes),
       messageHeader.sentInError
     )
   }

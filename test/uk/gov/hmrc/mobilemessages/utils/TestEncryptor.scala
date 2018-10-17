@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilemessages.utils
 
-import com.ning.http.util.Base64
+import org.apache.commons.codec.binary.Base64.encodeBase64String
 import uk.gov.hmrc.crypto.{AesCrypto, Encrypter, PlainText}
 
 class UnitTestCrypto extends AesCrypto {
@@ -25,6 +25,6 @@ class UnitTestCrypto extends AesCrypto {
 
 object EncryptionUtils {
   def encrypted(value: String, encrypter: Encrypter = new UnitTestCrypto): String = {
-    Base64.encode(encrypter.encrypt(PlainText(value)).value.getBytes)
+    encodeBase64String(encrypter.encrypt(PlainText(value)).value.getBytes)
   }
 }
