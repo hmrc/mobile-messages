@@ -31,11 +31,11 @@ def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
   }
 
 val compile = Seq(
-  "uk.gov.hmrc" %% "bootstrap-play-25" % "3.7.0",
-  "uk.gov.hmrc" %% "auth-client" % "2.6.0",
+  "uk.gov.hmrc" %% "bootstrap-play-25" % "3.10.0",
+  "uk.gov.hmrc" %% "auth-client" % "2.10.0",
   "uk.gov.hmrc" %% "play-hmrc-api" % "3.2.0",
   "uk.gov.hmrc" %% "domain" % "5.2.0",
-  "uk.gov.hmrc" %% "reactive-circuit-breaker" % "3.2.0",
+  "uk.gov.hmrc" %% "reactive-circuit-breaker" % "3.3.0",
   "uk.gov.hmrc" %% "emailaddress" % "2.2.0",
   "uk.gov.hmrc" %% "crypto" % "4.5.0",
   "uk.gov.hmrc" %% "reactivemongo-bson" % "0.14.0" //NOTE: this is included purely for sandbox object creation
@@ -43,7 +43,7 @@ val compile = Seq(
 
 val test = Seq(
   "com.typesafe.play" %% "play-test" % PlayVersion.current % Test,
-  "uk.gov.hmrc" %% "hmrctest" % "3.1.0" % Test,
+  "uk.gov.hmrc" %% "hmrctest" % "3.2.0" % Test,
   "org.scalamock" %% "scalamock" % "4.0.0" % Test
 )
 
