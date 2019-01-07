@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import com.google.inject.Inject
 import com.google.inject.name.Named
 import play.api.Logger
 import play.api.libs.json.OFormat
+
+import scala.language.implicitConversions
 
 final case class RenderMessageLocation(service: String, url: String)
 

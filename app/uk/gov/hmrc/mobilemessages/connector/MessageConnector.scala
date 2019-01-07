@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,14 @@ package uk.gov.hmrc.mobilemessages.connector
 
 import java.net.URLEncoder.encode
 
+import com.typesafe.config.Config
 import javax.inject.{Inject, Named}
 import org.apache.commons.codec.CharEncoding.UTF_8
 import org.joda.time.DateTime
+import play.api.Configuration
 import play.twirl.api.Html
-import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageHeadersResponse, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
@@ -31,12 +33,17 @@ import uk.gov.hmrc.time.DateTimeUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class MessageConnector @Inject()(@Named("message") val messageBaseUrl: String,
-                                 @Named("sa-message-renderer") val saMessageRendererBaseUrl: String,
-                                 @Named("ats-message-renderer") val atsMessageRendererBaseUrl: String,
-                                 @Named("secure-message-renderer") val secureMessageRendererBaseUrl: String,
-                                 val http: CoreGet with CorePost )
+class MessageConnector @Inject()(
+  @Named("message") val messageBaseUrl: String,
+  @Named("sa-message-renderer") val saMessageRendererBaseUrl: String,
+  @Named("ats-message-renderer") val atsMessageRendererBaseUrl: String,
+  @Named("secure-message-renderer") val secureMessageRendererBaseUrl: String,
+   configuration: Configuration,
+  val http: CoreGet with CorePost
+)
   extends SessionCookieEncryptionSupport with HttpErrorFunctions {
+
+  override lazy val config: Config = configuration.underlying
 
   implicit val now: DateTime = DateTimeUtils.now
 
@@ -44,7 +51,7 @@ class MessageConnector @Inject()(@Named("message") val messageBaseUrl: String,
     "message" -> messageBaseUrl,
     "sa-message-renderer" -> saMessageRendererBaseUrl,
     "ats-message-renderer" -> atsMessageRendererBaseUrl,
-    "secure-message-renderer" -> secureMessageRendererBaseUrl )
+    "secure-message-renderer" -> secureMessageRendererBaseUrl)
 
   def messages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
     http.GET[UpstreamMessageHeadersResponse](s"$messageBaseUrl/messages").map(_.items)

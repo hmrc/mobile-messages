@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package uk.gov.hmrc.mobilemessages.connector
 
 import java.net.URLDecoder
 
+import com.typesafe.config.Config
 import org.apache.commons.codec.CharEncoding
 import org.apache.commons.lang3.StringUtils
 import play.api.http.HeaderNames
@@ -25,10 +26,12 @@ import play.api.libs.Crypto
 import uk.gov.hmrc.crypto.{Crypted, CryptoGCMWithKeysFromConfig, PlainText}
 
 trait SessionCookieEncryptionSupport {
-  val SignSeparator = "-"
+  val SignSeparator     = "-"
   val mtdpSessionCookie = "mdtp"
 
-  lazy val cipher = CryptoGCMWithKeysFromConfig("cookie.encryption")
+  def config: Config
+
+  lazy val cipher = new CryptoGCMWithKeysFromConfig("cookie.encryption", config)
 
   private def createPopulatedSessionCookie(payload: String): String = {
     val signedPayload = Crypto.sign(payload) + SignSeparator + payload
@@ -48,7 +51,7 @@ trait SessionCookieEncryptionSupport {
     pairs.toMap
   }
 
-  def withSession(pair: (String, String) *): (String, String) = {
+  def withSession(pair: (String, String)*): (String, String) = {
     val payload = pair.toSeq.map {
       case (k, v) => s"$k=$v"
     }.mkString("&")

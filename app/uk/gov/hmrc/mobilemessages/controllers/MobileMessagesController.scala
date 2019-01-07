@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,9 @@
 package uk.gov.hmrc.mobilemessages.controllers
 
 import com.google.inject.Singleton
+import com.typesafe.config.Config
 import javax.inject.{Inject, Named}
-import play.api.Logger
+import play.api.{Configuration, Logger}
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, BodyParsers}
 import play.twirl.api.Html
@@ -40,24 +41,28 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetai
 import scala.concurrent.Future
 
 @Singleton
-class MobileMessagesController @Inject()(val service: MobileMessagesService,
-                                         override val authConnector: AuthConnector,
-                                         override val http: CoreGet,
-                                         @Named("controllers.confidenceLevel") override val confLevel: Int,
-                                         @Named("auth") val authUrl: String)
+class MobileMessagesController @Inject()(
+  val service: MobileMessagesService,
+  override val authConnector: AuthConnector,
+  override val http: CoreGet,
+  configuration: Configuration,
+  @Named("controllers.confidenceLevel") override val confLevel: Int,
+  @Named("auth") val authUrl: String
+)
   extends BaseController with HeaderValidator with ErrorHandling with AccessControl {
 
   val crypto: Encrypter with Decrypter =
-    CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption")
+    new CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption", configuration.underlying)
 
   def getMessages(journeyId: Option[String] = None): Action[AnyContent] =
     validateAcceptWithAuth(acceptHeaderValidationRules).async {
       implicit authenticated =>
         implicit val hc: HeaderCarrier = fromHeadersAndSession(authenticated.request.headers, None)
-        errorWrapper(service.readAndUnreadMessages().map(
-          (messageHeaders: Seq[MessageHeader]) =>
-            Ok(Json.toJson(MessageHeaderResponseBody.fromAll(messageHeaders)(crypto)))
-        ))
+        errorWrapper(
+          service.readAndUnreadMessages().map(
+            (messageHeaders: Seq[MessageHeader]) =>
+              Ok(Json.toJson(MessageHeaderResponseBody.fromAll(messageHeaders)(crypto)))
+          ))
     }
 
   def read(journeyId: Option[String] = None): Action[JsValue] =
@@ -84,10 +89,10 @@ class MobileMessagesController @Inject()(val service: MobileMessagesService,
 }
 
 @Singleton
-class SandboxMobileMessagesController @Inject()() extends BaseController with HeaderValidator {
+class SandboxMobileMessagesController @Inject()(config: Configuration) extends BaseController with HeaderValidator {
 
   val crypto: Encrypter with Decrypter =
-    CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption")
+    new CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption", config.underlying)
 
   val saUtr: SaUtr = nextSaUtr
 
@@ -98,7 +103,7 @@ class SandboxMobileMessagesController @Inject()() extends BaseController with He
           case Some("ERROR-401") => Unauthorized
           case Some("ERROR-403") => Forbidden
           case Some("ERROR-500") => InternalServerError
-          case _ => Ok(Json.toJson(MessageHeaderResponseBody.fromAll(Seq(readMessageHeader(saUtr), unreadMessageHeader(saUtr)))(crypto)))
+          case _                 => Ok(Json.toJson(MessageHeaderResponseBody.fromAll(Seq(readMessageHeader(saUtr), unreadMessageHeader(saUtr)))(crypto)))
         })
     }
 
@@ -107,12 +112,12 @@ class SandboxMobileMessagesController @Inject()() extends BaseController with He
       implicit request =>
         Future successful (request.headers.get("SANDBOX-CONTROL") match {
           case Some("ANNUAL-TAX-SUMMARY") => Ok(annualTaxSummary)
-          case Some("STOPPING-SA") => Ok(stoppingSA)
-          case Some("OVERDUE-PAYMENT") => Ok(overduePayment)
-          case Some("ERROR-401") => Unauthorized
-          case Some("ERROR-403") => Forbidden
-          case Some("ERROR-500") => InternalServerError
-          case _ => Ok(newTaxStatement)
+          case Some("STOPPING-SA")        => Ok(stoppingSA)
+          case Some("OVERDUE-PAYMENT")    => Ok(overduePayment)
+          case Some("ERROR-401")          => Unauthorized
+          case Some("ERROR-403")          => Forbidden
+          case Some("ERROR-500")          => InternalServerError
+          case _                          => Ok(newTaxStatement)
         })
     }
 }
