@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilemessages.controllers
 
+import com.typesafe.config.Config
+import play.api.Configuration
 import uk.gov.hmrc.mobilemessages.connector.SessionCookieEncryptionSupport
 import uk.gov.hmrc.mobilemessages.mocks.StubApplicationConfiguration
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
@@ -25,8 +27,9 @@ class CookieEncryptionSupportSpec extends UnitSpec with StubApplicationConfigura
   "encrypt/decrypt cookie" should {
 
     "successfully encrypt and decrypt" in {
-
-      val crypto: SessionCookieEncryptionSupport = new SessionCookieEncryptionSupport {}
+      val crypto: SessionCookieEncryptionSupport = new SessionCookieEncryptionSupport {
+        override def config: Config = Configuration.from(Map("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")).underlying
+      }
 
       val data = Map(("some key1", "some value1"), ("some key2", "some value2"))
       val result: (String, String) = crypto.withSession(data.toList: _ *)
@@ -39,7 +42,9 @@ class CookieEncryptionSupportSpec extends UnitSpec with StubApplicationConfigura
 
     "fail to decrypt when an invalid payload is supplied for decryption" in {
 
-      val crypto: SessionCookieEncryptionSupport = new SessionCookieEncryptionSupport {}
+      val crypto: SessionCookieEncryptionSupport = new SessionCookieEncryptionSupport  {
+        override def config: Config = Configuration.from(Map("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")).underlying
+      }
 
       val data = Map(("some key1", "some value1"), ("some key2", "some value2"))
       val result: (String, String) = crypto.withSession(data.toList: _ *)

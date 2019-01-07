@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilemessages.connector
 
+import play.api.Configuration
 import play.api.libs.json.Json.toJson
 import play.api.libs.json.{Json, OFormat}
 import play.api.test.Helpers.SERVICE_UNAVAILABLE
@@ -53,6 +54,7 @@ class MessagesConnectorSpec extends UnitSpec with Setup {
       message.fullUrlFor("sa-message-renderer", ""),
       message.fullUrlFor("ats-message-renderer", ""),
       message.fullUrlFor("secure-message-renderer", ""),
+      Configuration.from(Map("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")),
       mockHttp)
 
   private val upstream5xxResponse = Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)

@@ -16,6 +16,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(routesGenerator := StaticRoutesGenerator)
   .settings(
     majorVersion := 1,
+    scalaVersion := "2.11.12",
     playDefaultPort := 8234,
     libraryDependencies ++= compile ++ test ++ integration,
     evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
@@ -31,25 +32,24 @@ def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
   }
 
 val compile = Seq(
-  "uk.gov.hmrc" %% "bootstrap-play-25" % "3.10.0",
-  "uk.gov.hmrc" %% "auth-client" % "2.16.0-play-25",
+  "uk.gov.hmrc" %% "bootstrap-play-25" % "4.6.0",
+  "uk.gov.hmrc" %% "auth-client" % "2.18.0-play-25",
   "uk.gov.hmrc" %% "play-hmrc-api" % "3.2.0",
-  "uk.gov.hmrc" %% "domain" % "5.2.0",
+  "uk.gov.hmrc" %% "domain" % "5.3.0",
   "uk.gov.hmrc" %% "reactive-circuit-breaker" % "3.3.0",
   "uk.gov.hmrc" %% "emailaddress" % "2.2.0",
-  "uk.gov.hmrc" %% "crypto" % "4.5.0",
-  "uk.gov.hmrc" %% "reactivemongo-bson" % "0.14.0" //NOTE: this is included purely for sandbox object creation
+  "uk.gov.hmrc" %% "reactivemongo-bson" % "0.15.1" //NOTE: this is included purely for sandbox object creation
 )
 
 val test = Seq(
   "com.typesafe.play" %% "play-test" % PlayVersion.current % Test,
-  "uk.gov.hmrc" %% "hmrctest" % "3.2.0" % Test,
-  "org.scalamock" %% "scalamock" % "4.0.0" % Test
+  "uk.gov.hmrc" %% "hmrctest" % "3.3.0" % Test,
+  "org.scalamock" %% "scalamock" % "4.1.0" % Test
 )
 
 val integration = Seq(
   "com.typesafe.play" %% "play-test" % PlayVersion.current % IntegrationTest,
   "uk.gov.hmrc" %% "hmrctest" % "3.1.0" % IntegrationTest,
-  "com.github.tomakehurst" % "wiremock" % "2.9.0" % IntegrationTest,
+  "com.github.tomakehurst" % "wiremock" % "2.20.0" % IntegrationTest,
   "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.1" % IntegrationTest
 )

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilemessages.controllers
 
+import play.api.Configuration
 import play.api.libs.json._
 import play.api.mvc.Result
 import play.api.test.FakeRequest
@@ -43,7 +44,14 @@ class MobileMessagesControllerSpec extends UnitSpec with Setup {
       .expects(*, *, *, *).returns(Future successful response)
 
   running(fakeApplication) {
-    val controller = new MobileMessagesController(mockMobileMessagesService, mockAuthConnector, mockHttp, L200.level, "authUrl")
+    val controller =
+      new MobileMessagesController(
+        mockMobileMessagesService,
+        mockAuthConnector,
+        mockHttp,
+        Configuration.from(Map("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")),
+        L200.level,
+        "authUrl")
 
     "getMessages() Live" should {
 
@@ -191,7 +199,7 @@ class MobileMessagesControllerSpec extends UnitSpec with Setup {
   }
 
   running(fakeApplication) {
-    val controller = new SandboxMobileMessagesController()
+    val controller = new SandboxMobileMessagesController(Configuration.from(Map("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")))
 
     "getMessages() Sandbox" should {
 
