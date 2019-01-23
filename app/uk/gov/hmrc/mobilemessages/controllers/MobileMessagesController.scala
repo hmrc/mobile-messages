@@ -27,14 +27,13 @@ import uk.gov.hmrc.api.controllers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.crypto.{CryptoWithKeysFromConfig, Decrypter, Encrypter}
 import uk.gov.hmrc.domain.SaUtr
-import uk.gov.hmrc.http.{CoreGet, HeaderCarrier}
+import uk.gov.hmrc.http.CoreGet
 import uk.gov.hmrc.mobilemessages.controllers.auth.{AccessControl, Authority}
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator.{nextSaUtr, readMessageHeader, unreadMessageHeader}
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
 import uk.gov.hmrc.mobilemessages.services.MobileMessagesService
-import uk.gov.hmrc.play.HeaderCarrierConverter._
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
 import scala.concurrent.{ExecutionContext, Future}

@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.mobilemessages.connector.model
 
-import java.time.{LocalDateTime, LocalDate}
-import uk.gov.hmrc.http.controllers.RestFormats
+import java.time.{LocalDate, LocalDateTime}
+
 import uk.gov.hmrc.mobilemessages.domain.{MessageHeader, MessageId}
 
 final case class UpstreamMessageHeadersResponse(items: Seq[MessageHeader])
@@ -33,9 +33,7 @@ object UpstreamMessageHeadersResponse {
       (__ \ "validFrom").read[LocalDate] and
       (__ \ "readTime").readNullable[LocalDateTime] and
       (__ \ "sentInError").read[Boolean]
-    ) ((id, subject, validFrom, readTime, sentInError) =>
-    MessageHeader(MessageId(id), subject, validFrom, readTime, sentInError)
-  )
+  )((id, subject, validFrom, readTime, sentInError) => MessageHeader(MessageId(id), subject, validFrom, readTime, sentInError))
 
   implicit val reads: Reads[UpstreamMessageHeadersResponse] = Json.reads[UpstreamMessageHeadersResponse]
 

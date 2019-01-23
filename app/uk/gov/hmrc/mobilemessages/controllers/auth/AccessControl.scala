@@ -25,7 +25,7 @@ import uk.gov.hmrc.auth.core.retrieve.Retrievals.{confidenceLevel, nino}
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{AuthorisedFunctions, ConfidenceLevel}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.{Request => _, _}
+import uk.gov.hmrc.http.{CoreGet, HeaderCarrier}
 import uk.gov.hmrc.mobilemessages.controllers._
 import uk.gov.hmrc.play.HeaderCarrierConverter.fromHeadersAndSession
 
