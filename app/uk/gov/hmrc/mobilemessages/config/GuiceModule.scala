@@ -19,27 +19,34 @@ package uk.gov.hmrc.mobilemessages.config
 import com.google.inject.name.Named
 import com.google.inject.name.Names.named
 import com.google.inject.{AbstractModule, Provides}
-import play.api.Mode.Mode
 import play.api.{Configuration, Environment}
-import uk.gov.hmrc.api.connector.{ApiServiceLocatorConnector, ServiceLocatorConnector}
+import uk.gov.hmrc.api.connector.{
+  ApiServiceLocatorConnector,
+  ServiceLocatorConnector
+}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.{CoreGet, CorePost}
+import uk.gov.hmrc.mobilemessages.controllers.api.ApiAccess
 import uk.gov.hmrc.mobilemessages.tasks.ServiceLocatorRegistrationTask
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
+import uk.gov.hmrc.play.bootstrap.config.{RunMode, ServicesConfig}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.mobilemessages.controllers.api.ApiAccess
-import uk.gov.hmrc.play.config.{AppName, ServicesConfig}
 
 import scala.collection.JavaConverters._
 
-class GuiceModule(environment: Environment, configuration: Configuration) extends AbstractModule with ServicesConfig {
+class GuiceModule(environment: Environment, configuration: Configuration)
+    extends AbstractModule {
 
-  override protected lazy val mode: Mode = environment.mode
-  override protected lazy val runModeConfiguration: Configuration = configuration
+  val servicesConfig = new ServicesConfig(
+    configuration,
+    new RunMode(configuration, environment.mode)
+  )
+  import servicesConfig.baseUrl
 
   override def configure(): Unit = {
-    bind(classOf[ServiceLocatorConnector]).to(classOf[ApiServiceLocatorConnector])
+    bind(classOf[ServiceLocatorConnector])
+      .to(classOf[ApiServiceLocatorConnector])
     bind(classOf[CoreGet]).to(classOf[WSHttpImpl])
     bind(classOf[CorePost]).to(classOf[WSHttpImpl])
     bind(classOf[HttpClient]).to(classOf[WSHttpImpl])
@@ -49,19 +56,31 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
     bind(classOf[AuthConnector]).to(classOf[DefaultAuthConnector])
 
     bind(classOf[ApiAccess]).toInstance(
-      ApiAccess("PRIVATE", configuration.underlying.getStringList("api.access.white-list.applicationIds").asScala))
+      ApiAccess(
+        "PRIVATE",
+        configuration.underlying
+          .getStringList("api.access.white-list.applicationIds")
+          .asScala
+      )
+    )
 
     bindConfigInt("controllers.confidenceLevel")
-    bind(classOf[String]).annotatedWith(named("auth")).toInstance(baseUrl("auth"))
-    bind(classOf[String]).annotatedWith(named("message")).toInstance(baseUrl("message"))
-    bind(classOf[String]).annotatedWith(named("sa-message-renderer")).toInstance(baseUrl("sa-message-renderer"))
-    bind(classOf[String]).annotatedWith(named("ats-message-renderer")).toInstance(baseUrl("ats-message-renderer"))
-    bind(classOf[String]).annotatedWith(named("secure-message-renderer")).toInstance(baseUrl("secure-message-renderer"))
+    bind(classOf[String])
+      .annotatedWith(named("auth"))
+      .toInstance(baseUrl("auth"))
+    bind(classOf[String])
+      .annotatedWith(named("message"))
+      .toInstance(baseUrl("message"))
+    bind(classOf[String])
+      .annotatedWith(named("sa-message-renderer"))
+      .toInstance(baseUrl("sa-message-renderer"))
+    bind(classOf[String])
+      .annotatedWith(named("ats-message-renderer"))
+      .toInstance(baseUrl("ats-message-renderer"))
+    bind(classOf[String])
+      .annotatedWith(named("secure-message-renderer"))
+      .toInstance(baseUrl("secure-message-renderer"))
   }
-
-  @Provides
-  @Named("appName")
-  def appName: String = AppName(configuration).appName
 
   @Provides
   @Named("baseUrl")
@@ -72,7 +91,8 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
     * Throws an exception if the configuration value does not exist or cannot be read as an Int.
     */
   private def bindConfigInt(path: String): Unit = {
-    bindConstant().annotatedWith(named(path))
+    bindConstant()
+      .annotatedWith(named(path))
       .to(configuration.underlying.getInt(path))
   }
 }

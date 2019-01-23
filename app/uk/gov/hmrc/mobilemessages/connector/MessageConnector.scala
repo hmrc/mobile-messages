@@ -17,41 +17,43 @@
 package uk.gov.hmrc.mobilemessages.connector
 
 import java.net.URLEncoder.encode
+import java.time.LocalDateTime
 
 import com.typesafe.config.Config
 import javax.inject.{Inject, Named}
 import org.apache.commons.codec.CharEncoding.UTF_8
-import org.joda.time.DateTime
 import play.api.Configuration
+import play.api.libs.crypto.CookieSigner
 import play.twirl.api.Html
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageHeadersResponse, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
-import uk.gov.hmrc.time.DateTimeUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class MessageConnector @Inject()(
-  @Named("message") val messageBaseUrl: String,
-  @Named("sa-message-renderer") val saMessageRendererBaseUrl: String,
-  @Named("ats-message-renderer") val atsMessageRendererBaseUrl: String,
+  @Named("message") val messageBaseUrl:                               String,
+  @Named("sa-message-renderer") val saMessageRendererBaseUrl:         String,
+  @Named("ats-message-renderer") val atsMessageRendererBaseUrl:       String,
   @Named("secure-message-renderer") val secureMessageRendererBaseUrl: String,
-   configuration: Configuration,
-  val http: CoreGet with CorePost
-)
-  extends SessionCookieEncryptionSupport with HttpErrorFunctions {
+  configuration:                                                      Configuration,
+  val cookieSigner:                                                   CookieSigner,
+  val http:                                                           CoreGet with CorePost
+) extends SessionCookieEncryptionSupport
+    with HttpErrorFunctions {
 
   override lazy val config: Config = configuration.underlying
 
-  implicit val now: DateTime = DateTimeUtils.now
+  implicit val now: LocalDateTime = LocalDateTime.now
 
   lazy val servicesToUrl: Map[String, String] = Map(
-    "message" -> messageBaseUrl,
-    "sa-message-renderer" -> saMessageRendererBaseUrl,
-    "ats-message-renderer" -> atsMessageRendererBaseUrl,
-    "secure-message-renderer" -> secureMessageRendererBaseUrl)
+    "message"                 -> messageBaseUrl,
+    "sa-message-renderer"     -> saMessageRendererBaseUrl,
+    "ats-message-renderer"    -> atsMessageRendererBaseUrl,
+    "secure-message-renderer" -> secureMessageRendererBaseUrl
+  )
 
   def messages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
     http.GET[UpstreamMessageHeadersResponse](s"$messageBaseUrl/messages").map(_.items)
@@ -65,8 +67,8 @@ class MessageConnector @Inject()(
 
     val keys = Seq(SessionKeys.authToken -> encode(authToken.value, UTF_8), SessionKeys.userId -> userId.authId)
 
-    val session: (String, String) = withSession(keys: _ *)
-    implicit val updatedHc: HeaderCarrier = hc.withExtraHeaders(session)
+    val session:            (String, String) = withSession(keys: _*)
+    implicit val updatedHc: HeaderCarrier    = hc.withExtraHeaders(session)
 
     http.GET[HttpResponse](message.renderUrl).map(response => Html(response.body))
   }

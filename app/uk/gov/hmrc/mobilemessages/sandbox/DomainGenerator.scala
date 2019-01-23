@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.mobilemessages.sandbox
 
-import org.joda.time.DateTime
+import java.time.LocalDateTime
+
 import uk.gov.hmrc.domain.{Nino, SaUtr}
 import uk.gov.hmrc.mobilemessages.domain.{MessageHeader, MessageId}
-import uk.gov.hmrc.time.DateTimeUtils
 
 import scala.util.Random
 
@@ -27,35 +27,27 @@ object DomainGenerator {
 
   import uk.gov.hmrc.domain.Generator
 
-  val dateTime: DateTime = DateTimeUtils.now
+  val dateTime: LocalDateTime = LocalDateTime.now
 
-  val generator = new Generator()
+  val generator      = new Generator()
   val saUtrGenerator = new SaUtrGenerator()
 
   def nextNino: Nino = generator.nextNino
 
   def nextSaUtr: SaUtr = saUtrGenerator.nextSaUtr
 
-  val nino: Nino = nextNino
+  val nino:  Nino  = nextNino
   val saUtr: SaUtr = nextSaUtr
 
   val readMessageId = MessageId("543e8c6001000001003e4a9e")
 
-  def readMessageHeader(saUtr: SaUtr = nextSaUtr): MessageHeader = {
-    MessageHeader(readMessageId,
-      "You have a new tax statement",
-      dateTime.minusDays(3).toLocalDate,
-      Some(dateTime.minusDays(1)),
-      sentInError = false)
-  }
+  def readMessageHeader(saUtr: SaUtr = nextSaUtr): MessageHeader =
+    MessageHeader(readMessageId, "You have a new tax statement", dateTime.minusDays(3).toLocalDate, Some(dateTime.minusDays(1)), sentInError = false)
 
   val unreadMessageId = MessageId("643e8c5f01000001003e4a8f")
 
-  def unreadMessageHeader(saUtr: SaUtr = nextSaUtr): MessageHeader = MessageHeader(unreadMessageId,
-    "Stopping Self Assessment",
-    dateTime.toLocalDate,
-    None,
-    sentInError = false)
+  def unreadMessageHeader(saUtr: SaUtr = nextSaUtr): MessageHeader =
+    MessageHeader(unreadMessageId, "Stopping Self Assessment", dateTime.toLocalDate, None, sentInError = false)
 }
 
 //TODO add this to domain

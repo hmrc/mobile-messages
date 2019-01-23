@@ -17,11 +17,11 @@
 package uk.gov.hmrc.mobilemessages.controllers
 
 import com.google.inject.Singleton
-import com.typesafe.config.Config
 import javax.inject.{Inject, Named}
-import play.api.{Configuration, Logger}
+import play.api.libs.crypto.CookieSigner
 import play.api.libs.json._
-import play.api.mvc.{Action, AnyContent, BodyParsers}
+import play.api.mvc._
+import play.api.{Configuration, Logger}
 import play.twirl.api.Html
 import uk.gov.hmrc.api.controllers._
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -35,42 +35,47 @@ import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator.{nextSaUtr, readMessag
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
 import uk.gov.hmrc.mobilemessages.services.MobileMessagesService
 import uk.gov.hmrc.play.HeaderCarrierConverter._
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
+import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class MobileMessagesController @Inject()(
-  val service: MobileMessagesService,
-  override val authConnector: AuthConnector,
-  override val http: CoreGet,
-  configuration: Configuration,
+  val service:                                                  MobileMessagesService,
+  override val authConnector:                                   AuthConnector,
+  override val http:                                            CoreGet,
+  configuration:                                                Configuration,
   @Named("controllers.confidenceLevel") override val confLevel: Int,
-  @Named("auth") val authUrl: String
-)
-  extends BaseController with HeaderValidator with ErrorHandling with AccessControl {
+  @Named("auth") val authUrl:                                   String,
+  val controllerComponents:                                     ControllerComponents,
+  cookieSigner:                                                 CookieSigner
+)(
+  implicit val executionContext: ExecutionContext
+) extends BackendBaseController
+    with HeaderValidator
+    with ErrorHandling
+    with AccessControl {
+
+  override def parser: BodyParser[AnyContent] = controllerComponents.parsers.anyContent
 
   val crypto: Encrypter with Decrypter =
     new CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption", configuration.underlying)
 
   def getMessages(journeyId: Option[String] = None): Action[AnyContent] =
-    validateAcceptWithAuth(acceptHeaderValidationRules).async {
-      implicit authenticated =>
-        implicit val hc: HeaderCarrier = fromHeadersAndSession(authenticated.request.headers, None)
-        errorWrapper(
-          service.readAndUnreadMessages().map(
-            (messageHeaders: Seq[MessageHeader]) =>
-              Ok(Json.toJson(MessageHeaderResponseBody.fromAll(messageHeaders)(crypto)))
+    validateAcceptWithAuth(acceptHeaderValidationRules).async { implicit authenticated =>
+      errorWrapper(
+        service
+          .readAndUnreadMessages()
+          .map(
+            (messageHeaders: Seq[MessageHeader]) => Ok(Json.toJson(MessageHeaderResponseBody.fromAll(messageHeaders)(crypto)))
           ))
     }
 
   def read(journeyId: Option[String] = None): Action[JsValue] =
-    validateAcceptWithAuth(acceptHeaderValidationRules).async(BodyParsers.parse.json) {
-      implicit authenticated =>
-        implicit val hc: HeaderCarrier = fromHeadersAndSession(authenticated.request.headers, None)
-
-        authenticated.request.body.validate[RenderMessageRequest].fold(
+    validateAcceptWithAuth(acceptHeaderValidationRules).async(controllerComponents.parsers.json) { implicit authenticated =>
+      authenticated.request.body
+        .validate[RenderMessageRequest]
+        .fold(
           errors => {
             Logger.warn("Received JSON error with read endpoint: " + errors)
             Future.successful(BadRequest(Json.toJson(ErrorGenericBadRequest(errors))))
@@ -78,18 +83,26 @@ class MobileMessagesController @Inject()(
           renderMessageRequest => {
             implicit val auth: Option[Authority] = authenticated.authority
             errorWrapper {
-              service.readMessageContent(renderMessageRequest.toMessageIdUsing(crypto))
+              service
+                .readMessageContent(renderMessageRequest.toMessageIdUsing(crypto))
                 .map((as: Html) => Ok(as))
             }
           }
         )
     }
 
-
 }
 
 @Singleton
-class SandboxMobileMessagesController @Inject()(config: Configuration) extends BaseController with HeaderValidator {
+class SandboxMobileMessagesController @Inject()(
+  config:                   Configuration,
+  val controllerComponents: ControllerComponents
+)(
+  implicit val executionContext: ExecutionContext
+) extends BackendBaseController
+    with HeaderValidator {
+
+  override def parser: BodyParser[AnyContent] = controllerComponents.parsers.anyContent
 
   val crypto: Encrypter with Decrypter =
     new CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption", config.underlying)
@@ -97,27 +110,25 @@ class SandboxMobileMessagesController @Inject()(config: Configuration) extends B
   val saUtr: SaUtr = nextSaUtr
 
   def getMessages(journeyId: Option[String] = None): Action[AnyContent] =
-    validateAccept(acceptHeaderValidationRules).async {
-      implicit request =>
-        Future successful (request.headers.get("SANDBOX-CONTROL") match {
-          case Some("ERROR-401") => Unauthorized
-          case Some("ERROR-403") => Forbidden
-          case Some("ERROR-500") => InternalServerError
-          case _                 => Ok(Json.toJson(MessageHeaderResponseBody.fromAll(Seq(readMessageHeader(saUtr), unreadMessageHeader(saUtr)))(crypto)))
-        })
+    validateAccept(acceptHeaderValidationRules).async { implicit request =>
+      Future successful (request.headers.get("SANDBOX-CONTROL") match {
+        case Some("ERROR-401") => Unauthorized
+        case Some("ERROR-403") => Forbidden
+        case Some("ERROR-500") => InternalServerError
+        case _                 => Ok(Json.toJson(MessageHeaderResponseBody.fromAll(Seq(readMessageHeader(saUtr), unreadMessageHeader(saUtr)))(crypto)))
+      })
     }
 
   def read(journeyId: Option[String] = None): Action[JsValue] =
-    validateAccept(acceptHeaderValidationRules).async(BodyParsers.parse.json) {
-      implicit request =>
-        Future successful (request.headers.get("SANDBOX-CONTROL") match {
-          case Some("ANNUAL-TAX-SUMMARY") => Ok(annualTaxSummary)
-          case Some("STOPPING-SA")        => Ok(stoppingSA)
-          case Some("OVERDUE-PAYMENT")    => Ok(overduePayment)
-          case Some("ERROR-401")          => Unauthorized
-          case Some("ERROR-403")          => Forbidden
-          case Some("ERROR-500")          => InternalServerError
-          case _                          => Ok(newTaxStatement)
-        })
+    validateAccept(acceptHeaderValidationRules).async(controllerComponents.parsers.json) { implicit request =>
+      Future successful (request.headers.get("SANDBOX-CONTROL") match {
+        case Some("ANNUAL-TAX-SUMMARY") => Ok(annualTaxSummary)
+        case Some("STOPPING-SA")        => Ok(stoppingSA)
+        case Some("OVERDUE-PAYMENT")    => Ok(overduePayment)
+        case Some("ERROR-401")          => Unauthorized
+        case Some("ERROR-403")          => Forbidden
+        case Some("ERROR-500")          => InternalServerError
+        case _                          => Ok(newTaxStatement)
+      })
     }
 }

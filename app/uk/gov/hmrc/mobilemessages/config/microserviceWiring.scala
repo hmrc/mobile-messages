@@ -19,43 +19,36 @@ package uk.gov.hmrc.mobilemessages.config
 import akka.actor.ActorSystem
 import com.typesafe.config.Config
 import javax.inject.{Inject, Named}
-import play.api.Mode.Mode
-import play.api.{Configuration, Environment, Logger}
-import uk.gov.hmrc.api.config.ServiceLocatorConfig
-import uk.gov.hmrc.api.connector.ServiceLocatorConnector
-import uk.gov.hmrc.http.CorePost
-import uk.gov.hmrc.http.hooks.HttpHooks
+import play.api.Configuration
+import play.api.libs.ws.WSClient
+import uk.gov.hmrc.http.hooks.{HttpHook, HttpHooks}
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.config.AppName
 import uk.gov.hmrc.play.http.ws._
 
 trait Hooks extends HttpHooks with HttpAuditing {
-  val hooks = Seq(AuditingHook)
+  val hooks: Seq[HttpHook] = Seq(AuditingHook)
 }
 
-trait WSHttp extends HttpClient with WSGet
-  with WSPut
-  with WSPost
-  with WSDelete
-  with WSPatch
-  with Hooks with AppName
+trait WSHttp extends HttpClient with WSGet with WSPut with WSPost with WSDelete with WSPatch with Hooks
 
 class WSHttpImpl @Inject()(
+  val wsClient:                  WSClient,
   @Named("appName") val appName: String,
-  val auditConnector: AuditConnector,
-  config: Configuration,
-  override val actorSystem: ActorSystem
-) extends HttpClient with WSGet
-  with WSPut
-  with WSPost
-  with WSDelete
-  with WSPatch
-  with Hooks{
+  val auditConnector:            AuditConnector,
+  config:                        Configuration,
+  override val actorSystem:      ActorSystem)
+    extends HttpClient
+    with WSGet
+    with WSPut
+    with WSPost
+    with WSDelete
+    with WSPatch
+    with Hooks {
   override lazy val configuration: Option[Config] = Option(config.underlying)
 }
 
-class MicroserviceAudit @Inject()(@Named("appName") val applicationName: String,
-                                  val auditConnector: AuditConnector) extends Audit(applicationName, auditConnector)
+class MicroserviceAudit @Inject()(@Named("appName") val applicationName: String, val auditConnector: AuditConnector)
+    extends Audit(applicationName, auditConnector)
