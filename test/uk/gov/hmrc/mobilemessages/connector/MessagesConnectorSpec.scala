@@ -16,20 +16,23 @@
 
 package uk.gov.hmrc.mobilemessages.connector
 
+import org.scalatest.{Matchers, WordSpecLike}
 import play.api.Configuration
+import play.api.http.SecretConfiguration
+import play.api.libs.crypto.DefaultCookieSigner
 import play.api.libs.json.Json.toJson
 import play.api.libs.json.{Json, OFormat}
 import play.api.test.Helpers.SERVICE_UNAVAILABLE
+import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageHeadersResponse, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.mobilemessages.utils.Setup
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class MessagesConnectorSpec extends UnitSpec with Setup {
+class MessagesConnectorSpec extends WordSpecLike with Matchers with FutureAwaits with DefaultAwaitTimeout with Setup {
 
   def testBaseUrl(serviceName: String): String = "http://localhost:8089"
 
@@ -38,14 +41,14 @@ class MessagesConnectorSpec extends UnitSpec with Setup {
   implicit val formats: OFormat[RenderMessageLocation] = Json.format[RenderMessageLocation]
 
   val responseRenderer = RenderMessageLocation("sa-message-renderer", "http://somelocation")
-  val renderPath = "/some/render/path"
+  val renderPath       = "/some/render/path"
   val messageBodyToRender: UpstreamMessageResponse =
     message.bodyWith(id = "id1", renderUrl = ResourceActionLocation("test-renderer-service", renderPath))
   val messageToBeMarkedAsReadBody: UpstreamMessageResponse = message.bodyToBeMarkedAsReadWith(id = "id48")
-  val messageToBeMarkedAsRead: UnreadMessage = UnreadMessage(MessageId(messageToBeMarkedAsReadBody.id),
-    messageToBeMarkedAsReadBody.renderUrl.url, "markAsReadUrl")
+  val messageToBeMarkedAsRead: UnreadMessage =
+    UnreadMessage(MessageId(messageToBeMarkedAsReadBody.id), messageToBeMarkedAsReadBody.renderUrl.url, "markAsReadUrl")
 
-  lazy val PostSuccessResult: Future[AnyRef with HttpResponse] = Future.successful(HttpResponse(200, Some(toJson(html.body))))
+  lazy val PostSuccessResult:         Future[AnyRef with HttpResponse] = Future.successful(HttpResponse(200, Some(toJson(html.body))))
   lazy val PostSuccessRendererResult: Future[AnyRef with HttpResponse] = Future.successful(HttpResponse(200, Some(toJson(responseRenderer))))
 
   lazy val connector: MessageConnector =
@@ -55,7 +58,9 @@ class MessagesConnectorSpec extends UnitSpec with Setup {
       message.fullUrlFor("ats-message-renderer", ""),
       message.fullUrlFor("secure-message-renderer", ""),
       Configuration.from(Map("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")),
-      mockHttp)
+      new DefaultCookieSigner(SecretConfiguration("hwdODU8hulPkolIryPRkVW==")),
+      mockHttp
+    )
 
   private val upstream5xxResponse = Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)
   private val badRequestException = new BadRequestException("")
@@ -63,10 +68,7 @@ class MessagesConnectorSpec extends UnitSpec with Setup {
   "messages()" should {
 
     "return a list of items when a 200 response is received with a payload" in {
-      val messagesHeaders = Seq(
-        message.headerWith(id = "someId1"),
-        message.headerWith(id = "someId2"),
-        message.headerWith(id = "someId3"))
+      val messagesHeaders = Seq(message.headerWith(id = "someId1"), message.headerWith(id = "someId2"), message.headerWith(id = "someId3"))
 
       messagesGetSuccess(UpstreamMessageHeadersResponse(messagesHeaders))
 

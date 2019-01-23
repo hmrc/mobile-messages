@@ -17,42 +17,43 @@
 package uk.gov.hmrc.mobilemessages.services
 
 import com.google.inject._
+import javax.inject.Named
 import play.api.Configuration
 import play.twirl.api.Html
-import uk.gov.hmrc.api.service.Auditor
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilemessages.connector._
 import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import uk.gov.hmrc.service.Auditor
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class MobileMessagesService @Inject()(val messageConnector: MessageConnector,
-                                      val auditConnector: AuditConnector,
-                                      val appNameConfiguration: Configuration) extends Auditor {
+class MobileMessagesService @Inject()(
+  @Named("appName") val appName: String,
+  val messageConnector:          MessageConnector,
+  val auditConnector:            AuditConnector,
+  val appNameConfiguration:      Configuration)
+    extends Auditor {
 
-  def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] = {
+  def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
     withAudit("readAndUnreadMessages", Map.empty) {
       messageConnector.messages()
     }
-  }
 
   def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] =
     withAudit("readMessageContent", Map.empty) {
-      messageConnector.getMessageBy(messageId) flatMap {
-        message =>
-          messageConnector.render(message, hc) map {
-            renderedMessage =>
-              markAsReadIfUnread.apply(message)
-              renderedMessage
-          }
+      messageConnector.getMessageBy(messageId) flatMap { message =>
+        messageConnector.render(message, hc) map { renderedMessage =>
+          markAsReadIfUnread.apply(message)
+          renderedMessage
+        }
       }
     }
 
   private def markAsReadIfUnread(implicit hc: HeaderCarrier, ec: ExecutionContext): Message => Unit = {
-    case unreadMessage@UnreadMessage(_, _, _) => messageConnector.markAsRead(unreadMessage)
-    case _ => ()
+    case unreadMessage @ UnreadMessage(_, _, _) => messageConnector.markAsRead(unreadMessage)
+    case _                                      => ()
   }
 }

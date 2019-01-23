@@ -17,10 +17,11 @@
 package uk.gov.hmrc.mobilemessages.connector.model
 
 import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.{Matchers, WordSpecLike}
+import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-class ResourceActionLocationSpec extends UnitSpec with MockFactory {
+class ResourceActionLocationSpec extends WordSpecLike with Matchers with FutureAwaits with DefaultAwaitTimeout with MockFactory {
 
   "to Url method" should {
 
@@ -31,7 +32,7 @@ class ResourceActionLocationSpec extends UnitSpec with MockFactory {
       val expectedUrl = "http://localhost:3030/path/to/resource"
 
       ResourceActionLocation("service", "/path/to/resource").toUrlUsing(servicesConfigMock.baseUrl("service")) shouldBe expectedUrl
-      ResourceActionLocation("service", "path/to/resource").toUrlUsing(servicesConfigMock.baseUrl("service")) shouldBe expectedUrl
+      ResourceActionLocation("service", "path/to/resource").toUrlUsing(servicesConfigMock.baseUrl("service"))  shouldBe expectedUrl
     }
   }
 }

@@ -16,20 +16,22 @@
 
 package uk.gov.hmrc.mobilemessages.controllers.model
 
-import org.joda.time.{DateTime, DateTimeZone}
+import java.time.LocalDateTime
+
+import org.scalatest.{Matchers, WordSpecLike}
+import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 import uk.gov.hmrc.mobilemessages.utils.{MessageServiceMock, UnitTestCrypto}
-import uk.gov.hmrc.play.test.UnitSpec
 
-class MessageHeaderResponseBodySpec extends UnitSpec {
+class MessageHeaderResponseBodySpec extends WordSpecLike with Matchers with FutureAwaits with DefaultAwaitTimeout {
 
   val message = new MessageServiceMock("authToken")
 
   "get messages response" should {
     "be correctly converted from message headers" in {
       val messageHeader1 = message.headerWith(id = "id1")
-      val messageHeader2 = message.headerWith(id = "id2", readTime = Some(DateTime.now(DateTimeZone.UTC)))
+      val messageHeader2 = message.headerWith(id = "id2", readTime = Some(LocalDateTime.now))
 
       MessageHeaderResponseBody.fromAll(Seq(messageHeader1, messageHeader2))(new UnitTestCrypto) shouldBe Seq(
         expectedMessageResponseItemFor(messageHeader1),
@@ -38,7 +40,7 @@ class MessageHeaderResponseBodySpec extends UnitSpec {
     }
   }
 
-  def expectedMessageResponseItemFor(messageHeader: MessageHeader): MessageHeaderResponseBody = {
+  def expectedMessageResponseItemFor(messageHeader: MessageHeader): MessageHeaderResponseBody =
     MessageHeaderResponseBody(
       messageHeader.id.value,
       messageHeader.subject,
@@ -47,5 +49,4 @@ class MessageHeaderResponseBodySpec extends UnitSpec {
       encrypted(messageHeader.id.value),
       messageHeader.sentInError
     )
-  }
 }

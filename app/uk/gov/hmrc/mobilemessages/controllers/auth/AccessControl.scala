@@ -25,7 +25,7 @@ import uk.gov.hmrc.auth.core.retrieve.Retrievals.{confidenceLevel, nino}
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{AuthorisedFunctions, ConfidenceLevel}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.{Request => _, _}
+import uk.gov.hmrc.http.{CoreGet, HeaderCarrier}
 import uk.gov.hmrc.mobilemessages.controllers._
 import uk.gov.hmrc.play.HeaderCarrierConverter.fromHeadersAndSession
 
@@ -40,7 +40,7 @@ case class AuthorityRecord(uri: String)
 
 object AuthorityRecord {
   implicit val format: OFormat[AuthorityRecord] = Json.format[AuthorityRecord]
-  implicit val reads: Reads[AuthorityRecord] = Json.reads[AuthorityRecord]
+  implicit val reads:  Reads[AuthorityRecord]   = Json.reads[AuthorityRecord]
 }
 
 trait Authorisation extends Results with AuthorisedFunctions {
@@ -48,14 +48,14 @@ trait Authorisation extends Results with AuthorisedFunctions {
   import AuthorityRecord._
 
   val confLevel: Int
-  val http: CoreGet
-  val authUrl: String
+  val http:      CoreGet
+  val authUrl:   String
 
   lazy val requiresAuth: Boolean = true
   lazy val ninoNotFoundOnAccount = new NinoNotFoundOnAccount
-  lazy val lowConfidenceLevel = new AccountWithLowCL
+  lazy val lowConfidenceLevel    = new AccountWithLowCL
 
-  def grantAccess()(implicit hc: HeaderCarrier): Future[Authority] = {
+  def grantAccess()(implicit hc: HeaderCarrier): Future[Authority] =
     getAuthorityRecord.flatMap { authRecord: AuthorityRecord =>
       authorised().retrieve(nino and confidenceLevel) {
         case Some(foundNino) ~ foundConfidenceLevel =>
@@ -66,26 +66,27 @@ trait Authorisation extends Results with AuthorisedFunctions {
           throw ninoNotFoundOnAccount
       }
     }
-  }
 
   def invokeAuthBlock[A](request: Request[A], block: AuthenticatedRequest[A] => Future[Result]): Future[Result] = {
     implicit val hc: HeaderCarrier = fromHeadersAndSession(request.headers, None)
 
-    grantAccess().flatMap { authority =>
-      block(AuthenticatedRequest(Some(authority), request))
-    }.recover {
-      case _: uk.gov.hmrc.http.Upstream4xxResponse =>
-        Logger.info("Unauthorized! Failed to grant access since 4xx response!")
-        Unauthorized(toJson(ErrorUnauthorizedMicroService))
+    grantAccess()
+      .flatMap { authority =>
+        block(AuthenticatedRequest(Some(authority), request))
+      }
+      .recover {
+        case _: uk.gov.hmrc.http.Upstream4xxResponse =>
+          Logger.info("Unauthorized! Failed to grant access since 4xx response!")
+          Unauthorized(toJson(ErrorUnauthorizedMicroService))
 
-      case _: NinoNotFoundOnAccount =>
-        Logger.info("Unauthorized! NINO not found on account!")
-        Forbidden(toJson(ErrorForbidden))
+        case _: NinoNotFoundOnAccount =>
+          Logger.info("Unauthorized! NINO not found on account!")
+          Forbidden(toJson(ErrorForbidden))
 
-      case _: AccountWithLowCL =>
-        Logger.info("Unauthorized! Account with low CL!")
-        Forbidden(toJson(ErrorForbidden))
-    }
+        case _: AccountWithLowCL =>
+          Logger.info("Unauthorized! Account with low CL!")
+          Forbidden(toJson(ErrorForbidden))
+      }
   }
 
   def getAuthorityRecord(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[AuthorityRecord] =
@@ -93,15 +94,18 @@ trait Authorisation extends Results with AuthorisedFunctions {
 }
 
 trait AccessControl extends HeaderValidator with Authorisation {
+  outer =>
 
-  def validateAcceptWithAuth(rules: Option[String] => Boolean): ActionBuilder[AuthenticatedRequest] = new ActionBuilder[AuthenticatedRequest] {
+  def validateAcceptWithAuth(rules: Option[String] => Boolean): ActionBuilder[AuthenticatedRequest, AnyContent] =
+    new ActionBuilder[AuthenticatedRequest, AnyContent] {
 
-    def invokeBlock[A](request: Request[A], block: AuthenticatedRequest[A] => Future[Result]): Future[Result] = {
-      if (rules(request.headers.get("Accept"))) {
-        if (requiresAuth) invokeAuthBlock(request, block)
-        else block(AuthenticatedRequest(None, request))
-      }
-      else Future.successful(Status(ErrorAcceptHeaderInvalid.httpStatusCode)(toJson(ErrorAcceptHeaderInvalid)))
+      override def parser:                     BodyParser[AnyContent] = outer.parser
+      override protected def executionContext: ExecutionContext       = outer.executionContext
+
+      def invokeBlock[A](request: Request[A], block: AuthenticatedRequest[A] => Future[Result]): Future[Result] =
+        if (rules(request.headers.get("Accept"))) {
+          if (requiresAuth) invokeAuthBlock(request, block)
+          else block(AuthenticatedRequest(None, request))
+        } else Future.successful(Status(ErrorAcceptHeaderInvalid.httpStatusCode)(toJson(ErrorAcceptHeaderInvalid)))
     }
-  }
 }

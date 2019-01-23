@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilemessages.controllers
 import play.api.mvc.Result
 import uk.gov.hmrc.api.controllers.ErrorResponse
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -34,13 +34,13 @@ case object ErrorUnauthorizedMicroService extends ErrorResponse(401, "UNAUTHORIZ
 case object ErrorForbidden extends ErrorResponse(403, "FORBIDDEN", "Forbidden")
 
 trait ErrorHandling {
-  self: BaseController =>
+  self: BackendBaseController =>
 
   import play.api.libs.json.Json
   import play.api.{Logger, mvc}
   import uk.gov.hmrc.api.controllers.{ErrorInternalServerError, ErrorNotFound, ErrorUnauthorizedLowCL}
 
-  def errorWrapper(func: => Future[mvc.Result])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result] = {
+  def errorWrapper(func: => Future[mvc.Result])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result] =
     func.recover {
       case _: NotFoundException => Status(ErrorNotFound.httpStatusCode)(Json.toJson(ErrorNotFound))
 
@@ -52,5 +52,4 @@ trait ErrorHandling {
         Logger.error(s"Internal server error: ${e.getMessage}", e)
         Status(ErrorInternalServerError.httpStatusCode)(Json.toJson(ErrorInternalServerError))
     }
-  }
 }

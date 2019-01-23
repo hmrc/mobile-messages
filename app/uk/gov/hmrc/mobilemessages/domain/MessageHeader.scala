@@ -16,10 +16,6 @@
 
 package uk.gov.hmrc.mobilemessages.domain
 
-import org.joda.time.{DateTime, LocalDate}
+import java.time.{LocalDate, LocalDateTime}
 
-final case class MessageHeader(id: MessageId,
-                               subject: String,
-                               validFrom: LocalDate,
-                               readTime: Option[DateTime],
-                               sentInError: Boolean)
+final case class MessageHeader(id: MessageId, subject: String, validFrom: LocalDate, readTime: Option[LocalDateTime], sentInError: Boolean)

@@ -16,29 +16,38 @@
 
 package uk.gov.hmrc.mobilemessages.controllers.model
 
+import java.time.{LocalDate, LocalDateTime, ZoneOffset}
+
 import org.apache.commons.codec.binary.Base64.encodeBase64String
-import org.joda.time.{DateTime, LocalDate}
+import play.api.libs.json._
 import uk.gov.hmrc.crypto.{Encrypter, PlainText}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 
-final case class MessageHeaderResponseBody(id: String,
-                                           subject: String,
-                                           validFrom: LocalDate,
-                                           readTime: Option[DateTime],
-                                           readTimeUrl: String,
-                                           sentInError: Boolean)
+trait WriteDatesAsLongs {
+  implicit val dateTimeWrites: Writes[LocalDateTime] = new Writes[LocalDateTime] {
+    override def writes(o: LocalDateTime): JsValue =
+      JsNumber(o.toInstant(ZoneOffset.UTC).toEpochMilli)
+  }
+}
 
-object MessageHeaderResponseBody {
+final case class MessageHeaderResponseBody(
+  id:          String,
+  subject:     String,
+  validFrom:   LocalDate,
+  readTime:    Option[LocalDateTime],
+  readTimeUrl: String,
+  sentInError: Boolean)
+
+object MessageHeaderResponseBody extends WriteDatesAsLongs {
 
   import play.api.libs.json._
 
   implicit val writes: Writes[MessageHeaderResponseBody] = Json.writes[MessageHeaderResponseBody]
 
-  def fromAll(messageHeaders: Seq[MessageHeader])(encrypter: Encrypter): Seq[MessageHeaderResponseBody] = {
+  def fromAll(messageHeaders: Seq[MessageHeader])(encrypter: Encrypter): Seq[MessageHeaderResponseBody] =
     messageHeaders.map(from(_)(encrypter))
-  }
 
-  def from(messageHeader: MessageHeader)(encrypter: Encrypter): MessageHeaderResponseBody = {
+  def from(messageHeader: MessageHeader)(encrypter: Encrypter): MessageHeaderResponseBody =
     MessageHeaderResponseBody(
       messageHeader.id.value,
       messageHeader.subject,
@@ -47,5 +56,4 @@ object MessageHeaderResponseBody {
       encodeBase64String(encrypter.encrypt(PlainText(messageHeader.id.value)).value.getBytes),
       messageHeader.sentInError
     )
-  }
 }
