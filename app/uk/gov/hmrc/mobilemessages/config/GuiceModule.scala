@@ -20,11 +20,9 @@ import com.google.inject.name.Named
 import com.google.inject.name.Names.named
 import com.google.inject.{AbstractModule, Provides}
 import play.api.{Configuration, Environment}
-import uk.gov.hmrc.api.connector.{ApiServiceLocatorConnector, ServiceLocatorConnector}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.{CoreGet, CorePost}
 import uk.gov.hmrc.mobilemessages.controllers.api.ApiAccess
-import uk.gov.hmrc.mobilemessages.tasks.ServiceLocatorRegistrationTask
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
 import uk.gov.hmrc.play.bootstrap.config.{RunMode, ServicesConfig}
@@ -41,12 +39,9 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
   import servicesConfig.baseUrl
 
   override def configure(): Unit = {
-    bind(classOf[ServiceLocatorConnector])
-      .to(classOf[ApiServiceLocatorConnector])
     bind(classOf[CoreGet]).to(classOf[WSHttpImpl])
     bind(classOf[CorePost]).to(classOf[WSHttpImpl])
     bind(classOf[HttpClient]).to(classOf[WSHttpImpl])
-    bind(classOf[ServiceLocatorRegistrationTask]).asEagerSingleton()
 
     bind(classOf[Audit]).to(classOf[MicroserviceAudit])
     bind(classOf[AuthConnector]).to(classOf[DefaultAuthConnector])
