@@ -25,11 +25,9 @@ class BaseISpec
 
   def config: Map[String, Any] = Map(
     "auditing.enabled"                                   -> false,
-    "microservice.services.service-locator.enabled"      -> false,
     "microservice.services.auth.port"                    -> wireMockPort,
     "microservice.services.citizen-details.port"         -> wireMockPort,
     "microservice.services.entity-resolver.port"         -> wireMockPort,
-    "microservice.services.service-locator.port"         -> wireMockPort,
     "microservice.services.preferences.port"             -> wireMockPort,
     "microservice.services.message.host"                 -> "localhost",
     "microservice.services.message.port"                 -> wireMockPort,
