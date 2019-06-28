@@ -34,7 +34,7 @@ def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
 val compile = Seq(
   "uk.gov.hmrc" %% "bootstrap-play-26"        % "0.36.0",
   "uk.gov.hmrc" %% "play-hmrc-api"            % "3.4.0-play-26",
-  "uk.gov.hmrc" %% "domain"                   % "5.3.0",
+  "uk.gov.hmrc" %% "domain"                   % "5.6.0-play-26",
   "uk.gov.hmrc" %% "reactive-circuit-breaker" % "3.3.0",
   "uk.gov.hmrc" %% "emailaddress"             % "2.2.0",
   "uk.gov.hmrc" %% "reactivemongo-bson"       % "0.15.1" //NOTE: this is included purely for sandbox object creation
