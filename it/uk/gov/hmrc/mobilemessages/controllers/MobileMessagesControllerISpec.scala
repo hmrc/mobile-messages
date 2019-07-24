@@ -9,19 +9,12 @@ import uk.gov.hmrc.mobilemessages.support.BaseISpec
 
 class MobileMessagesControllerISpec extends BaseISpec {
 
-  def request(url: String, journeyId: Option[String]): WSRequest = {
-    val urlMaybeId = journeyId.fold(url) { id =>
-      s"$url?journeyId=$id"
-    }
-    wsUrl(urlMaybeId).addHttpHeaders(acceptJsonHeader)
+  def request(url: String, journeyId: String): WSRequest = {
+    wsUrl(s"$url?journeyId=$journeyId").addHttpHeaders(acceptJsonHeader)
   }
 
-  def requestWithoutAcceptHeader(url: String, journeyId: Option[String]): WSRequest = {
-    val urlMaybeId = journeyId.fold(url) { id =>
-      s"$url?journeyId=$id"
-    }
-    wsUrl(urlMaybeId)
-  }
+  def requestWithoutAcceptHeader(url: String, journeyId: String): WSRequest = wsUrl(s"$url?journeyId=$journeyId")
+
 
   "GET /messages" should {
     val url = "/messages"
@@ -30,54 +23,54 @@ class MobileMessagesControllerISpec extends BaseISpec {
       authRecordExists()
       messagesAreFound()
 
-      await(request(url, None).get()).status shouldBe 200
+      await(request(url, "journeyId").get()).status shouldBe 200
     }
 
     "return a valid response with a journeyId" in {
       authRecordExists()
       messagesAreFound()
 
-      await(request(url, Some("journeyId")).get()).status shouldBe 200
+      await(request(url, "journeyId").get()).status shouldBe 200
     }
 
     "return 403 when authority record does not have a high enough confidence level" in {
       authRecordExistsWithLowCL()
 
-      await(request(url, None).get()).status shouldBe 403
+      await(request(url, "journeyId").get()).status shouldBe 403
     }
 
     "return 403 when authority record does not contain a NINO" in {
       authRecordExistsWithoutNino()
 
-      await(request(url, None).get()).status shouldBe 403
+      await(request(url, "journeyId").get()).status shouldBe 403
     }
 
     "return a 406 when request does not contain an Accept header" in {
-      await(requestWithoutAcceptHeader(url, None).get()).status shouldBe 406
+      await(requestWithoutAcceptHeader(url, "journeyId").get()).status shouldBe 406
     }
 
     "return a valid response when MessageConnector returns 404" in {
       authRecordExists()
       messagesNotFoundException()
 
-      await(request(url, None).get()).status shouldBe 404
+      await(request(url, "journeyId").get()).status shouldBe 404
     }
 
     "return a valid response when MessageConnector returns 500" in {
       authRecordExists()
       messagesServiceUnavailableException()
 
-      await(request(url, None).get()).status shouldBe 500
+      await(request(url, "journeyId").get()).status shouldBe 500
     }
 
     "return 401 when authority call fails" in {
       unauthorised()
-      await(request(url, None).get()).status shouldBe 401
+      await(request(url, "journeyId").get()).status shouldBe 401
     }
 
     "return 401 with authorise call fails" in {
       authFailure()
-      await(request(url, None).get()).status shouldBe 401
+      await(request(url, "journeyId").get()).status shouldBe 401
     }
   }
 
@@ -86,14 +79,14 @@ class MobileMessagesControllerISpec extends BaseISpec {
     val messageUrl = RenderMessageRequest("L2U5NkwzTCtUdmQvSS9VVyt0MGh6UT09")
     val authHeader = ("Authorization", "auth1")
 
-    def messagesRequest(journeyId: Option[String]) = request(url, journeyId).addHttpHeaders(authHeader)
+    def messagesRequest(journeyId: String) = request(url, journeyId).addHttpHeaders(authHeader)
 
     "return a valid response without a journeyId with empty render payload from sa-message-renderer" in {
       authRecordExists()
       mmessageFound("url1", "sa-message-renderer")
       messageIsRenderedSuccessfully()
 
-      await(request(url, None).addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
+      await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
     }
 
     "return a valid response with a journeyId with empty render payload from message service" in {
@@ -101,7 +94,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
       mmessageFound("url1", "message")
       messageIsRenderedSuccessfully()
 
-      await(request(url, Some("journeyId")).addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
+      await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
     }
 
     "return a valid response with a journeyId with empty render payload from sa-message-renderer" in {
@@ -109,7 +102,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
       mmessageFound("url1", "sa-message-renderer")
       messageIsRenderedSuccessfully()
 
-      await(request(url, Some("journeyId")).addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
+      await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
     }
 
     "return a valid response with a journeyId with empty render payload from ats-message-renderer" in {
@@ -117,7 +110,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
       mmessageFound("url1", "ats-message-renderer")
       messageIsRenderedSuccessfully()
 
-      await(request(url, Some("journeyId")).addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
+      await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
     }
 
     "return a valid response with a journeyId with empty render payload from secure-message-renderer" in {
@@ -125,47 +118,47 @@ class MobileMessagesControllerISpec extends BaseISpec {
       mmessageFound("url1", "secure-message-renderer")
       messageIsRenderedSuccessfully()
 
-      await(request(url, Some("journeyId")).addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
+      await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
     }
 
     "return 403 when authority record does not have a high enough confidence level" in {
       authRecordExistsWithLowCL()
 
-      await(request(url, None).post(toJson(messageUrl))).status shouldBe 403
+      await(request(url, "journeyId").post(toJson(messageUrl))).status shouldBe 403
     }
 
     "return 403 when authority record does not contain a NINO" in {
       authRecordExistsWithoutNino()
 
-      await(request(url, None).post(toJson(messageUrl))).status shouldBe 403
+      await(request(url, "journeyId").post(toJson(messageUrl))).status shouldBe 403
     }
 
     "return a 406 when request does not contain an Accept header" in {
-      await(requestWithoutAcceptHeader(url, None).post(toJson(messageUrl))).status shouldBe 406
+      await(requestWithoutAcceptHeader(url, "journeyId").post(toJson(messageUrl))).status shouldBe 406
     }
 
     "return a valid response when MessageConnector returns 404" in {
       authRecordExists()
       messagesNotFound("url1")
 
-      await(request(url, None).addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 404
+      await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 404
     }
 
     "return a valid response when MessageConnector returns 500" in {
       authRecordExists()
       messagesServiceIsUnavailable("url1")
 
-      await(request(url, None).addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 500
+      await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 500
     }
 
     "return 401 when authority call fails" in {
       unauthorised()
-      await(request(url, None).addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 401
+      await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 401
     }
 
     "return 401 with authorise call fails" in {
       authFailure()
-      await(request(url, None).addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 401
+      await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 401
     }
   }
 }

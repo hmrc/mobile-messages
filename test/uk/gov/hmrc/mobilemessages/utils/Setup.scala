@@ -63,7 +63,7 @@ trait Setup extends AuthorisationStub with MessagesStub with StubApplicationConf
   val configuration: Configuration = Configuration("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")
 
   val nino      = Nino("CS700100A")
-  val journeyId = Option(randomUUID().toString)
+  val journeyId = randomUUID().toString
   val acceptHeader: (String, String) = "Accept" -> "application/vnd.hmrc.1.0+json"
 
   val encrypter: CryptoWithKeysFromConfig =

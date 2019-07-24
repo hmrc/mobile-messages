@@ -68,7 +68,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
       stubAuthoritySuccess(AuthorityRecord("uri"))
       readAndUnreadMessagesMock(Seq.empty)
 
-      val result = liveController.getMessages()(emptyRequestWithAcceptHeader)
+      val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
 
       status(result)                                           shouldBe 200
       contentAsJson(result).as[Seq[MessageHeaderResponseBody]] shouldBe Seq.empty[MessageHeaderResponseBody]
@@ -90,7 +90,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
       stubAuthoritySuccess(AuthorityRecord("uri"))
       readAndUnreadMessagesMock(messageServiceHeadersResponse)
 
-      val result = liveController.getMessages()(emptyRequestWithAcceptHeader)
+      val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
 
       status(result)                                           shouldBe 200
       contentAsJson(result).as[Seq[MessageHeaderResponseBody]] shouldBe getMessageResponseItemList
@@ -100,7 +100,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
       stubAuthorisationGrantAccess(Some(nino.nino) and L100)
       stubAuthoritySuccess(AuthorityRecord("uri"))
 
-      val result = liveController.getMessages()(emptyRequestWithAcceptHeader)
+      val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
 
       status(result) shouldBe 403
     }
@@ -109,7 +109,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
       stubAuthorisationGrantAccess(None and L200)
       stubAuthoritySuccess(AuthorityRecord("uri"))
 
-      val result = liveController.getMessages()(emptyRequestWithAcceptHeader)
+      val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
 
       status(result) shouldBe 403
     }
@@ -118,13 +118,13 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
       stubAuthoritySuccess(AuthorityRecord("uri"))
       stubAuthorisationUnauthorised()
 
-      val result = liveController.getMessages()(emptyRequestWithAcceptHeader)
+      val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
 
       status(result) shouldBe 401
     }
 
     "return status code 406 when the headers are invalid" in {
-      val result = liveController.getMessages()(FakeRequest())
+      val result = liveController.getMessages(journeyId)(FakeRequest())
 
       status(result) shouldBe 406
     }
@@ -132,7 +132,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
     "return unauthorized when unable to retrieve authority record uri" in {
       stubAuthorityFailure()
 
-      val result = liveController.getMessages()(emptyRequestWithAcceptHeader)
+      val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
 
       status(result) shouldBe 401
     }
@@ -145,7 +145,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
       stubAuthoritySuccess(AuthorityRecord("uri"))
       readMessageContentMock(html)
 
-      val result = liveController.read()(readTimeRequest)
+      val result = liveController.read(journeyId)(readTimeRequest)
 
       status(result)          shouldBe 200
       contentAsString(result) shouldBe html.toString()
@@ -212,7 +212,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
 
   "getMessages() Sandbox" should {
     "return messages" in {
-      val result = sandboxController.getMessages()(emptyRequestWithAcceptHeader)
+      val result = sandboxController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
 
       status(result) shouldBe 200
 
@@ -225,7 +225,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
   "read() Sandbox" should {
 
     "return messages" in {
-      val result = sandboxController.read()(readTimeRequest)
+      val result = sandboxController.read(journeyId)(readTimeRequest)
 
       status(result) shouldBe 200
 
