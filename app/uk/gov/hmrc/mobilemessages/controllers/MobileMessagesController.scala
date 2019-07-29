@@ -60,7 +60,7 @@ class MobileMessagesController @Inject()(
   val crypto: Encrypter with Decrypter =
     new CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption", configuration.underlying)
 
-  def getMessages(journeyId: Option[String] = None): Action[AnyContent] =
+  def getMessages(journeyId: String): Action[AnyContent] =
     validateAcceptWithAuth(acceptHeaderValidationRules).async { implicit authenticated =>
       errorWrapper(
         service
@@ -70,7 +70,7 @@ class MobileMessagesController @Inject()(
           ))
     }
 
-  def read(journeyId: Option[String] = None): Action[JsValue] =
+  def read(journeyId: String): Action[JsValue] =
     validateAcceptWithAuth(acceptHeaderValidationRules).async(controllerComponents.parsers.json) { implicit authenticated =>
       authenticated.request.body
         .validate[RenderMessageRequest]
@@ -108,7 +108,7 @@ class SandboxMobileMessagesController @Inject()(
 
   val saUtr: SaUtr = nextSaUtr
 
-  def getMessages(journeyId: Option[String] = None): Action[AnyContent] =
+  def getMessages(journeyId: String): Action[AnyContent] =
     validateAccept(acceptHeaderValidationRules).async { implicit request =>
       Future successful (request.headers.get("SANDBOX-CONTROL") match {
         case Some("ERROR-401") => Unauthorized
@@ -118,7 +118,7 @@ class SandboxMobileMessagesController @Inject()(
       })
     }
 
-  def read(journeyId: Option[String] = None): Action[JsValue] =
+  def read(journeyId: String): Action[JsValue] =
     validateAccept(acceptHeaderValidationRules).async(controllerComponents.parsers.json) { implicit request =>
       Future successful (request.headers.get("SANDBOX-CONTROL") match {
         case Some("ANNUAL-TAX-SUMMARY") => Ok(annualTaxSummary)
