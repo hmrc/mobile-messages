@@ -19,18 +19,18 @@ class MobileMessagesControllerISpec extends BaseISpec {
   "GET /messages" should {
     val url = "/messages"
 
-    "return a valid response without a journeyId" in {
+    "return a valid response with a journeyId" in {
       authRecordExists()
       messagesAreFound()
 
       await(request(url, "journeyId").get()).status shouldBe 200
     }
 
-    "return a valid response with a journeyId" in {
+    "return a 400 without a journeyId" in {
       authRecordExists()
       messagesAreFound()
 
-      await(request(url, "journeyId").get()).status shouldBe 200
+      await(wsUrl(url).get()).status shouldBe 400
     }
 
     "return 403 when authority record does not have a high enough confidence level" in {
@@ -81,14 +81,6 @@ class MobileMessagesControllerISpec extends BaseISpec {
 
     def messagesRequest(journeyId: String) = request(url, journeyId).addHttpHeaders(authHeader)
 
-    "return a valid response without a journeyId with empty render payload from sa-message-renderer" in {
-      authRecordExists()
-      mmessageFound("url1", "sa-message-renderer")
-      messageIsRenderedSuccessfully()
-
-      await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
-    }
-
     "return a valid response with a journeyId with empty render payload from message service" in {
       authRecordExists()
       mmessageFound("url1", "message")
@@ -119,6 +111,14 @@ class MobileMessagesControllerISpec extends BaseISpec {
       messageIsRenderedSuccessfully()
 
       await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
+    }
+
+    "return a 400 without a journeyId" in {
+      authRecordExists()
+      mmessageFound("url1", "sa-message-renderer")
+      messageIsRenderedSuccessfully()
+
+      await(wsUrl(url).addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 400
     }
 
     "return 403 when authority record does not have a high enough confidence level" in {
