@@ -18,12 +18,12 @@ class SandboxMobileMessagesControllerISpec extends BaseISpec {
   "GET /sandbox/messages" should {
     val url = "/messages"
 
-    "return a valid response without a journeyId" in {
+    "return a valid response with a journeyId" in {
       await(request(url, "journeyId").get()).status shouldBe 200
     }
 
-    "return a valid response with a journeyId" in {
-      await(request(url, "journeyId").get()).status shouldBe 200
+    "return a 400 without a journeyId" in {
+      await(wsUrl(url).get()).status shouldBe 400
     }
 
     "return a valid response for ERROR-401" in {
@@ -48,18 +48,17 @@ class SandboxMobileMessagesControllerISpec extends BaseISpec {
     val url = "/messages/read"
     val messageUrl = RenderMessageRequest("L2U5NkwzTCtUdmQvSS9VVyt0MGh6UT09")
 
-    "return a valid response without a journeyId with empty render payload" in {
-      val response: WSResponse = await(request(url, "journeyId").addHttpHeaders(("Authorization", "auth1")).post(Json.toJson(messageUrl)))
-
-      response.status shouldBe 200
-      response.body shouldEqual newTaxStatement.toString()
-    }
-
     "return a valid response with a journeyId with empty render payload" in {
       val response = await(request(url, "journeyId").addHttpHeaders(("Authorization", "auth1")).post(Json.toJson(messageUrl)))
 
       response.status shouldBe 200
       response.body shouldEqual newTaxStatement.toString()
+    }
+
+    "return a 400 without a journeyId" in {
+      val response: WSResponse = await(wsUrl(url).addHttpHeaders(("Authorization", "auth1")).post(Json.toJson(messageUrl)))
+
+      response.status shouldBe 400
     }
 
     "return a 406 when request does not contain an Accept header" in {
