@@ -38,6 +38,7 @@ class MessageConnector @Inject()(
   @Named("sa-message-renderer") val saMessageRendererBaseUrl:         String,
   @Named("ats-message-renderer") val atsMessageRendererBaseUrl:       String,
   @Named("secure-message-renderer") val secureMessageRendererBaseUrl: String,
+  @Named("two-way-message") val twoWayMessageBaseUrl:                 String,
   configuration:                                                      Configuration,
   val cookieSigner:                                                   CookieSigner,
   val http:                                                           CoreGet with CorePost
@@ -52,7 +53,8 @@ class MessageConnector @Inject()(
     "message"                 -> messageBaseUrl,
     "sa-message-renderer"     -> saMessageRendererBaseUrl,
     "ats-message-renderer"    -> atsMessageRendererBaseUrl,
-    "secure-message-renderer" -> secureMessageRendererBaseUrl
+    "secure-message-renderer" -> secureMessageRendererBaseUrl,
+    "two-way-message"         -> twoWayMessageBaseUrl
   )
 
   def messages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =

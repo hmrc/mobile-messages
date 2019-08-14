@@ -71,6 +71,9 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
     bind(classOf[String])
       .annotatedWith(named("secure-message-renderer"))
       .toInstance(baseUrl("secure-message-renderer"))
+    bind(classOf[String])
+      .annotatedWith(named("two-way-message"))
+      .toInstance(baseUrl("two-way-message"))
   }
 
   @Provides

@@ -57,6 +57,7 @@ class MessagesConnectorSpec extends WordSpecLike with Matchers with FutureAwaits
       message.fullUrlFor("sa-message-renderer", ""),
       message.fullUrlFor("ats-message-renderer", ""),
       message.fullUrlFor("secure-message-renderer", ""),
+      message.fullUrlFor("two-way-message", ""),
       Configuration.from(Map("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")),
       new DefaultCookieSigner(SecretConfiguration("hwdODU8hulPkolIryPRkVW==")),
       mockHttp
