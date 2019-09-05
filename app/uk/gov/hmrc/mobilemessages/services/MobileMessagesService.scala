@@ -42,18 +42,23 @@ class MobileMessagesService @Inject()(
       messageConnector.messages()
     }
 
-  def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[Html] =
+  def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[MessageWithHeader] =
     withAudit("readMessageContent", Map.empty) {
       messageConnector.getMessageBy(messageId) flatMap { message =>
         messageConnector.render(message, hc) map { renderedMessage =>
           markAsReadIfUnread.apply(message)
-          renderedMessage
+          MessageWithHeader(renderedMessage, message.`type`, message.threadId)
+
         }
       }
     }
 
   private def markAsReadIfUnread(implicit hc: HeaderCarrier, ec: ExecutionContext): Message => Unit = {
-    case unreadMessage @ UnreadMessage(_, _, _) => messageConnector.markAsRead(unreadMessage)
+    case unreadMessage @ UnreadMessage(_, _, _,_,_) => messageConnector.markAsRead(unreadMessage)
     case _                                      => ()
   }
 }
+
+case class MessageWithHeader(html: Html, `type`: String, threadId: String)
+
+object MessageWithHeader

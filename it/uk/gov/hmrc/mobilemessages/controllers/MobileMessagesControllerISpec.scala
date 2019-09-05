@@ -83,7 +83,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
 
     "return a valid response with a journeyId with empty render payload from message service" in {
       authRecordExists()
-      mmessageFound("url1", "message")
+      messageFound("url1", "message")
       messageIsRenderedSuccessfully()
 
       await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
@@ -91,7 +91,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
 
     "return a valid response with a journeyId with empty render payload from sa-message-renderer" in {
       authRecordExists()
-      mmessageFound("url1", "sa-message-renderer")
+      messageFound("url1", "sa-message-renderer")
       messageIsRenderedSuccessfully()
 
       await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
@@ -99,7 +99,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
 
     "return a valid response with a journeyId with empty render payload from ats-message-renderer" in {
       authRecordExists()
-      mmessageFound("url1", "ats-message-renderer")
+      messageFound("url1", "ats-message-renderer")
       messageIsRenderedSuccessfully()
 
       await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
@@ -107,7 +107,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
 
     "return a valid response with a journeyId with empty render payload from secure-message-renderer" in {
       authRecordExists()
-      mmessageFound("url1", "secure-message-renderer")
+      messageFound("url1", "secure-message-renderer")
       messageIsRenderedSuccessfully()
 
       await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
@@ -115,7 +115,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
 
     "return a 400 without a journeyId" in {
       authRecordExists()
-      mmessageFound("url1", "sa-message-renderer")
+      messageFound("url1", "sa-message-renderer")
       messageIsRenderedSuccessfully()
 
       await(wsUrl(url).addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 400

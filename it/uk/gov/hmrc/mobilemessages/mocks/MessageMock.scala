@@ -51,13 +51,17 @@ object MessageMock {
       |    "service": "$service",
       |    "url": "messagesByUrl"
       |  },
+      |  "details": {
+      |    "type": "2wsm-advisor",
+      |    "threadId": "9794f96d-f595-4b03-84dc-1861408918fb"
+      |  },
       |  "markAsReadUrl": {
       |    "service": "$service",
       |    "url": "url2"
       |  }
       |}""".stripMargin
 
-  def mmessageFound(id: String, service: String): Unit =
+  def messageFound(id: String, service: String): Unit =
     stubFor(get(urlPathEqualTo(s"/messages/$id")).willReturn(
       aResponse().withStatus(200).withHeader("Content-Type", "application.json")
         .withBody(messagesResponse(service))

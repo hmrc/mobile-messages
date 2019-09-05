@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilemessages.controllers
 
+import java.util.UUID
+
 import org.scalatest.{Matchers, WordSpecLike}
 import play.api.Configuration
 import play.api.http.SecretConfiguration
@@ -31,6 +33,7 @@ import uk.gov.hmrc.mobilemessages.controllers.auth.{Authority, AuthorityRecord}
 import uk.gov.hmrc.mobilemessages.controllers.model.MessageHeaderResponseBody
 import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
+import uk.gov.hmrc.mobilemessages.services.MessageWithHeader
 import uk.gov.hmrc.mobilemessages.utils.Setup
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -47,7 +50,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
     (mockMobileMessagesService
       .readMessageContent(_: MessageId)(_: HeaderCarrier, _: ExecutionContext, _: Option[Authority]))
       .expects(*, *, *, *)
-      .returns(Future successful response)
+      .returns(Future successful MessageWithHeader(response, "2wsm-advisor", "9794f96d-f595-4b03-84dc-1861408918fb"))
 
   val liveController =
     new MobileMessagesController(

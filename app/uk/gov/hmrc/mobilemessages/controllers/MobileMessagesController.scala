@@ -84,7 +84,7 @@ class MobileMessagesController @Inject()(
             errorWrapper {
               service
                 .readMessageContent(renderMessageRequest.toMessageIdUsing(crypto))
-                .map((as: Html) => Ok(as))
+                .map(message => Ok(message.html).withHeaders(("type", message.threadId),("threadId", message.threadId)))
             }
           }
         )

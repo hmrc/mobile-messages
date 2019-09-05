@@ -56,7 +56,7 @@ class MobileMessagesServiceSpec extends WordSpecLike with Matchers with FutureAw
   }
 
   "readMessageContent(messageId: MessageId)" should {
-    "return an html page and mark an unread message as read" in {
+    "return an html page with headers and mark an unread message as read" in {
       stubAuditReadMessageContent()
       (mockMessageConnector
         .getMessageBy(_: MessageId)(_: HeaderCarrier, _: ExecutionContext))
@@ -72,10 +72,10 @@ class MobileMessagesServiceSpec extends WordSpecLike with Matchers with FutureAw
         .expects(*, *, *)
         .returns(ReadSuccessEmptyResult)
 
-      await(service.readMessageContent(messageId)) shouldBe html
+      await(service.readMessageContent(messageId)) shouldBe MessageWithHeader(html, "2wsm-advisor", "9794f96d-f595-4b03-84dc-1861408918fb")
     }
 
-    "return an html page when receiving read messages" in {
+    "return an html page with headers when receiving read messages" in {
       stubAuditReadMessageContent()
       (mockMessageConnector
         .getMessageBy(_: MessageId)(_: HeaderCarrier, _: ExecutionContext))
@@ -86,7 +86,7 @@ class MobileMessagesServiceSpec extends WordSpecLike with Matchers with FutureAw
         .expects(*, *, *, *)
         .returns(Future successful html)
 
-      await(service.readMessageContent(messageId)) shouldBe html
+      await(service.readMessageContent(messageId)) shouldBe MessageWithHeader(html, "2wsm-advisor", "9794f96d-f595-4b03-84dc-1861408918fb")
     }
 
   }
