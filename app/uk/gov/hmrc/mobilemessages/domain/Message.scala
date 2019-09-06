@@ -19,16 +19,23 @@ package uk.gov.hmrc.mobilemessages.domain
 final case class MessageId(value: String)
 
 trait Message {
-  def id: MessageId
-
+  def id:        MessageId
   def renderUrl: String
-
-  def `type`: String
-  def threadId: String
+  def `type`:    Option[String]
+  def threadId:  Option[String]
 }
 
-final case class ReadMessage(override val id: MessageId, override val renderUrl: String, `type`: String, threadId: String)
-  extends Message
+final case class ReadMessage(
+  override val id:        MessageId,
+  override val renderUrl: String,
+  override val `type`:    Option[String],
+  override val threadId:  Option[String])
+    extends Message
 
-final case class UnreadMessage(override val id: MessageId, override val renderUrl: String, markAsReadUrl: String, `type`: String, threadId: String)
-  extends Message
+final case class UnreadMessage(
+  override val id:        MessageId,
+  override val renderUrl: String,
+  markAsReadUrl:          String,
+  override val `type`:    Option[String],
+  override val threadId:  Option[String])
+    extends Message

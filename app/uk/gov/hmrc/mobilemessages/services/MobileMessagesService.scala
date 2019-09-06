@@ -54,11 +54,11 @@ class MobileMessagesService @Inject()(
     }
 
   private def markAsReadIfUnread(implicit hc: HeaderCarrier, ec: ExecutionContext): Message => Unit = {
-    case unreadMessage @ UnreadMessage(_, _, _,_,_) => messageConnector.markAsRead(unreadMessage)
-    case _                                      => ()
+    case unreadMessage @ UnreadMessage(_, _, _, _, _) => messageConnector.markAsRead(unreadMessage)
+    case _                                            => ()
   }
 }
 
-case class MessageWithHeader(html: Html, `type`: String, threadId: String)
+case class MessageWithHeader(html: Html, `type`: Option[String], threadId: Option[String])
 
 object MessageWithHeader

@@ -72,7 +72,10 @@ class MobileMessagesServiceSpec extends WordSpecLike with Matchers with FutureAw
         .expects(*, *, *)
         .returns(ReadSuccessEmptyResult)
 
-      await(service.readMessageContent(messageId)) shouldBe MessageWithHeader(html, "2wsm-advisor", "9794f96d-f595-4b03-84dc-1861408918fb")
+      await(service.readMessageContent(messageId)) shouldBe MessageWithHeader(
+        html,
+        Some("2wsm-advisor"),
+        Some("9794f96d-f595-4b03-84dc-1861408918fb"))
     }
 
     "return an html page with headers when receiving read messages" in {
@@ -86,7 +89,10 @@ class MobileMessagesServiceSpec extends WordSpecLike with Matchers with FutureAw
         .expects(*, *, *, *)
         .returns(Future successful html)
 
-      await(service.readMessageContent(messageId)) shouldBe MessageWithHeader(html, "2wsm-advisor", "9794f96d-f595-4b03-84dc-1861408918fb")
+      await(service.readMessageContent(messageId)) shouldBe MessageWithHeader(
+        html,
+        Some("2wsm-advisor"),
+        Some("9794f96d-f595-4b03-84dc-1861408918fb"))
     }
 
   }

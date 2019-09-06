@@ -27,21 +27,19 @@ object MessageMock {
       |}
       |""".stripMargin
 
-  def messagesAreFound(): Unit = {
-    stubFor(get(urlPathEqualTo("/messages")).willReturn(
-      aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-        .withBody(messagesJson)))
-  }
+  def messagesAreFound(): Unit =
+    stubFor(
+      get(urlPathEqualTo("/messages")).willReturn(
+        aResponse()
+          .withStatus(200)
+          .withHeader("Content-Type", "application/json")
+          .withBody(messagesJson)))
 
-  def messagesNotFoundException(): Unit = {
-    stubFor(get(urlPathEqualTo("/messages")).willReturn(
-      aResponse().withStatus(404)))
-  }
+  def messagesNotFoundException(): Unit =
+    stubFor(get(urlPathEqualTo("/messages")).willReturn(aResponse().withStatus(404)))
 
-  def messagesServiceUnavailableException(): Unit = {
-    stubFor(get(urlPathEqualTo("/messages")).willReturn(
-      aResponse().withStatus(500)))
-  }
+  def messagesServiceUnavailableException(): Unit =
+    stubFor(get(urlPathEqualTo("/messages")).willReturn(aResponse().withStatus(500)))
 
   def messagesResponse(service: String): String =
     s"""
@@ -51,7 +49,7 @@ object MessageMock {
       |    "service": "$service",
       |    "url": "messagesByUrl"
       |  },
-      |  "details": {
+      |  "body": {
       |    "type": "2wsm-advisor",
       |    "threadId": "9794f96d-f595-4b03-84dc-1861408918fb"
       |  },
@@ -61,25 +59,45 @@ object MessageMock {
       |  }
       |}""".stripMargin
 
-  def messageFound(id: String, service: String): Unit =
-    stubFor(get(urlPathEqualTo(s"/messages/$id")).willReturn(
-      aResponse().withStatus(200).withHeader("Content-Type", "application.json")
-        .withBody(messagesResponse(service))
-    ))
+  def messagesResponseNoHeaders(service: String): String =
+    s"""
+       |{
+       |  "id": "url1",
+       |  "renderUrl": {
+       |    "service": "$service",
+       |    "url": "messagesByUrl"
+       |  },
+       |  "markAsReadUrl": {
+       |    "service": "$service",
+       |    "url": "url2"
+       |  }
+       |}""".stripMargin
+
+  def messageFound(id: String, service: String, headers: Boolean = true): Unit =
+    stubFor(
+      get(urlPathEqualTo(s"/messages/$id")).willReturn(
+        aResponse()
+          .withStatus(200)
+          .withHeader("Content-Type", "application.json")
+          .withBody(if (headers) messagesResponse(service) else messagesResponseNoHeaders(service))
+      ))
 
   def messagesNotFound(id: String): Unit =
-    stubFor(get(urlPathEqualTo(s"/messages/$id")).willReturn(
-      aResponse().withStatus(404)
-    ))
+    stubFor(
+      get(urlPathEqualTo(s"/messages/$id")).willReturn(
+        aResponse().withStatus(404)
+      ))
 
   def messagesServiceIsUnavailable(id: String): Unit =
-    stubFor(get(urlPathEqualTo(s"/messages/$id")).willReturn(
-      aResponse().withStatus(500)
-    ))
+    stubFor(
+      get(urlPathEqualTo(s"/messages/$id")).willReturn(
+        aResponse().withStatus(500)
+      ))
 
   def messageIsRenderedSuccessfully(): Unit =
-    stubFor(get(urlPathEqualTo("/messagesByUrl")).willReturn(
-      aResponse().withStatus(200)
-    ))
+    stubFor(
+      get(urlPathEqualTo("/messagesByUrl")).willReturn(
+        aResponse().withStatus(200)
+      ))
 
 }

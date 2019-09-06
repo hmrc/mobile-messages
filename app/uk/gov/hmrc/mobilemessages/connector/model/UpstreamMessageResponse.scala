@@ -23,13 +23,14 @@ final case class ResourceActionLocation(service: String, url: String) {
   def toUrlUsing(baseUrl: String) = s"${baseUrl.stripSuffix("/").trim}/${url.stripPrefix("/").trim}"
 }
 
-final case class UpstreamMessageResponse(id: String,
-                                         renderUrl: ResourceActionLocation,
-                                         markAsReadUrl: Option[ResourceActionLocation],
-                                         body: Option[Details]) {
+final case class UpstreamMessageResponse(
+  id:            String,
+  renderUrl:     ResourceActionLocation,
+  markAsReadUrl: Option[ResourceActionLocation],
+  body:          Option[Details]) {
   def toMessageUsing(servicesToUrl: Map[String, String]): Message = {
-    val `type`: String = body.flatMap(details => details.`type`).getOrElse("")
-    val threadId: String = body.flatMap(details => details.threadId).getOrElse("")
+    val `type`:   Option[String] = body.flatMap(details => details.`type`)
+    val threadId: Option[String] = body.flatMap(details => details.threadId)
 
     markAsReadUrl.fold[Message](
       ReadMessage(
@@ -38,15 +39,15 @@ final case class UpstreamMessageResponse(id: String,
         `type`,
         threadId
       )
-    )(res =>
-      UnreadMessage(
-        MessageId(id),
-        renderUrl.toUrlUsing(servicesToUrl(renderUrl.service)),
-        res.toUrlUsing(servicesToUrl(res.service)),
-        `type`,
-        threadId
-      )
-    )
+    )(
+      res =>
+        UnreadMessage(
+          MessageId(id),
+          renderUrl.toUrlUsing(servicesToUrl(renderUrl.service)),
+          res.toUrlUsing(servicesToUrl(res.service)),
+          `type`,
+          threadId
+      ))
   }
 }
 

@@ -17,7 +17,6 @@
 package uk.gov.hmrc.mobilemessages.utils
 
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
-import java.util.UUID
 
 import uk.gov.hmrc.mobilemessages.connector.model.{Details, ResourceActionLocation, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.domain._
@@ -36,12 +35,16 @@ class MessageServiceMock(authToken: String) {
         UnreadMessage(
           MessageId(messageBody.id),
           fullUrlFor(messageBody.renderUrl.service, messageBody.renderUrl.url),
-          fullUrlFor(location.service, location.url), "2wsm-advisor", "9794f96d-f595-4b03-84dc-1861408918fb"
+          fullUrlFor(location.service, location.url),
+          Some("2wsm-advisor"),
+          Some("9794f96d-f595-4b03-84dc-1861408918fb")
         )
       case _ =>
         ReadMessage(
           MessageId(messageBody.id),
-          fullUrlFor(messageBody.renderUrl.service, messageBody.renderUrl.url), "2wsm-advisor", "9794f96d-f595-4b03-84dc-1861408918fb"
+          fullUrlFor(messageBody.renderUrl.service, messageBody.renderUrl.url),
+          Some("2wsm-advisor"),
+          Some("9794f96d-f595-4b03-84dc-1861408918fb")
         )
     }
 

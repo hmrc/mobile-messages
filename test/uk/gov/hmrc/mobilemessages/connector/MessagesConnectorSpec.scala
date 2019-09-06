@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.mobilemessages.connector
 
-import java.util.UUID
-
 import org.scalatest.{Matchers, WordSpecLike}
 import play.api.Configuration
 import play.api.http.SecretConfiguration
@@ -48,7 +46,13 @@ class MessagesConnectorSpec extends WordSpecLike with Matchers with FutureAwaits
     message.bodyWith(id = "id1", renderUrl = ResourceActionLocation("test-renderer-service", renderPath))
   val messageToBeMarkedAsReadBody: UpstreamMessageResponse = message.bodyToBeMarkedAsReadWith(id = "id48")
   val messageToBeMarkedAsRead: UnreadMessage =
-    UnreadMessage(MessageId(messageToBeMarkedAsReadBody.id), messageToBeMarkedAsReadBody.renderUrl.url, "markAsReadUrl", "2wsm-advisor", "9794f96d-f595-4b03-84dc-1861408918fb")
+    UnreadMessage(
+      MessageId(messageToBeMarkedAsReadBody.id),
+      messageToBeMarkedAsReadBody.renderUrl.url,
+      "markAsReadUrl",
+      Some("2wsm-advisor"),
+      Some("9794f96d-f595-4b03-84dc-1861408918fb")
+    )
 
   lazy val PostSuccessResult:         Future[AnyRef with HttpResponse] = Future.successful(HttpResponse(200, Some(toJson(html.body))))
   lazy val PostSuccessRendererResult: Future[AnyRef with HttpResponse] = Future.successful(HttpResponse(200, Some(toJson(responseRenderer))))

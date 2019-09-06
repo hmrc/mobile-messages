@@ -1,7 +1,7 @@
 package uk.gov.hmrc.mobilemessages.controllers
 
 import play.api.libs.json.Json.toJson
-import play.api.libs.ws.WSRequest
+import play.api.libs.ws.{WSRequest, WSResponse}
 import uk.gov.hmrc.mobilemessages.controllers.model.RenderMessageRequest
 import uk.gov.hmrc.mobilemessages.mocks.AuthMock._
 import uk.gov.hmrc.mobilemessages.mocks.MessageMock._
@@ -9,12 +9,10 @@ import uk.gov.hmrc.mobilemessages.support.BaseISpec
 
 class MobileMessagesControllerISpec extends BaseISpec {
 
-  def request(url: String, journeyId: String): WSRequest = {
+  def request(url: String, journeyId: String): WSRequest =
     wsUrl(s"$url?journeyId=$journeyId").addHttpHeaders(acceptJsonHeader)
-  }
 
   def requestWithoutAcceptHeader(url: String, journeyId: String): WSRequest = wsUrl(s"$url?journeyId=$journeyId")
-
 
   "GET /messages" should {
     val url = "/messages"
@@ -81,12 +79,31 @@ class MobileMessagesControllerISpec extends BaseISpec {
 
     def messagesRequest(journeyId: String) = request(url, journeyId).addHttpHeaders(authHeader)
 
-    "return a valid response with a journeyId with empty render payload from message service" in {
+    "return a valid response with a journeyId with empty render payload and headers from message service" in {
       authRecordExists()
       messageFound("url1", "message")
       messageIsRenderedSuccessfully()
 
-      await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
+      val result:         WSResponse     = await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl)))
+      val typeHeader:     Option[String] = result.headers("type").headOption
+      val threadIdHeader: Option[String] = result.headers("threadId").headOption
+
+      result.status  shouldBe 200
+      typeHeader     shouldBe Some("2wsm-advisor")
+      threadIdHeader shouldBe Some("9794f96d-f595-4b03-84dc-1861408918fb")
+    }
+
+    "return a valid response with a journeyId with empty render payload and no headers from message service" in {
+      authRecordExists()
+      messageFound("url1", "message", false)
+      messageIsRenderedSuccessfully()
+
+      val result:  WSResponse               = await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl)))
+      val headers: Map[String, Seq[String]] = result.headers
+
+      result.status                    shouldBe 200
+      headers.find(_._1 == "type")     shouldBe None
+      headers.find(_._1 == "threadId") shouldBe None
     }
 
     "return a valid response with a journeyId with empty render payload from sa-message-renderer" in {
