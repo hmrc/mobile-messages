@@ -31,10 +31,12 @@ import uk.gov.hmrc.mobilemessages.controllers.auth.{Authority, AuthorityRecord}
 import uk.gov.hmrc.mobilemessages.controllers.model.MessageHeaderResponseBody
 import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
+import uk.gov.hmrc.mobilemessages.services.MessageWithHeader
 import uk.gov.hmrc.mobilemessages.utils.Setup
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 class MobileMessagesControllerSpec extends WordSpecLike with Matchers with FutureAwaits with DefaultAwaitTimeout with Setup {
 
@@ -47,7 +49,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
     (mockMobileMessagesService
       .readMessageContent(_: MessageId)(_: HeaderCarrier, _: ExecutionContext, _: Option[Authority]))
       .expects(*, *, *, *)
-      .returns(Future successful response)
+      .returns(Future successful MessageWithHeader(response, Some("2wsm-advisor"), Some("9794f96d-f595-4b03-84dc-1861408918fb")))
 
   val liveController =
     new MobileMessagesController(
@@ -140,26 +142,20 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
 
   "read() Live" should {
 
-    "read a valid html response from the read service" in {
+    "read a valid html response and header from the read service" in {
       stubAuthorisationGrantAccess(Some(nino.nino) and L200)
       stubAuthoritySuccess(AuthorityRecord("uri"))
       readMessageContentMock(html)
 
       val result = liveController.read(journeyId)(readTimeRequest)
 
-      status(result)          shouldBe 200
-      contentAsString(result) shouldBe html.toString()
-    }
-
-    "read a valid html response from the read service when a journeyId is supplied" in {
-      stubAuthorisationGrantAccess(Some(nino.nino) and L200)
-      stubAuthoritySuccess(AuthorityRecord("uri"))
-      readMessageContentMock(html)
-
-      val result = liveController.read(journeyId)(readTimeRequest)
+      val `type`   = Await.result(result.map[String](h => h.header.headers("type")), 1 second)
+      val threadId = Await.result(result.map[String](h => h.header.headers("threadId")), 1 second)
 
       status(result)          shouldBe 200
       contentAsString(result) shouldBe html.toString()
+      `type`                  shouldBe "2wsm-advisor"
+      threadId                shouldBe "9794f96d-f595-4b03-84dc-1861408918fb"
     }
 
     "return forbidden when authority record does not have correct confidence level" in {
