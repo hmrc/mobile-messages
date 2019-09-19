@@ -61,11 +61,6 @@ class MobileMessagesControllerISpec extends BaseISpec {
       await(request(url, "journeyId").get()).status shouldBe 500
     }
 
-    "return 401 when authority call fails" in {
-      unauthorised()
-      await(request(url, "journeyId").get()).status shouldBe 401
-    }
-
     "return 401 with authorise call fails" in {
       authFailure()
       await(request(url, "journeyId").get()).status shouldBe 401
@@ -166,11 +161,6 @@ class MobileMessagesControllerISpec extends BaseISpec {
       messagesServiceIsUnavailable("url1")
 
       await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 500
-    }
-
-    "return 401 when authority call fails" in {
-      unauthorised()
-      await(request(url, "journeyId").addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 401
     }
 
     "return 401 with authorise call fails" in {

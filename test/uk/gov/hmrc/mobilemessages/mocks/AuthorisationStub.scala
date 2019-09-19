@@ -17,31 +17,26 @@
 package uk.gov.hmrc.mobilemessages.mocks
 
 import org.scalamock.scalatest.MockFactory
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
-import uk.gov.hmrc.auth.core.{AuthConnector, ConfidenceLevel}
-import uk.gov.hmrc.http.{CoreGet, HeaderCarrier, HttpReads, Upstream4xxResponse}
-import uk.gov.hmrc.mobilemessages.controllers.auth.AuthorityRecord
+import uk.gov.hmrc.http.{HeaderCarrier, Upstream4xxResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 trait AuthorisationStub extends MockFactory {
 
-  type GrantAccess = Option[String] ~ ConfidenceLevel
+  type GrantAccess = Option[String] ~ Option[String]
 
   def stubAuthorisationGrantAccess(response: GrantAccess)(implicit authConnector: AuthConnector): Unit =
-    (authConnector.authorise(_: Predicate, _: Retrieval[GrantAccess])(_:HeaderCarrier, _: ExecutionContext)).
-      expects(*,*,*,*).returning(Future successful response)
+    (authConnector
+      .authorise(_: Predicate, _: Retrieval[GrantAccess])(_: HeaderCarrier, _: ExecutionContext))
+      .expects(*, *, *, *)
+      .returning(Future successful response)
 
   def stubAuthorisationUnauthorised()(implicit authConnector: AuthConnector): Unit =
-    (authConnector.authorise(_: Predicate, _: Retrieval[GrantAccess])(_ :HeaderCarrier, _: ExecutionContext)).
-      expects(*,*,*,*).returning(Future failed Upstream4xxResponse("401", 401, 401))
-
-  def stubAuthoritySuccess(response: AuthorityRecord)(implicit http: CoreGet): Unit =
-    (http.GET(_: String)(_: HttpReads[AuthorityRecord], _: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *).returns(Future successful response)
-
-  def stubAuthorityFailure()(implicit http:CoreGet): Unit =
-    (http.GET(_: String)(_: HttpReads[AuthorityRecord], _: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *).returns(Future failed Upstream4xxResponse("401", 401, 401))
+    (authConnector
+      .authorise(_: Predicate, _: Retrieval[GrantAccess])(_: HeaderCarrier, _: ExecutionContext))
+      .expects(*, *, *, *)
+      .returning(Future failed Upstream4xxResponse("401", 401, 401))
 }
