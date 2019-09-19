@@ -65,9 +65,9 @@ class MessageConnector @Inject()(
 
   def render(message: Message, hc: HeaderCarrier)(implicit ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
     val authToken: Authorization = hc.authorization.getOrElse(throw new IllegalArgumentException("Failed to find auth header!"))
-    val userId = auth.getOrElse(throw new IllegalArgumentException("Failed to find the user!"))
+    val userId: String = auth.flatMap(_.userID).getOrElse(throw new IllegalArgumentException("Failed to find the user!"))
 
-    val keys = Seq(SessionKeys.authToken -> encode(authToken.value, UTF_8), SessionKeys.userId -> userId.userID.get)
+    val keys = Seq(SessionKeys.authToken -> encode(authToken.value, UTF_8), SessionKeys.userId -> userId)
 
     val session:            (String, String) = withSession(keys: _*)
     implicit val updatedHc: HeaderCarrier    = hc.withExtraHeaders(session)
