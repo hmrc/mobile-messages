@@ -41,10 +41,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class MobileMessagesController @Inject()(
   val service:                                                  MobileMessagesService,
   override val authConnector:                                   AuthConnector,
-  override val http:                                            CoreGet,
   configuration:                                                Configuration,
-  @Named("controllers.confidenceLevel") override val confLevel: Int,
-  @Named("auth") val authUrl:                                   String,
   val controllerComponents:                                     ControllerComponents,
   cookieSigner:                                                 CookieSigner
 )(

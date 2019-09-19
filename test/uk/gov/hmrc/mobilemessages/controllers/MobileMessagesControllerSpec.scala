@@ -24,10 +24,9 @@ import play.api.libs.json._
 import play.api.test.Helpers._
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import play.twirl.api.Html
-import uk.gov.hmrc.auth.core.ConfidenceLevel.{L100, L200}
 import uk.gov.hmrc.auth.core.syntax.retrieved._
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilemessages.controllers.auth.{Authority, AuthorityRecord}
+import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
 import uk.gov.hmrc.mobilemessages.controllers.model.MessageHeaderResponseBody
 import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
@@ -51,14 +50,13 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
       .expects(*, *, *, *)
       .returns(Future successful MessageWithHeader(response, Some("2wsm-advisor"), Some("9794f96d-f595-4b03-84dc-1861408918fb")))
 
+  val userId: Option[String] = Some("userId123")
+
   val liveController =
     new MobileMessagesController(
       mockMobileMessagesService,
       mockAuthConnector,
-      mockHttp,
       Configuration.from(Map("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")),
-      L200.level,
-      "authUrl",
       stubControllerComponents(),
       cookieSigner
     )
@@ -66,8 +64,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
   "getMessages() Live" should {
 
     "return an empty list of messages successfully" in {
-      stubAuthorisationGrantAccess(Some(nino.nino) and L200)
-      stubAuthoritySuccess(AuthorityRecord("uri"))
+      stubAuthorisationGrantAccess(Some(nino.nino) and userId)
       readAndUnreadMessagesMock(Seq.empty)
 
       val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
@@ -77,8 +74,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
     }
 
     "return an empty list of messages successfully when journeyId is supplied" in {
-      stubAuthorisationGrantAccess(Some(nino.nino) and L200)
-      stubAuthoritySuccess(AuthorityRecord("uri"))
+      stubAuthorisationGrantAccess(Some(nino.nino) and userId)
       readAndUnreadMessagesMock(Seq.empty)
 
       val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
@@ -88,8 +84,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
     }
 
     "return a list of messages successfully" in {
-      stubAuthorisationGrantAccess(Some(nino.nino) and L200)
-      stubAuthoritySuccess(AuthorityRecord("uri"))
+      stubAuthorisationGrantAccess(Some(nino.nino) and userId)
       readAndUnreadMessagesMock(messageServiceHeadersResponse)
 
       val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
@@ -98,18 +93,8 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
       contentAsJson(result).as[Seq[MessageHeaderResponseBody]] shouldBe getMessageResponseItemList
     }
 
-    "return forbidden when authority record does not have correct confidence level" in {
-      stubAuthorisationGrantAccess(Some(nino.nino) and L100)
-      stubAuthoritySuccess(AuthorityRecord("uri"))
-
-      val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
-
-      status(result) shouldBe 403
-    }
-
     "return forbidden when authority record does not contain a NINO" in {
-      stubAuthorisationGrantAccess(None and L200)
-      stubAuthoritySuccess(AuthorityRecord("uri"))
+      stubAuthorisationGrantAccess(None and userId)
 
       val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
 
@@ -117,7 +102,6 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
     }
 
     "return unauthorized when auth call fails" in {
-      stubAuthoritySuccess(AuthorityRecord("uri"))
       stubAuthorisationUnauthorised()
 
       val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
@@ -132,7 +116,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
     }
 
     "return unauthorized when unable to retrieve authority record uri" in {
-      stubAuthorityFailure()
+      stubAuthorisationGrantAccess(Some(nino.nino) and None)
 
       val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
 
@@ -143,8 +127,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
   "read() Live" should {
 
     "read a valid html response and header from the read service" in {
-      stubAuthorisationGrantAccess(Some(nino.nino) and L200)
-      stubAuthoritySuccess(AuthorityRecord("uri"))
+      stubAuthorisationGrantAccess(Some(nino.nino) and userId)
       readMessageContentMock(html)
 
       val result = liveController.read(journeyId)(readTimeRequest)
@@ -158,18 +141,8 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
       threadId                shouldBe "9794f96d-f595-4b03-84dc-1861408918fb"
     }
 
-    "return forbidden when authority record does not have correct confidence level" in {
-      stubAuthorisationGrantAccess(Some(nino.nino) and L100)
-      stubAuthoritySuccess(AuthorityRecord("uri"))
-
-      val result = liveController.read(journeyId)(readTimeRequest)
-
-      status(result) shouldBe 403
-    }
-
     "return forbidden when authority record does not contain a NINO" in {
-      stubAuthorisationGrantAccess(None and L200)
-      stubAuthoritySuccess(AuthorityRecord("uri"))
+      stubAuthorisationGrantAccess(None and userId)
 
       val result = liveController.read(journeyId)(readTimeRequest)
 
@@ -178,7 +151,6 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
 
     "return unauthorized when auth call fails" in {
       stubAuthorisationUnauthorised()
-      stubAuthoritySuccess(AuthorityRecord("uri"))
 
       val result = liveController.read(journeyId)(readTimeRequest)
 
@@ -192,7 +164,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
     }
 
     "return unauthorized when unable to retrieve authority record uri" in {
-      stubAuthorityFailure()
+      stubAuthorisationGrantAccess(Some(nino.nino) and None)
 
       val result = liveController.read(journeyId)(readTimeRequest)
 

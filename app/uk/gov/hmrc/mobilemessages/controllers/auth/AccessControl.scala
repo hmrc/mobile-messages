@@ -21,18 +21,18 @@ import play.api.libs.json.Json.toJson
 import play.api.libs.json.{Json, OFormat, Reads}
 import play.api.mvc._
 import uk.gov.hmrc.api.controllers.{ErrorAcceptHeaderInvalid, HeaderValidator}
-import uk.gov.hmrc.auth.core.retrieve.Retrievals.{confidenceLevel, nino}
+import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.retrieve.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.~
-import uk.gov.hmrc.auth.core.{AuthorisedFunctions, ConfidenceLevel}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.{CoreGet, HeaderCarrier}
+import uk.gov.hmrc.http.{HeaderCarrier, Upstream4xxResponse}
 import uk.gov.hmrc.mobilemessages.controllers._
-import uk.gov.hmrc.play.HeaderCarrierConverter.fromHeadersAndSession
+import uk.gov.hmrc.play.HeaderCarrierConverter
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-final case class Authority(nino: Nino, cl: ConfidenceLevel, authId: String)
+final case class Authority(nino: Nino, userID: Option[String])
 
 final case class AuthenticatedRequest[A](authority: Option[Authority], request: Request[A]) extends WrappedRequest(request)
 
@@ -45,30 +45,22 @@ object AuthorityRecord {
 
 trait Authorisation extends Results with AuthorisedFunctions {
 
-  import AuthorityRecord._
-
-  val confLevel: Int
-  val http:      CoreGet
-  val authUrl:   String
-
   lazy val requiresAuth: Boolean = true
   lazy val ninoNotFoundOnAccount = new NinoNotFoundOnAccount
   lazy val lowConfidenceLevel    = new AccountWithLowCL
+  lazy val upstreamException     = new Upstream4xxResponse(("userId not found"), 401, 401)
 
   def grantAccess()(implicit hc: HeaderCarrier): Future[Authority] =
-    getAuthorityRecord.flatMap { authRecord: AuthorityRecord =>
-      authorised().retrieve(nino and confidenceLevel) {
-        case Some(foundNino) ~ foundConfidenceLevel =>
-          if (foundNino.isEmpty) throw ninoNotFoundOnAccount
-          if (confLevel > foundConfidenceLevel.level) throw lowConfidenceLevel
-          Future successful Authority(Nino(foundNino), foundConfidenceLevel, authRecord.uri)
-        case None ~ _ =>
-          throw ninoNotFoundOnAccount
+    authorised(ConfidenceLevel.L200)
+      .retrieve(nino and internalId) {
+        case None ~ _ => throw ninoNotFoundOnAccount
+        case _ ~ None => throw upstreamException
+        case Some(foundNino) ~ foundInternalId =>
+          if (foundNino.isEmpty) throw ninoNotFoundOnAccount else Future(Authority(Nino(foundNino), foundInternalId))
       }
-    }
 
   def invokeAuthBlock[A](request: Request[A], block: AuthenticatedRequest[A] => Future[Result]): Future[Result] = {
-    implicit val hc: HeaderCarrier = fromHeadersAndSession(request.headers, None)
+    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers, None)
 
     grantAccess()
       .flatMap { authority =>
@@ -82,15 +74,9 @@ trait Authorisation extends Results with AuthorisedFunctions {
         case _: NinoNotFoundOnAccount =>
           Logger.info("Unauthorized! NINO not found on account!")
           Forbidden(toJson(ErrorForbidden))
-
-        case _: AccountWithLowCL =>
-          Logger.info("Unauthorized! Account with low CL!")
-          Forbidden(toJson(ErrorForbidden))
       }
   }
 
-  def getAuthorityRecord(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[AuthorityRecord] =
-    http.GET[AuthorityRecord](s"$authUrl/auth/authority")
 }
 
 trait AccessControl extends HeaderValidator with Authorisation {

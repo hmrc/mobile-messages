@@ -26,7 +26,6 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.POST
 import play.twirl.api.Html
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.auth.core.ConfidenceLevel.L200
 import uk.gov.hmrc.crypto.CryptoWithKeysFromConfig
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.logging.Authorization
@@ -58,7 +57,7 @@ trait Setup extends AuthorisationStub with MessagesStub with StubApplicationConf
   implicit val mockAuthConnector:    AuthConnector                    = mock[AuthConnector]
   implicit val mockAuditConnector:   AuditConnector                   = mock[AuditConnector]
   implicit val mockMessageConnector: MessageConnector                 = mock[MessageConnector]
-  implicit val authUser:             Option[Authority]                = Some(Authority(Nino("CS700100A"), L200, "someId"))
+  implicit val authUser:             Option[Authority]                = Some(Authority(Nino("CS700100A"), Some("someId")))
 
   val configuration: Configuration = Configuration("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")
 
