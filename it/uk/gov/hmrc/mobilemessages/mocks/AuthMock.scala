@@ -7,7 +7,6 @@ import uk.gov.hmrc.domain.Nino
 
 object AuthMock {
   private val accountsRequestJson: String = """{ "authorise": [ { "confidenceLevel" : 200 } ], "retrieve": ["nino","internalId"] }""".stripMargin
-  private val authorityUrl = "/auth/authority"
   private val authUrl      = "/auth/authorise"
 
   def authRecordExists(nino: Nino = Nino("BC233445B"), internalId: String = "userId123"): Unit =
@@ -33,7 +32,4 @@ object AuthMock {
       post(urlEqualTo(authUrl))
         .withRequestBody(equalToJson(accountsRequestJson, true, false))
         .willReturn(aResponse().withStatus(401).withHeader(WWW_AUTHENTICATE, """MDTP detail="BearerTokenExpired"""").withHeader(ENROLMENT, "")))
-
-  def unauthorised(): Unit =
-    stubFor(get(urlEqualTo(authorityUrl)).willReturn(aResponse().withStatus(401)))
 }
