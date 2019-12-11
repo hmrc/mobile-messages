@@ -34,11 +34,13 @@ import uk.gov.hmrc.mobilemessages.config.WSHttpImpl
 import uk.gov.hmrc.mobilemessages.connector.MessageConnector
 import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
+import uk.gov.hmrc.mobilemessages.domain.types.ModelTypes.JourneyId
 import uk.gov.hmrc.mobilemessages.domain.{MessageHeader, MessageId}
 import uk.gov.hmrc.mobilemessages.mocks.{AuthorisationStub, MessagesStub, StubApplicationConfiguration}
 import uk.gov.hmrc.mobilemessages.services.MobileMessagesService
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import eu.timepit.refined.auto._
 
 import scala.concurrent.Future
 
@@ -62,7 +64,7 @@ trait Setup extends AuthorisationStub with MessagesStub with StubApplicationConf
   val configuration: Configuration = Configuration("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")
 
   val nino      = Nino("CS700100A")
-  val journeyId = randomUUID().toString
+  val journeyId: JourneyId = "87144372-6bda-4cc9-87db-1d52fd96498f"
   val acceptHeader: (String, String) = "Accept" -> "application/vnd.hmrc.1.0+json"
 
   val encrypter: CryptoWithKeysFromConfig =

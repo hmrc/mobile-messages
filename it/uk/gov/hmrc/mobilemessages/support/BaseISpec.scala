@@ -22,6 +22,7 @@ class BaseISpec
   override implicit lazy val app: Application = appBuilder.build()
 
   protected val acceptJsonHeader: (String, String) = "Accept" -> "application/vnd.hmrc.1.0+json"
+  protected val journeyId = "87144372-6bda-4cc9-87db-1d52fd96498f"
 
   def config: Map[String, Any] = Map(
     "auditing.enabled"                                   -> false,
