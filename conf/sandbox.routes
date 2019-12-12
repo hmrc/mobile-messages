@@ -1,5 +1,5 @@
 # microservice specific routes
 
-GET        /messages        @uk.gov.hmrc.mobilemessages.controllers.SandboxMobileMessagesController.getMessages(journeyId: String)
+GET        /messages        @uk.gov.hmrc.mobilemessages.controllers.SandboxMobileMessagesController.getMessages(journeyId: JourneyId)
 
-POST       /messages/read   @uk.gov.hmrc.mobilemessages.controllers.SandboxMobileMessagesController.read(journeyId: String)
+POST       /messages/read   @uk.gov.hmrc.mobilemessages.controllers.SandboxMobileMessagesController.read(journeyId: JourneyId)

@@ -30,6 +30,7 @@ import uk.gov.hmrc.http.CoreGet
 import uk.gov.hmrc.mobilemessages.controllers.auth.{AccessControl, Authority}
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
+import uk.gov.hmrc.mobilemessages.domain.types.ModelTypes.JourneyId
 import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator.{nextSaUtr, readMessageHeader, unreadMessageHeader}
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
 import uk.gov.hmrc.mobilemessages.services.{MessageWithHeader, MobileMessagesService}
@@ -56,7 +57,7 @@ class MobileMessagesController @Inject()(
   val crypto: Encrypter with Decrypter =
     new CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption", configuration.underlying)
 
-  def getMessages(journeyId: String): Action[AnyContent] =
+  def getMessages(journeyId: JourneyId): Action[AnyContent] =
     validateAcceptWithAuth(acceptHeaderValidationRules).async { implicit authenticated =>
       errorWrapper(
         service
@@ -66,7 +67,7 @@ class MobileMessagesController @Inject()(
           ))
     }
 
-  def read(journeyId: String): Action[JsValue] =
+  def read(journeyId: JourneyId): Action[JsValue] =
     validateAcceptWithAuth(acceptHeaderValidationRules).async(controllerComponents.parsers.json) { implicit authenticated =>
       authenticated.request.body
         .validate[RenderMessageRequest]
@@ -112,7 +113,7 @@ class SandboxMobileMessagesController @Inject()(
 
   val saUtr: SaUtr = nextSaUtr
 
-  def getMessages(journeyId: String): Action[AnyContent] =
+  def getMessages(journeyId: JourneyId): Action[AnyContent] =
     validateAccept(acceptHeaderValidationRules).async { implicit request =>
       Future successful (request.headers.get("SANDBOX-CONTROL") match {
         case Some("ERROR-401") => Unauthorized
@@ -122,7 +123,7 @@ class SandboxMobileMessagesController @Inject()(
       })
     }
 
-  def read(journeyId: String): Action[JsValue] =
+  def read(journeyId: JourneyId): Action[JsValue] =
     validateAccept(acceptHeaderValidationRules).async(controllerComponents.parsers.json) { implicit request =>
       Future successful (request.headers.get("SANDBOX-CONTROL") match {
         case Some("ANNUAL-TAX-SUMMARY") => Ok(annualTaxSummary)
