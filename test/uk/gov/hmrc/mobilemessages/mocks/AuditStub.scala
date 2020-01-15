@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,24 +26,29 @@ import uk.gov.hmrc.play.audit.model.DataEvent
 import scala.concurrent.{ExecutionContext, Future}
 
 trait AuditStub extends MockFactory {
-  def dataEventWith(auditSource: String,
-                    auditType: String,
-                    tags: Map[String, String],
-                    detail: Map[String, String]): MatcherBase =
-    argThat((dataEvent: DataEvent) => {
+
+  def dataEventWith(
+    auditSource: String,
+    auditType:   String,
+    tags:        Map[String, String],
+    detail:      Map[String, String]
+  ): MatcherBase =
+    argThat { (dataEvent: DataEvent) =>
       dataEvent.auditSource.equals(auditSource) &&
-        dataEvent.auditType.equals(auditType) &&
-        dataEvent.tags.equals(tags) &&
-        dataEvent.detail.equals(detail)
-    })
+      dataEvent.auditType.equals(auditType) &&
+      dataEvent.tags.equals(tags) &&
+      dataEvent.detail.equals(detail)
+    }
 
   def stubAudit(transactionName: String)(implicit auditConnector: AuditConnector): Unit =
-    (auditConnector.sendEvent(_: DataEvent)(_: HeaderCarrier, _: ExecutionContext)).expects(
-      dataEventWith(
-        "mobile-messages",
-        "ServiceResponseSent",
-        Map("transactionName" -> transactionName),
-        Map.empty), *, *).returning(Future successful Success)
+    (auditConnector
+      .sendEvent(_: DataEvent)(_: HeaderCarrier, _: ExecutionContext))
+      .expects(
+        dataEventWith("mobile-messages", "ServiceResponseSent", Map("transactionName" -> transactionName), Map.empty),
+        *,
+        *
+      )
+      .returning(Future successful Success)
 
   def stubAuditReadAndUnreadMessages()(implicit auditConnector: AuditConnector): Unit =
     stubAudit("readAndUnreadMessages")

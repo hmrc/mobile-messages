@@ -34,22 +34,26 @@ private object AppDependencies {
   }
 
   object Test {
+
     def apply(): Seq[ModuleID] =
       new TestDependencies {
+
         override lazy val test: Seq[ModuleID] = testCommon(scope) ++ Seq(
-          "org.scalamock" %% "scalamock" % scalaMockVersion % scope,
-          "org.scalatest" %% "scalatest" % scalaTestVersion % scope
-        )
+            "org.scalamock" %% "scalamock" % scalaMockVersion % scope,
+            "org.scalatest" %% "scalatest" % scalaTestVersion % scope
+          )
       }.test
   }
 
   object IntegrationTest {
+
     def apply(): Seq[ModuleID] =
       new TestDependencies {
         override lazy val scope: String = "it"
+
         override lazy val test: Seq[ModuleID] = testCommon(scope) ++ Seq(
-          "com.github.tomakehurst" % "wiremock" % wireMockVersion % scope
-        )
+            "com.github.tomakehurst" % "wiremock" % wireMockVersion % scope
+          )
       }.test
   }
 
@@ -63,6 +67,7 @@ private object AppDependencies {
   // compatible with wiremock, so we need to pin the jetty stuff to the older version.
   // see https://groups.google.com/forum/#!topic/play-framework/HAIM1ukUCnI
   val jettyVersion = "9.2.13.v20150730"
+
   val overrides: Set[ModuleID] = Set(
     "org.eclipse.jetty"           % "jetty-server"       % jettyVersion,
     "org.eclipse.jetty"           % "jetty-servlet"      % jettyVersion,

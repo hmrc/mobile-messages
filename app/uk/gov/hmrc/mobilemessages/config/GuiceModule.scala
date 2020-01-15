@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,10 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.collection.JavaConverters._
 
-class GuiceModule(environment: Environment, configuration: Configuration) extends AbstractModule {
+class GuiceModule(
+  environment:   Environment,
+  configuration: Configuration)
+    extends AbstractModule {
 
   val servicesConfig = new ServicesConfig(
     configuration,
@@ -74,6 +77,9 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
     bind(classOf[String])
       .annotatedWith(named("two-way-message"))
       .toInstance(baseUrl("two-way-message"))
+    bind(classOf[String])
+      .annotatedWith(named("mobile-shuttering"))
+      .toInstance(baseUrl("mobile-shuttering"))
   }
 
   @Provides

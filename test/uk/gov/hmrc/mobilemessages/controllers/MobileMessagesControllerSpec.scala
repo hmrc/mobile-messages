@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,18 +37,30 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-class MobileMessagesControllerSpec extends WordSpecLike with Matchers with FutureAwaits with DefaultAwaitTimeout with Setup {
+class MobileMessagesControllerSpec
+    extends WordSpecLike
+    with Matchers
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with Setup {
 
   val cookieSigner: CookieSigner = new DefaultCookieSigner(SecretConfiguration("hwdODU8hulPkolIryPRkVW=="))
 
   def readAndUnreadMessagesMock(response: Seq[MessageHeader]): Unit =
-    (mockMobileMessagesService.readAndUnreadMessages()(_: HeaderCarrier, _: ExecutionContext)).expects(*, *).returns(Future successful response)
+    (mockMobileMessagesService
+      .readAndUnreadMessages()(_: HeaderCarrier, _: ExecutionContext))
+      .expects(*, *)
+      .returns(Future successful response)
 
   def readMessageContentMock(response: Html): Unit =
     (mockMobileMessagesService
       .readMessageContent(_: MessageId)(_: HeaderCarrier, _: ExecutionContext, _: Option[Authority]))
       .expects(*, *, *, *)
-      .returns(Future successful MessageWithHeader(response, Some("2wsm-advisor"), Some("9794f96d-f595-4b03-84dc-1861408918fb")))
+      .returns(
+        Future successful MessageWithHeader(response,
+                                            Some("2wsm-advisor"),
+                                            Some("9794f96d-f595-4b03-84dc-1861408918fb"))
+      )
 
   val userId: Option[String] = Some("userId123")
 
@@ -58,7 +70,8 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
       mockAuthConnector,
       Configuration.from(Map("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")),
       stubControllerComponents(),
-      cookieSigner
+      cookieSigner,
+      mockShutteringConnector
     )
 
   "getMessages() Live" should {
@@ -66,6 +79,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
     "return an empty list of messages successfully" in {
       stubAuthorisationGrantAccess(Some(nino.nino) and userId)
       readAndUnreadMessagesMock(Seq.empty)
+      stubShutteringResponse(notShuttered)
 
       val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
 
@@ -76,6 +90,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
     "return an empty list of messages successfully when journeyId is supplied" in {
       stubAuthorisationGrantAccess(Some(nino.nino) and userId)
       readAndUnreadMessagesMock(Seq.empty)
+      stubShutteringResponse(notShuttered)
 
       val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
 
@@ -86,6 +101,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
     "return a list of messages successfully" in {
       stubAuthorisationGrantAccess(Some(nino.nino) and userId)
       readAndUnreadMessagesMock(messageServiceHeadersResponse)
+      stubShutteringResponse(notShuttered)
 
       val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
 
@@ -122,6 +138,19 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
 
       status(result) shouldBe 401
     }
+
+    "return 521 when shuttered" in {
+      stubShutteringResponse(shuttered)
+      stubAuthorisationGrantAccess(Some(nino.nino) and userId)
+
+      val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
+
+      status(result) shouldBe 521
+      val jsonBody = contentAsJson(result)
+      (jsonBody \ "shuttered").as[Boolean] shouldBe true
+      (jsonBody \ "title").as[String]      shouldBe "Shuttered"
+      (jsonBody \ "message").as[String]    shouldBe "Messages are currently not available"
+    }
   }
 
   "read() Live" should {
@@ -129,6 +158,7 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
     "read a valid html response and header from the read service" in {
       stubAuthorisationGrantAccess(Some(nino.nino) and userId)
       readMessageContentMock(html)
+      stubShutteringResponse(notShuttered)
 
       val result = liveController.read(journeyId)(readTimeRequest)
 
@@ -169,6 +199,19 @@ class MobileMessagesControllerSpec extends WordSpecLike with Matchers with Futur
       val result = liveController.read(journeyId)(readTimeRequest)
 
       status(result) shouldBe 401
+    }
+
+    "return 521 when shuttered" in {
+      stubShutteringResponse(shuttered)
+      stubAuthorisationGrantAccess(Some(nino.nino) and userId)
+
+      val result = liveController.read(journeyId)(readTimeRequest)
+
+      status(result) shouldBe 521
+      val jsonBody = contentAsJson(result)
+      (jsonBody \ "shuttered").as[Boolean] shouldBe true
+      (jsonBody \ "title").as[String]      shouldBe "Shuttered"
+      (jsonBody \ "message").as[String]    shouldBe "Messages are currently not available"
     }
   }
 

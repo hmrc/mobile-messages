@@ -14,20 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.utils
+package uk.gov.hmrc.mobilemessages.domain
 
-import org.apache.commons.codec.binary.Base64.encodeBase64String
-import uk.gov.hmrc.crypto.{AesCrypto, Encrypter, PlainText}
+import play.api.libs.json.{Json, OFormat}
 
-class UnitTestCrypto extends AesCrypto {
-  override protected val encryptionKey: String = "hwdODU8hulPkolIryPRkVW=="
-}
+case class Shuttering(
+  shuttered: Boolean,
+  title:     Option[String] = None,
+  message:   Option[String] = None)
 
-object EncryptionUtils {
+case object Shuttering {
+  implicit val format: OFormat[Shuttering] = Json.format[Shuttering]
 
-  def encrypted(
-    value:     String,
-    encrypter: Encrypter = new UnitTestCrypto
-  ): String =
-    encodeBase64String(encrypter.encrypt(PlainText(value)).value.getBytes)
+  def shutteringDisabled = this.apply(shuttered = false)
 }

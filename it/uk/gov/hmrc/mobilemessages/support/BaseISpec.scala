@@ -38,7 +38,8 @@ class BaseISpec
     "microservice.services.ats-message-renderer.port"    -> wireMockPort,
     "microservice.services.secure-message-renderer.host" -> "localhost",
     "microservice.services.secure-message-renderer.port" -> wireMockPort,
-    "cookie.encryption.key"                              -> "gvBoGdgzqG1AarzF1LY0zQ=="
+    "cookie.encryption.key"                              -> "gvBoGdgzqG1AarzF1LY0zQ==",
+    "microservice.services.mobile-shuttering.port"       -> wireMockPort
   )
 
   protected def appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder().configure(config)

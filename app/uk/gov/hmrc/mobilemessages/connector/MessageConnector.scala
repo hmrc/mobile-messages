@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, Unr
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class MessageConnector @Inject()(
+class MessageConnector @Inject() (
   @Named("message") val messageBaseUrl:                               String,
   @Named("sa-message-renderer") val saMessageRendererBaseUrl:         String,
   @Named("ats-message-renderer") val atsMessageRendererBaseUrl:       String,
@@ -41,8 +41,8 @@ class MessageConnector @Inject()(
   @Named("two-way-message") val twoWayMessageBaseUrl:                 String,
   configuration:                                                      Configuration,
   val cookieSigner:                                                   CookieSigner,
-  val http:                                                           CoreGet with CorePost
-) extends SessionCookieEncryptionSupport
+  val http:                                                           CoreGet with CorePost)
+    extends SessionCookieEncryptionSupport
     with HttpErrorFunctions {
 
   override lazy val config: Config = configuration.underlying
@@ -57,15 +57,29 @@ class MessageConnector @Inject()(
     "two-way-message"         -> twoWayMessageBaseUrl
   )
 
-  def messages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
+  def messages(
+  )(implicit hc: HeaderCarrier,
+    ec:          ExecutionContext
+  ): Future[Seq[MessageHeader]] =
     http.GET[UpstreamMessageHeadersResponse](s"$messageBaseUrl/messages").map(_.items)
 
-  def getMessageBy(id: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Message] =
+  def getMessageBy(
+    id:          MessageId
+  )(implicit hc: HeaderCarrier,
+    ec:          ExecutionContext
+  ): Future[Message] =
     http.GET[UpstreamMessageResponse](s"$messageBaseUrl/messages/${id.value}").map(_.toMessageUsing(servicesToUrl))
 
-  def render(message: Message, hc: HeaderCarrier)(implicit ec: ExecutionContext, auth: Option[Authority]): Future[Html] = {
-    val authToken: Authorization = hc.authorization.getOrElse(throw new IllegalArgumentException("Failed to find auth header!"))
-    val userId: String = auth.flatMap(_.userID).getOrElse(throw new IllegalArgumentException("Failed to find the user!"))
+  def render(
+    message:     Message,
+    hc:          HeaderCarrier
+  )(implicit ec: ExecutionContext,
+    auth:        Option[Authority]
+  ): Future[Html] = {
+    val authToken: Authorization =
+      hc.authorization.getOrElse(throw new IllegalArgumentException("Failed to find auth header!"))
+    val userId: String =
+      auth.flatMap(_.userID).getOrElse(throw new IllegalArgumentException("Failed to find the user!"))
 
     val keys = Seq(SessionKeys.authToken -> encode(authToken.value, UTF_8), SessionKeys.userId -> userId)
 
@@ -75,6 +89,10 @@ class MessageConnector @Inject()(
     http.GET[HttpResponse](message.renderUrl).map(response => Html(response.body))
   }
 
-  def markAsRead(message: UnreadMessage)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] =
+  def markAsRead(
+    message:     UnreadMessage
+  )(implicit hc: HeaderCarrier,
+    ec:          ExecutionContext
+  ): Future[HttpResponse] =
     http.POSTEmpty[HttpResponse](message.markAsReadUrl)
 }

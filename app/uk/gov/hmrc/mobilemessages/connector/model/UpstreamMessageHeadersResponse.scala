@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,11 +29,13 @@ object UpstreamMessageHeadersResponse {
 
   implicit val messageHeaderReads: Reads[MessageHeader] = (
     (__ \ "id").read[String] and
-      (__ \ "subject").read[String] and
-      (__ \ "validFrom").read[LocalDate] and
-      (__ \ "readTime").readNullable[LocalDateTime] and
-      (__ \ "sentInError").read[Boolean]
-  )((id, subject, validFrom, readTime, sentInError) => MessageHeader(MessageId(id), subject, validFrom, readTime, sentInError))
+    (__ \ "subject").read[String] and
+    (__ \ "validFrom").read[LocalDate] and
+    (__ \ "readTime").readNullable[LocalDateTime] and
+    (__ \ "sentInError").read[Boolean]
+  )((id, subject, validFrom, readTime, sentInError) =>
+    MessageHeader(MessageId(id), subject, validFrom, readTime, sentInError)
+  )
 
   implicit val reads: Reads[UpstreamMessageHeadersResponse] = Json.reads[UpstreamMessageHeadersResponse]
 

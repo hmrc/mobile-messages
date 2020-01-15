@@ -7,16 +7,25 @@ import uk.gov.hmrc.versioning.SbtGitVersioning
 val appName: String = "mobile-messages"
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(Seq(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin, SbtArtifactory, ScoverageSbtPlugin): _*)
+  .enablePlugins(
+    Seq(play.sbt.PlayScala,
+        SbtAutoBuildPlugin,
+        SbtGitVersioning,
+        SbtDistributablesPlugin,
+        SbtArtifactory,
+        ScoverageSbtPlugin): _*
+  )
   .configs(IntegrationTest)
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
   .settings(publishingSettings: _*)
-  .settings(routesImport ++= Seq(
-    "uk.gov.hmrc.domain._",
-    "uk.gov.hmrc.mobilemessages.binder.Binders._",
-    "uk.gov.hmrc.mobilemessages.domain.types._",
-    "uk.gov.hmrc.mobilemessages.domain.types.ModelTypes._"
-  ))
+  .settings(
+    routesImport ++= Seq(
+      "uk.gov.hmrc.domain._",
+      "uk.gov.hmrc.mobilemessages.binder.Binders._",
+      "uk.gov.hmrc.mobilemessages.domain.types._",
+      "uk.gov.hmrc.mobilemessages.domain.types.ModelTypes._"
+    )
+  )
   .settings(
     majorVersion := 1,
     scalaVersion := "2.11.12",

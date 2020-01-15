@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,9 +42,11 @@ class MessagesConnectorSpec extends WordSpecLike with Matchers with FutureAwaits
 
   val responseRenderer = RenderMessageLocation("sa-message-renderer", "http://somelocation")
   val renderPath       = "/some/render/path"
+
   val messageBodyToRender: UpstreamMessageResponse =
     message.bodyWith(id = "id1", renderUrl = ResourceActionLocation("test-renderer-service", renderPath))
   val messageToBeMarkedAsReadBody: UpstreamMessageResponse = message.bodyToBeMarkedAsReadWith(id = "id48")
+
   val messageToBeMarkedAsRead: UnreadMessage =
     UnreadMessage(
       MessageId(messageToBeMarkedAsReadBody.id),
@@ -54,8 +56,11 @@ class MessagesConnectorSpec extends WordSpecLike with Matchers with FutureAwaits
       Some("9794f96d-f595-4b03-84dc-1861408918fb")
     )
 
-  lazy val PostSuccessResult:         Future[AnyRef with HttpResponse] = Future.successful(HttpResponse(200, Some(toJson(html.body))))
-  lazy val PostSuccessRendererResult: Future[AnyRef with HttpResponse] = Future.successful(HttpResponse(200, Some(toJson(responseRenderer))))
+  lazy val PostSuccessResult: Future[AnyRef with HttpResponse] =
+    Future.successful(HttpResponse(200, Some(toJson(html.body))))
+
+  lazy val PostSuccessRendererResult: Future[AnyRef with HttpResponse] =
+    Future.successful(HttpResponse(200, Some(toJson(responseRenderer))))
 
   lazy val connector: MessageConnector =
     new MessageConnector(
@@ -75,7 +80,8 @@ class MessagesConnectorSpec extends WordSpecLike with Matchers with FutureAwaits
   "messages()" should {
 
     "return a list of items when a 200 response is received with a payload" in {
-      val messagesHeaders = Seq(message.headerWith(id = "someId1"), message.headerWith(id = "someId2"), message.headerWith(id = "someId3"))
+      val messagesHeaders =
+        Seq(message.headerWith(id = "someId1"), message.headerWith(id = "someId2"), message.headerWith(id = "someId3"))
 
       messagesGetSuccess(UpstreamMessageHeadersResponse(messagesHeaders))
 

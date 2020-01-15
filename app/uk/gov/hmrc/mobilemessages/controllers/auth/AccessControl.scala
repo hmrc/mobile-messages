@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,14 @@ import uk.gov.hmrc.play.HeaderCarrierConverter
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-final case class Authority(nino: Nino, userID: Option[String])
+final case class Authority(
+  nino:   Nino,
+  userID: Option[String])
 
-final case class AuthenticatedRequest[A](authority: Option[Authority], request: Request[A]) extends WrappedRequest(request)
+final case class AuthenticatedRequest[A](
+  authority: Option[Authority],
+  request:   Request[A])
+    extends WrappedRequest(request)
 
 case class AuthorityRecord(uri: String)
 
@@ -59,7 +64,10 @@ trait Authorisation extends Results with AuthorisedFunctions {
           if (foundNino.isEmpty) throw ninoNotFoundOnAccount else Future(Authority(Nino(foundNino), foundInternalId))
       }
 
-  def invokeAuthBlock[A](request: Request[A], block: AuthenticatedRequest[A] => Future[Result]): Future[Result] = {
+  def invokeAuthBlock[A](
+    request: Request[A],
+    block:   AuthenticatedRequest[A] => Future[Result]
+  ): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers, None)
 
     grantAccess()
@@ -88,7 +96,10 @@ trait AccessControl extends HeaderValidator with Authorisation {
       override def parser:                     BodyParser[AnyContent] = outer.parser
       override protected def executionContext: ExecutionContext       = outer.executionContext
 
-      def invokeBlock[A](request: Request[A], block: AuthenticatedRequest[A] => Future[Result]): Future[Result] =
+      def invokeBlock[A](
+        request: Request[A],
+        block:   AuthenticatedRequest[A] => Future[Result]
+      ): Future[Result] =
         if (rules(request.headers.get("Accept"))) {
           if (requiresAuth) invokeAuthBlock(request, block)
           else block(AuthenticatedRequest(None, request))

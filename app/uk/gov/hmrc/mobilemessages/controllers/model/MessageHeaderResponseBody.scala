@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,9 @@ import uk.gov.hmrc.crypto.{Encrypter, PlainText}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 
 trait WriteDatesAsLongs {
+
   implicit val dateTimeWrites: Writes[LocalDateTime] = new Writes[LocalDateTime] {
+
     override def writes(o: LocalDateTime): JsValue =
       JsNumber(o.toInstant(ZoneOffset.UTC).toEpochMilli)
   }

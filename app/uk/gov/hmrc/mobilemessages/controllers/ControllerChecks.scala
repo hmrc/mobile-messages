@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.utils
+package uk.gov.hmrc.mobilemessages.controllers
 
-import org.apache.commons.codec.binary.Base64.encodeBase64String
-import uk.gov.hmrc.crypto.{AesCrypto, Encrypter, PlainText}
+import play.api.libs.json.Json
+import play.api.mvc.{Result, Results}
+import uk.gov.hmrc.mobilemessages.domain.Shuttering
 
-class UnitTestCrypto extends AesCrypto {
-  override protected val encryptionKey: String = "hwdODU8hulPkolIryPRkVW=="
-}
+import scala.concurrent.Future
 
-object EncryptionUtils {
+trait ControllerChecks  extends Results {
 
-  def encrypted(
-    value:     String,
-    encrypter: Encrypter = new UnitTestCrypto
-  ): String =
-    encodeBase64String(encrypter.encrypt(PlainText(value)).value.getBytes)
+  private final val WebServerIsDown = new Status(521)
+
+  def withShuttering(shuttering: Shuttering)(fn: => Future[Result]): Future[Result] =
+    if (shuttering.shuttered) Future.successful(WebServerIsDown(Json.toJson(shuttering))) else fn
+
 }

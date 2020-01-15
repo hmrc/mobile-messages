@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,11 @@ trait ErrorHandling {
   import play.api.{Logger, mvc}
   import uk.gov.hmrc.api.controllers.{ErrorInternalServerError, ErrorNotFound, ErrorUnauthorizedLowCL}
 
-  def errorWrapper(func: => Future[mvc.Result])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result] =
+  def errorWrapper(
+    func:        => Future[mvc.Result]
+  )(implicit hc: HeaderCarrier,
+    ec:          ExecutionContext
+  ): Future[Result] =
     func.recover {
       case _: NotFoundException => Status(ErrorNotFound.httpStatusCode)(Json.toJson(ErrorNotFound))
 

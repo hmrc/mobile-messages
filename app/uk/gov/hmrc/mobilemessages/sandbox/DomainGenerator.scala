@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,11 @@ object DomainGenerator {
   val readMessageId = MessageId("543e8c6001000001003e4a9e")
 
   def readMessageHeader(saUtr: SaUtr = nextSaUtr): MessageHeader =
-    MessageHeader(readMessageId, "You have a new tax statement", dateTime.minusDays(3).toLocalDate, Some(dateTime.minusDays(1)), sentInError = false)
+    MessageHeader(readMessageId,
+                  "You have a new tax statement",
+                  dateTime.minusDays(3).toLocalDate,
+                  Some(dateTime.minusDays(1)),
+                  sentInError = false)
 
   val unreadMessageId = MessageId("643e8c5f01000001003e4a8f")
 

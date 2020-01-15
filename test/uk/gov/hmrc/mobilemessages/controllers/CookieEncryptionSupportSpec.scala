@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,14 +25,21 @@ import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.mobilemessages.connector.SessionCookieEncryptionSupport
 import uk.gov.hmrc.mobilemessages.mocks.StubApplicationConfiguration
 
-class CookieEncryptionSupportSpec extends WordSpecLike with Matchers with FutureAwaits with DefaultAwaitTimeout with StubApplicationConfiguration {
+class CookieEncryptionSupportSpec
+    extends WordSpecLike
+    with Matchers
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with StubApplicationConfiguration {
 
   "encrypt/decrypt cookie" should {
 
     "successfully encrypt and decrypt" in {
       val crypto: SessionCookieEncryptionSupport = new SessionCookieEncryptionSupport {
-        override def config:       Config       = Configuration.from(Map("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")).underlying
-        override def cookieSigner: CookieSigner = new DefaultCookieSigner(SecretConfiguration("hwdODU8hulPkolIryPRkVW=="))
+        override def config: Config =
+          Configuration.from(Map("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")).underlying
+        override def cookieSigner: CookieSigner =
+          new DefaultCookieSigner(SecretConfiguration("hwdODU8hulPkolIryPRkVW=="))
       }
 
       val data = Map(("some key1", "some value1"), ("some key2", "some value2"))
@@ -47,8 +54,10 @@ class CookieEncryptionSupportSpec extends WordSpecLike with Matchers with Future
     "fail to decrypt when an invalid payload is supplied for decryption" in {
 
       val crypto: SessionCookieEncryptionSupport = new SessionCookieEncryptionSupport {
-        override def config:       Config       = Configuration.from(Map("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")).underlying
-        override def cookieSigner: CookieSigner = new DefaultCookieSigner(SecretConfiguration("hwdODU8hulPkolIryPRkVW=="))
+        override def config: Config =
+          Configuration.from(Map("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")).underlying
+        override def cookieSigner: CookieSigner =
+          new DefaultCookieSigner(SecretConfiguration("hwdODU8hulPkolIryPRkVW=="))
       }
 
       val data = Map(("some key1", "some value1"), ("some key2", "some value2"))

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,16 +20,19 @@ object MessageContentPartialStubs {
 
   import play.twirl.api.Html
 
-  val annualTaxSummary = Html("""<h2>Your Annual Tax Summary for 2009-10 is now ready</h2>
+  val annualTaxSummary = Html(
+    """<h2>Your Annual Tax Summary for 2009-10 is now ready</h2>
                                 |
                                 |<p class="message_time faded-text--small">This message was sent to you on 1 March 2016</p>
                                 |
                                 |<p>This is a summary of how Government spends your tax and National Insurance contributions.</p>
                                 |<p>See your <a href="/annual-tax-summary">Annual Tax Summary</a>.</p>
                                 |<p>Tax summaries are for information only so you don't need to contact HMRC. But you can <a href="https://www.gov.uk/annual-tax-summary">comment on tax summaries</a>.</p>
-                                |""".mkString.stripMargin)
+                                |""".mkString.stripMargin
+  )
 
-  val newTaxStatement = Html("""<h2>You have a new tax statement</h2>
+  val newTaxStatement = Html(
+    """<h2>You have a new tax statement</h2>
                                |<p class="message_time faded-text--small">This message was sent to you on 13 April 2016</p>
                                |
                                |<p>Your new Self Assessment statement has been prepared. You'll be able to view it online within 4 working days.</p>
@@ -38,9 +41,11 @@ object MessageContentPartialStubs {
                                |<ul>
                                |<li><a id="view-your-statement-href" href="https://ibt.hmrc.gov.uk/self-assessment/ind/1150863353/statements" target="_self" data-sso="client">Check if your statement is ready to view</a></li>
                                |</ul>
-                               |""".mkString.stripMargin)
+                               |""".mkString.stripMargin
+  )
 
-  val stoppingSA = Html("""<h2>Stopping Self Assessment</h2>
+  val stoppingSA = Html(
+    """<h2>Stopping Self Assessment</h2>
                           |<p class="message_time faded-text--small">This message was sent to you on 18 December 2015</p>
                           |
                           |<p>You don’t have to send a tax return after the 2013 to 2014 tax year unless:</p>
@@ -65,9 +70,11 @@ object MessageContentPartialStubs {
                           |<li><a id="sa-payment-href" href="/pay-online/self-assessment/make-a-payment" target="_self" data-sso="false">Pay a tax bill</a></li>
                           |<li><a id="deadline-and-penalties-href" href="https://www.gov.uk/self-assessment-tax-returns/deadlines" target="_blank" data-sso="false" rel="external">Deadlines and penalties<span class="visuallyhidden">link opens in a new window</span></a></li>
                           |</ul>
-                          |""".mkString.stripMargin)
+                          |""".mkString.stripMargin
+  )
 
-  val overduePayment = Html("""<h2>Pay your 2012 to 2013 tax bill now - it's overdue</h2>
+  val overduePayment = Html(
+    """<h2>Pay your 2012 to 2013 tax bill now - it's overdue</h2>
                           |<p class="message_time faded-text--small">This message was sent to you on 17 February 2016</p>
                           |
                           |<p>You didn't pay your 2012 to 2013 tax bill on time.</p>
@@ -89,5 +96,6 @@ object MessageContentPartialStubs {
                           |<li><a id="difficulties-paying-href" href="https://www.gov.uk/difficulties-paying-hmrc" target="_blank" data-sso="false" rel="external">Problems paying your tax bill<span class="visuallyhidden">link opens in a new window</span></a></li>
                           |<li><a id="contact-hmrc-href" href="https://www.gov.uk/government/organisations/hm-revenue-customs/contact/self-assessment" target="_blank" data-sso="false" rel="external">Contact HMRC<span class="visuallyhidden">link opens in a new window</span></a></li>
                           |</ul>
-                          |""".mkString.stripMargin)
+                          |""".mkString.stripMargin
+  )
 }

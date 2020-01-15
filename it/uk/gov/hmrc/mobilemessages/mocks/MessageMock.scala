@@ -3,6 +3,7 @@ package uk.gov.hmrc.mobilemessages.mocks
 import com.github.tomakehurst.wiremock.client.WireMock._
 
 object MessageMock {
+
   val messagesJson: String =
     """{
       |  "items": [
@@ -33,7 +34,9 @@ object MessageMock {
         aResponse()
           .withStatus(200)
           .withHeader("Content-Type", "application/json")
-          .withBody(messagesJson)))
+          .withBody(messagesJson)
+      )
+    )
 
   def messagesNotFoundException(): Unit =
     stubFor(get(urlPathEqualTo("/messages")).willReturn(aResponse().withStatus(404)))
@@ -43,21 +46,21 @@ object MessageMock {
 
   def messagesResponse(service: String): String =
     s"""
-      |{
-      |  "id": "url1",
-      |  "renderUrl": {
-      |    "service": "$service",
-      |    "url": "messagesByUrl"
-      |  },
-      |  "body": {
-      |    "type": "2wsm-advisor",
-      |    "threadId": "9794f96d-f595-4b03-84dc-1861408918fb"
-      |  },
-      |  "markAsReadUrl": {
-      |    "service": "$service",
-      |    "url": "url2"
-      |  }
-      |}""".stripMargin
+       |{
+       |  "id": "url1",
+       |  "renderUrl": {
+       |    "service": "$service",
+       |    "url": "messagesByUrl"
+       |  },
+       |  "body": {
+       |    "type": "2wsm-advisor",
+       |    "threadId": "9794f96d-f595-4b03-84dc-1861408918fb"
+       |  },
+       |  "markAsReadUrl": {
+       |    "service": "$service",
+       |    "url": "url2"
+       |  }
+       |}""".stripMargin
 
   def messagesResponseNoHeaders(service: String): String =
     s"""
@@ -73,31 +76,39 @@ object MessageMock {
        |  }
        |}""".stripMargin
 
-  def messageFound(id: String, service: String, headers: Boolean = true): Unit =
+  def messageFound(
+    id:      String,
+    service: String,
+    headers: Boolean = true
+  ): Unit =
     stubFor(
       get(urlPathEqualTo(s"/messages/$id")).willReturn(
         aResponse()
           .withStatus(200)
           .withHeader("Content-Type", "application.json")
           .withBody(if (headers) messagesResponse(service) else messagesResponseNoHeaders(service))
-      ))
+      )
+    )
 
   def messagesNotFound(id: String): Unit =
     stubFor(
       get(urlPathEqualTo(s"/messages/$id")).willReturn(
         aResponse().withStatus(404)
-      ))
+      )
+    )
 
   def messagesServiceIsUnavailable(id: String): Unit =
     stubFor(
       get(urlPathEqualTo(s"/messages/$id")).willReturn(
         aResponse().withStatus(500)
-      ))
+      )
+    )
 
   def messageIsRenderedSuccessfully(): Unit =
     stubFor(
       get(urlPathEqualTo("/messagesByUrl")).willReturn(
         aResponse().withStatus(200)
-      ))
+      )
+    )
 
 }
