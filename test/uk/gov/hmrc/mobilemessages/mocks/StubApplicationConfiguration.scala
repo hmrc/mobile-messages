@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,29 +19,29 @@ package uk.gov.hmrc.mobilemessages.mocks
 trait StubApplicationConfiguration {
 
   val config: Map[String, Any] = Map[String, Any](
-    "auditing.enabled" -> false,
-    "microservice.services.datastream.host" -> "localhost",
-    "microservice.services.datastream.port" -> "1234",
-    "microservice.services.datastream.enabled" -> false,
-    "appName" -> "mobile-messages",
-    "microservice.services.auth.host" -> "localhost",
-    "microservice.services.auth.port" -> "8500",
-    "microservice.services.ntc.host" -> "localhost",
-    "microservice.services.ntc.port" -> "4567",
-    "microservice.services.sa-message-renderer.host" -> "localhost",
-    "microservice.services.sa-message-renderer.port" -> "8089",
-    "microservice.services.ats-message-renderer.host" -> "localhost",
-    "microservice.services.ats-message-renderer.port" -> "8089",
+    "auditing.enabled"                                   -> false,
+    "microservice.services.datastream.host"              -> "localhost",
+    "microservice.services.datastream.port"              -> "1234",
+    "microservice.services.datastream.enabled"           -> false,
+    "appName"                                            -> "mobile-messages",
+    "microservice.services.auth.host"                    -> "localhost",
+    "microservice.services.auth.port"                    -> "8500",
+    "microservice.services.ntc.host"                     -> "localhost",
+    "microservice.services.ntc.port"                     -> "4567",
+    "microservice.services.sa-message-renderer.host"     -> "localhost",
+    "microservice.services.sa-message-renderer.port"     -> "8089",
+    "microservice.services.ats-message-renderer.host"    -> "localhost",
+    "microservice.services.ats-message-renderer.port"    -> "8089",
     "microservice.services.secure-message-renderer.host" -> "localhost",
     "microservice.services.secure-message-renderer.port" -> "8089",
-    "microservice.services.test-renderer-service.host" -> "localhost",
-    "microservice.services.test-renderer-service.port" -> "9999",
-    "microservice.services.message.host" -> "localhost",
-    "microservice.services.message.port" -> "8910",
-    "router.regex" -> ".*",
-    "router.prefix" -> "/sandbox",
-    "router.regex" -> "X-MOBILE-USER-ID",
-    "application.secret" -> "yNhI04vHs9<_HWbC`]20u`37=NGLGYY5:0Tg5?y`W<NoJnXWqmjcgZBec@rOxb^G",
-    "cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW=="
+    "microservice.services.test-renderer-service.host"   -> "localhost",
+    "microservice.services.test-renderer-service.port"   -> "9999",
+    "microservice.services.message.host"                 -> "localhost",
+    "microservice.services.message.port"                 -> "8910",
+    "router.regex"                                       -> ".*",
+    "router.prefix"                                      -> "/sandbox",
+    "router.regex"                                       -> "X-MOBILE-USER-ID",
+    "application.secret"                                 -> "yNhI04vHs9<_HWbC`]20u`37=NGLGYY5:0Tg5?y`W<NoJnXWqmjcgZBec@rOxb^G",
+    "cookie.encryption.key"                              -> "hwdODU8hulPkolIryPRkVW=="
   )
 }

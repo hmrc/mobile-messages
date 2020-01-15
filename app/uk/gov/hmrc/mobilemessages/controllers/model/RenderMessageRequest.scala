@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,14 @@
 
 package uk.gov.hmrc.mobilemessages.controllers.model
 
-
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.crypto.{Crypted, Decrypter}
 import uk.gov.hmrc.mobilemessages.domain.MessageId
 
 final case class RenderMessageRequest(url: String) {
-  def toMessageIdUsing(decrypter: Decrypter): MessageId = {
+
+  def toMessageIdUsing(decrypter: Decrypter): MessageId =
     MessageId(decrypter.decrypt(Crypted.fromBase64(url)).value)
-  }
 }
 
 object RenderMessageRequest {

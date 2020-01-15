@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 package uk.gov.hmrc.mobilemessages.utils
 
 import java.time.LocalDateTime
-import java.util.UUID.randomUUID
 
+import eu.timepit.refined.auto._
 import play.api.Configuration
 import play.api.libs.json.{JsValue, Json, Reads}
 import play.api.mvc.AnyContentAsEmpty
@@ -31,40 +31,51 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.mobilemessages.config.WSHttpImpl
-import uk.gov.hmrc.mobilemessages.connector.MessageConnector
+import uk.gov.hmrc.mobilemessages.connector.{MessageConnector, ShutteringConnector}
 import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
 import uk.gov.hmrc.mobilemessages.domain.types.ModelTypes.JourneyId
-import uk.gov.hmrc.mobilemessages.domain.{MessageHeader, MessageId}
-import uk.gov.hmrc.mobilemessages.mocks.{AuthorisationStub, MessagesStub, StubApplicationConfiguration}
+import uk.gov.hmrc.mobilemessages.domain.{MessageHeader, MessageId, Shuttering}
+import uk.gov.hmrc.mobilemessages.mocks.{MessagesStub, ShutteringStub, StubApplicationConfiguration, AuthorisationStub}
 import uk.gov.hmrc.mobilemessages.services.MobileMessagesService
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import eu.timepit.refined.auto._
 
 import scala.concurrent.Future
 
-trait Setup extends AuthorisationStub with MessagesStub with StubApplicationConfiguration {
+trait Setup extends AuthorisationStub with MessagesStub with StubApplicationConfiguration with ShutteringStub {
 
   lazy val html = Html.apply("<div>some snippet</div>")
   lazy val emptyRequestWithAcceptHeader: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withHeaders(acceptHeader)
-  lazy val readTimeRequest: FakeRequest[JsValue] = fakeRequest(Json.toJson(RenderMessageRequest(encrypted("543e8c6001000001003e4a9e"))))
-    .withHeaders(acceptHeader)
-  lazy val readTimeRequestNoAcceptHeader: FakeRequest[JsValue]             = fakeRequest(Json.toJson(RenderMessageRequest(encrypted("543e8c6001000001003e4a9e"))))
-  lazy val ReadSuccessEmptyResult:        Future[AnyRef with HttpResponse] = Future.successful(HttpResponse(200, None, Map.empty, None))
 
-  implicit val reads:                Reads[MessageHeaderResponseBody] = Json.reads[MessageHeaderResponseBody]
-  implicit val hc:                   HeaderCarrier                    = HeaderCarrier(Some(Authorization("authToken")))
-  implicit val mockHttp:             WSHttpImpl                       = mock[WSHttpImpl]
-  implicit val mockAuthConnector:    AuthConnector                    = mock[AuthConnector]
-  implicit val mockAuditConnector:   AuditConnector                   = mock[AuditConnector]
-  implicit val mockMessageConnector: MessageConnector                 = mock[MessageConnector]
-  implicit val authUser:             Option[Authority]                = Some(Authority(Nino("CS700100A"), Some("someId")))
+  lazy val readTimeRequest: FakeRequest[JsValue] =
+    fakeRequest(Json.toJson(RenderMessageRequest(encrypted("543e8c6001000001003e4a9e"))))
+      .withHeaders(acceptHeader)
+
+  lazy val readTimeRequestNoAcceptHeader: FakeRequest[JsValue] = fakeRequest(
+    Json.toJson(RenderMessageRequest(encrypted("543e8c6001000001003e4a9e")))
+  )
+
+  lazy val ReadSuccessEmptyResult: Future[AnyRef with HttpResponse] =
+    Future.successful(HttpResponse(200, None, Map.empty, None))
+
+  implicit val reads:                   Reads[MessageHeaderResponseBody] = Json.reads[MessageHeaderResponseBody]
+  implicit val hc:                      HeaderCarrier                    = HeaderCarrier(Some(Authorization("authToken")))
+  implicit val mockHttp:                WSHttpImpl                       = mock[WSHttpImpl]
+  implicit val mockAuthConnector:       AuthConnector                    = mock[AuthConnector]
+  implicit val mockAuditConnector:      AuditConnector                   = mock[AuditConnector]
+  implicit val mockMessageConnector:    MessageConnector                 = mock[MessageConnector]
+  implicit val mockShutteringConnector: ShutteringConnector              = mock[ShutteringConnector]
+  implicit val authUser:                Option[Authority]                = Some(Authority(Nino("CS700100A"), Some("someId")))
+
+  val shuttered =
+    Shuttering(shuttered = true, Some("Shuttered"), Some("Messages are currently not available"))
+  val notShuttered = Shuttering.shutteringDisabled
 
   val configuration: Configuration = Configuration("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")
 
-  val nino      = Nino("CS700100A")
-  val journeyId: JourneyId = "87144372-6bda-4cc9-87db-1d52fd96498f"
+  val nino = Nino("CS700100A")
+  val journeyId:    JourneyId        = "87144372-6bda-4cc9-87db-1d52fd96498f"
   val acceptHeader: (String, String) = "Accept" -> "application/vnd.hmrc.1.0+json"
 
   val encrypter: CryptoWithKeysFromConfig =
@@ -85,7 +96,8 @@ trait Setup extends AuthorisationStub with MessagesStub with StubApplicationConf
 
   val mockMobileMessagesService: MobileMessagesService = mock[MobileMessagesService]
 
-  def fakeRequest(body: JsValue): FakeRequest[JsValue] = FakeRequest(POST, "url").withBody(body).withHeaders("Content-Type" -> "application/json")
+  def fakeRequest(body: JsValue): FakeRequest[JsValue] =
+    FakeRequest(POST, "url").withBody(body).withHeaders("Content-Type" -> "application/json")
 
   val timeNow: LocalDateTime = LocalDateTime.now
   val msgId1 = "543e8c6001000001003e4a9e"
@@ -95,5 +107,7 @@ trait Setup extends AuthorisationStub with MessagesStub with StubApplicationConf
     s"""[{"id":"$msgId1","subject":"You have a new tax statement","validFrom":"${timeNow
          .minusDays(3)
          .toLocalDate}","readTime":$readTime,"readTimeUrl":"${encrypted(msgId1)}","sentInError":false},
-       |{"id":"$msgId2","subject":"Stopping Self Assessment","validFrom":"${timeNow.toLocalDate}","readTimeUrl":"${encrypted(msgId2)}","sentInError":false}]""".stripMargin
+       |{"id":"$msgId2","subject":"Stopping Self Assessment","validFrom":"${timeNow.toLocalDate}","readTimeUrl":"${encrypted(
+         msgId2
+       )}","sentInError":false}]""".stripMargin
 }

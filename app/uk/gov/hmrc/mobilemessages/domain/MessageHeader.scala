@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,4 +18,9 @@ package uk.gov.hmrc.mobilemessages.domain
 
 import java.time.{LocalDate, LocalDateTime}
 
-final case class MessageHeader(id: MessageId, subject: String, validFrom: LocalDate, readTime: Option[LocalDateTime], sentInError: Boolean)
+final case class MessageHeader(
+  id:          MessageId,
+  subject:     String,
+  validFrom:   LocalDate,
+  readTime:    Option[LocalDateTime],
+  sentInError: Boolean)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ trait Hooks extends HttpHooks with HttpAuditing {
 
 trait WSHttp extends HttpClient with WSGet with WSPut with WSPost with WSDelete with WSPatch with Hooks
 
-class WSHttpImpl @Inject()(
+class WSHttpImpl @Inject() (
   val wsClient:                  WSClient,
   @Named("appName") val appName: String,
   val auditConnector:            AuditConnector,
@@ -50,5 +50,7 @@ class WSHttpImpl @Inject()(
   override lazy val configuration: Option[Config] = Option(config.underlying)
 }
 
-class MicroserviceAudit @Inject()(@Named("appName") val applicationName: String, val auditConnector: AuditConnector)
+class MicroserviceAudit @Inject() (
+  @Named("appName") val applicationName: String,
+  val auditConnector:                    AuditConnector)
     extends Audit(applicationName, auditConnector)

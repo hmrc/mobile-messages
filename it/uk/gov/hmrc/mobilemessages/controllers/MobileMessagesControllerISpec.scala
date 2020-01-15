@@ -1,18 +1,27 @@
 package uk.gov.hmrc.mobilemessages.controllers
 
+import play.api.libs.json.Json
 import play.api.libs.json.Json.toJson
 import play.api.libs.ws.{WSRequest, WSResponse}
 import uk.gov.hmrc.mobilemessages.controllers.model.RenderMessageRequest
+import uk.gov.hmrc.mobilemessages.domain.Shuttering
 import uk.gov.hmrc.mobilemessages.mocks.AuthMock._
 import uk.gov.hmrc.mobilemessages.mocks.MessageMock._
+import uk.gov.hmrc.mobilemessages.mocks.ShutteringMock._
 import uk.gov.hmrc.mobilemessages.support.BaseISpec
 
 class MobileMessagesControllerISpec extends BaseISpec {
 
-  def request(url: String, journeyId: String): WSRequest =
+  def request(
+    url:       String,
+    journeyId: String
+  ): WSRequest =
     wsUrl(s"$url?journeyId=$journeyId").addHttpHeaders(acceptJsonHeader)
 
-  def requestWithoutAcceptHeader(url: String, journeyId: String): WSRequest = wsUrl(s"$url?journeyId=$journeyId")
+  def requestWithoutAcceptHeader(
+    url:       String,
+    journeyId: String
+  ): WSRequest = wsUrl(s"$url?journeyId=$journeyId")
 
   "GET /messages" should {
     val url = "/messages"
@@ -20,6 +29,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
     "return a valid response with a journeyId" in {
       authRecordExists()
       messagesAreFound()
+      stubForShutteringDisabled
 
       await(request(url, journeyId).get()).status shouldBe 200
     }
@@ -57,6 +67,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
     "return a valid response when MessageConnector returns 404" in {
       authRecordExists()
       messagesNotFoundException()
+      stubForShutteringDisabled
 
       await(request(url, journeyId).get()).status shouldBe 404
     }
@@ -64,6 +75,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
     "return a valid response when MessageConnector returns 500" in {
       authRecordExists()
       messagesServiceUnavailableException()
+      stubForShutteringDisabled
 
       await(request(url, journeyId).get()).status shouldBe 500
     }
@@ -71,6 +83,19 @@ class MobileMessagesControllerISpec extends BaseISpec {
     "return 401 with authorise call fails" in {
       authFailure()
       await(request(url, journeyId).get()).status shouldBe 401
+    }
+
+    "return shuttered when shuttered" in {
+      authRecordExists()
+      stubForShutteringEnabled
+
+      val response = await(request(url, journeyId).get())
+
+      response.status shouldBe 521
+      val shuttering: Shuttering = Json.parse(response.body).as[Shuttering]
+      shuttering.shuttered shouldBe true
+      shuttering.title     shouldBe Some("Shuttered")
+      shuttering.message   shouldBe Some("Messages are currently not available")
     }
   }
 
@@ -85,6 +110,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
       authRecordExists()
       messageFound("url1", "message")
       messageIsRenderedSuccessfully()
+      stubForShutteringDisabled
 
       val result:         WSResponse     = await(request(url, journeyId).addHttpHeaders(authHeader).post(toJson(messageUrl)))
       val typeHeader:     Option[String] = result.headers("type").headOption
@@ -99,6 +125,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
       authRecordExists()
       messageFound("url1", "message", false)
       messageIsRenderedSuccessfully()
+      stubForShutteringDisabled
 
       val result:  WSResponse               = await(request(url, journeyId).addHttpHeaders(authHeader).post(toJson(messageUrl)))
       val headers: Map[String, Seq[String]] = result.headers
@@ -112,6 +139,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
       authRecordExists()
       messageFound("url1", "sa-message-renderer")
       messageIsRenderedSuccessfully()
+      stubForShutteringDisabled
 
       await(request(url, journeyId).addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
     }
@@ -120,6 +148,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
       authRecordExists()
       messageFound("url1", "ats-message-renderer")
       messageIsRenderedSuccessfully()
+      stubForShutteringDisabled
 
       await(request(url, journeyId).addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
     }
@@ -128,6 +157,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
       authRecordExists()
       messageFound("url1", "secure-message-renderer")
       messageIsRenderedSuccessfully()
+      stubForShutteringDisabled
 
       await(request(url, journeyId).addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 200
     }
@@ -167,6 +197,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
     "return a valid response when MessageConnector returns 404" in {
       authRecordExists()
       messagesNotFound("url1")
+      stubForShutteringDisabled
 
       await(request(url, journeyId).addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 404
     }
@@ -174,13 +205,29 @@ class MobileMessagesControllerISpec extends BaseISpec {
     "return a valid response when MessageConnector returns 500" in {
       authRecordExists()
       messagesServiceIsUnavailable("url1")
+      stubForShutteringDisabled
 
       await(request(url, journeyId).addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 500
     }
 
     "return 401 with authorise call fails" in {
       authFailure()
-      await(request(url, journeyId).addHttpHeaders(authHeader).post(toJson(messageUrl))).status shouldBe 401
+      val response = await(request(url, journeyId).addHttpHeaders(authHeader).post(toJson(messageUrl)))
+      print("RESPONSE" + response.body)
+      response.status shouldBe 401
+    }
+
+    "return shuttered when shuttered" in {
+      authRecordExists()
+      stubForShutteringEnabled
+
+      val response = await(request(url, journeyId).addHttpHeaders(authHeader).post(toJson(messageUrl)))
+
+      response.status shouldBe 521
+      val shuttering: Shuttering = Json.parse(response.body).as[Shuttering]
+      shuttering.shuttered shouldBe true
+      shuttering.title     shouldBe Some("Shuttered")
+      shuttering.message   shouldBe Some("Messages are currently not available")
     }
   }
 }

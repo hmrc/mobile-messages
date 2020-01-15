@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,10 @@ import uk.gov.hmrc.mobilemessages.domain._
 
 class MessageServiceMock(authToken: String) {
 
-  def fullUrlFor(serviceName: String, path: String): String = {
+  def fullUrlFor(
+    serviceName: String,
+    path:        String
+  ): String = {
     val port = 9000
     val host = "localhost"
     s"http://$host:$port$path"
@@ -51,8 +54,12 @@ class MessageServiceMock(authToken: String) {
   def bodyWith(
     id:            String,
     renderUrl:     ResourceActionLocation = ResourceActionLocation("sa-message-renderer", "/utr/render"),
-    markAsReadUrl: Option[ResourceActionLocation] = None): UpstreamMessageResponse =
-    UpstreamMessageResponse(id, renderUrl, markAsReadUrl, Some(Details(Some("2wsm-advisor"), Some("9794f96d-f595-4b03-84dc-1861408918fb"))))
+    markAsReadUrl: Option[ResourceActionLocation] = None
+  ): UpstreamMessageResponse =
+    UpstreamMessageResponse(id,
+                            renderUrl,
+                            markAsReadUrl,
+                            Some(Details(Some("2wsm-advisor"), Some("9794f96d-f595-4b03-84dc-1861408918fb"))))
 
   def bodyToBeMarkedAsReadWith(id: String): UpstreamMessageResponse =
     bodyWith(id = id, markAsReadUrl = Some(ResourceActionLocation("message", s"/messages/$id/read-time")))
@@ -62,7 +69,8 @@ class MessageServiceMock(authToken: String) {
     subject:     String = "message subject",
     validFrom:   LocalDate = Instant.ofEpochMilli(29348L).atZone(ZoneId.of("UTC")).toLocalDate,
     readTime:    Option[LocalDateTime] = None,
-    sentInError: Boolean = false): MessageHeader =
+    sentInError: Boolean = false
+  ): MessageHeader =
     MessageHeader(MessageId(id), subject, validFrom, readTime, sentInError)
 
   def jsonRepresentationOf(message: UpstreamMessageResponse): String =

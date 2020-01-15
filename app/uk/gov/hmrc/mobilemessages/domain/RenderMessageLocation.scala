@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,11 @@ import play.api.libs.json.OFormat
 
 import scala.language.implicitConversions
 
-final case class RenderMessageLocation(service: String, url: String)
+final case class RenderMessageLocation(
+  service: String,
+  url:     String)
 
-class RenderMessageLocationImpl @Inject()(@Named("baseUrl") _baseUrl: String => String) {
+class RenderMessageLocationImpl @Inject() (@Named("baseUrl") _baseUrl: String => String) {
 
   import play.api.libs.json.Json
 

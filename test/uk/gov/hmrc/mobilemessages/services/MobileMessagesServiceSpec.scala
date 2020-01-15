@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,9 +28,16 @@ import uk.gov.hmrc.mobilemessages.utils.Setup
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-class MobileMessagesServiceSpec extends WordSpecLike with Matchers with FutureAwaits with DefaultAwaitTimeout with Setup with AuditStub {
+class MobileMessagesServiceSpec
+    extends WordSpecLike
+    with Matchers
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with Setup
+    with AuditStub {
 
-  val service: MobileMessagesService = new MobileMessagesService("mobile-messages", mockMessageConnector, mockAuditConnector, configuration)
+  val service: MobileMessagesService =
+    new MobileMessagesService("mobile-messages", mockMessageConnector, mockAuditConnector, configuration)
 
   "readAndUnreadMessages()" should {
     "return an empty seq of messages" in {
@@ -61,8 +68,12 @@ class MobileMessagesServiceSpec extends WordSpecLike with Matchers with FutureAw
       (mockMessageConnector
         .getMessageBy(_: MessageId)(_: HeaderCarrier, _: ExecutionContext))
         .expects(*, *, *)
-        .returns(Future successful message.convertedFrom(
-          message.bodyWith(id = messageId.value, markAsReadUrl = Some(ResourceActionLocation("sa-message-renderer", "url")))))
+        .returns(
+          Future successful message.convertedFrom(
+            message.bodyWith(id            = messageId.value,
+                             markAsReadUrl = Some(ResourceActionLocation("sa-message-renderer", "url")))
+          )
+        )
       (mockMessageConnector
         .render(_: Message, _: HeaderCarrier)(_: ExecutionContext, _: Option[Authority]))
         .expects(*, *, *, *)
@@ -75,7 +86,8 @@ class MobileMessagesServiceSpec extends WordSpecLike with Matchers with FutureAw
       await(service.readMessageContent(messageId)) shouldBe MessageWithHeader(
         html,
         Some("2wsm-advisor"),
-        Some("9794f96d-f595-4b03-84dc-1861408918fb"))
+        Some("9794f96d-f595-4b03-84dc-1861408918fb")
+      )
     }
 
     "return an html page with headers when receiving read messages" in {
@@ -92,7 +104,8 @@ class MobileMessagesServiceSpec extends WordSpecLike with Matchers with FutureAw
       await(service.readMessageContent(messageId)) shouldBe MessageWithHeader(
         html,
         Some("2wsm-advisor"),
-        Some("9794f96d-f595-4b03-84dc-1861408918fb"))
+        Some("9794f96d-f595-4b03-84dc-1861408918fb")
+      )
     }
 
   }

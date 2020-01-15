@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,9 @@ package uk.gov.hmrc.mobilemessages.connector.model
 import play.api.libs.json.{Format, Json, Reads}
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageId, ReadMessage, UnreadMessage}
 
-final case class ResourceActionLocation(service: String, url: String) {
+final case class ResourceActionLocation(
+  service: String,
+  url:     String) {
   def toUrlUsing(baseUrl: String) = s"${baseUrl.stripSuffix("/").trim}/${url.stripPrefix("/").trim}"
 }
 
@@ -28,6 +30,7 @@ final case class UpstreamMessageResponse(
   renderUrl:     ResourceActionLocation,
   markAsReadUrl: Option[ResourceActionLocation],
   body:          Option[Details]) {
+
   def toMessageUsing(servicesToUrl: Map[String, String]): Message = {
     val `type`:   Option[String] = body.flatMap(details => details.`type`)
     val threadId: Option[String] = body.flatMap(details => details.threadId)
@@ -39,19 +42,21 @@ final case class UpstreamMessageResponse(
         `type`,
         threadId
       )
-    )(
-      res =>
-        UnreadMessage(
-          MessageId(id),
-          renderUrl.toUrlUsing(servicesToUrl(renderUrl.service)),
-          res.toUrlUsing(servicesToUrl(res.service)),
-          `type`,
-          threadId
-      ))
+    )(res =>
+      UnreadMessage(
+        MessageId(id),
+        renderUrl.toUrlUsing(servicesToUrl(renderUrl.service)),
+        res.toUrlUsing(servicesToUrl(res.service)),
+        `type`,
+        threadId
+      )
+    )
   }
 }
 
-case class Details(`type`: Option[String], threadId: Option[String])
+case class Details(
+  `type`:   Option[String],
+  threadId: Option[String])
 
 object Details {
   implicit val format: Format[Details] = Json.format[Details]

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,19 +30,27 @@ import uk.gov.hmrc.service.Auditor
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class MobileMessagesService @Inject()(
+class MobileMessagesService @Inject() (
   @Named("appName") val appName: String,
   val messageConnector:          MessageConnector,
   val auditConnector:            AuditConnector,
   val appNameConfiguration:      Configuration)
     extends Auditor {
 
-  def readAndUnreadMessages()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
+  def readAndUnreadMessages(
+  )(implicit hc: HeaderCarrier,
+    ec:          ExecutionContext
+  ): Future[Seq[MessageHeader]] =
     withAudit("readAndUnreadMessages", Map.empty) {
       messageConnector.messages()
     }
 
-  def readMessageContent(messageId: MessageId)(implicit hc: HeaderCarrier, ec: ExecutionContext, auth: Option[Authority]): Future[MessageWithHeader] =
+  def readMessageContent(
+    messageId:   MessageId
+  )(implicit hc: HeaderCarrier,
+    ec:          ExecutionContext,
+    auth:        Option[Authority]
+  ): Future[MessageWithHeader] =
     withAudit("readMessageContent", Map.empty) {
       messageConnector.getMessageBy(messageId) flatMap { message =>
         messageConnector.render(message, hc) map { renderedMessage =>
@@ -53,12 +61,18 @@ class MobileMessagesService @Inject()(
       }
     }
 
-  private def markAsReadIfUnread(implicit hc: HeaderCarrier, ec: ExecutionContext): Message => Unit = {
+  private def markAsReadIfUnread(
+    implicit hc: HeaderCarrier,
+    ec:          ExecutionContext
+  ): Message => Unit = {
     case unreadMessage @ UnreadMessage(_, _, _, _, _) => messageConnector.markAsRead(unreadMessage)
     case _                                            => ()
   }
 }
 
-case class MessageWithHeader(html: Html, `type`: Option[String], threadId: Option[String])
+case class MessageWithHeader(
+  html:     Html,
+  `type`:   Option[String],
+  threadId: Option[String])
 
 object MessageWithHeader

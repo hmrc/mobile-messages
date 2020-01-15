@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,9 +46,9 @@ trait SessionCookieEncryptionSupport {
     val hashAndValue: String    = URLDecoder.decode(decrypted.value, CharEncoding.UTF_8)
     val justTheValue = StringUtils.substringAfter(hashAndValue, "-")
     val pairs = justTheValue.split("&") map { keyValuePair =>
-      val pair = keyValuePair.split("=")
-      (pair(0), pair(1))
-    }
+        val pair = keyValuePair.split("=")
+        (pair(0), pair(1))
+      }
     pairs.toMap
   }
 
