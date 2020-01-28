@@ -29,7 +29,6 @@ class BaseISpec
     "microservice.services.auth.port"                    -> wireMockPort,
     "microservice.services.citizen-details.port"         -> wireMockPort,
     "microservice.services.entity-resolver.port"         -> wireMockPort,
-    "microservice.services.preferences.port"             -> wireMockPort,
     "microservice.services.message.host"                 -> "localhost",
     "microservice.services.message.port"                 -> wireMockPort,
     "microservice.services.sa-message-renderer.host"     -> "localhost",

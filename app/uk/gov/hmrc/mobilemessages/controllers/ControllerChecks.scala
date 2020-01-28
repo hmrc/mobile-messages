@@ -22,7 +22,7 @@ import uk.gov.hmrc.mobilemessages.domain.Shuttering
 
 import scala.concurrent.Future
 
-trait ControllerChecks  extends Results {
+trait ControllerChecks extends Results {
 
   private final val WebServerIsDown = new Status(521)
 
