@@ -63,13 +63,17 @@ trait MessagesStub extends MockFactory {
 
   def markAsReadPostSuccess(response: Future[HttpResponse])(implicit http: WSHttpImpl): Unit =
     (http
-      .POSTEmpty(_: String)(_: HttpReads[HttpResponse], _: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *)
+      .POSTEmpty(_: String, _: Seq[(String, String)])(_: HttpReads[HttpResponse],
+                                                      _: HeaderCarrier,
+                                                      _: ExecutionContext))
+      .expects(*, *, *, *, *)
       .returns(response)
 
   def markAsReadPostFailure(response: Exception)(implicit http: WSHttpImpl): Unit =
     (http
-      .POSTEmpty(_: String)(_: HttpReads[HttpResponse], _: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *)
+      .POSTEmpty(_: String, _: Seq[(String, String)])(_: HttpReads[HttpResponse],
+                                                      _: HeaderCarrier,
+                                                      _: ExecutionContext))
+      .expects(*, *, *, *, *)
       .returns(Future failed response)
 }
