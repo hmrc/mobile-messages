@@ -4,10 +4,10 @@ private object AppDependencies {
 
   import play.core.PlayVersion
 
-  private val play26Bootstrap     = "1.3.0"
+  private val play26Bootstrap     = "1.5.0"
   private val playHmrcApiVersion  = "4.1.0-play-26"
   private val domainVersion       = "5.6.0-play-26"
-  private val emailAddressVersion = "2.2.0"
+  private val emailAddressVersion = "3.4.0"
 
   private val scalaMockVersion     = "4.4.0"
   private val scalaTestVersion     = "3.0.8"
