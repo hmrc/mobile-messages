@@ -21,7 +21,7 @@ object MessageContentPartialStubs {
   import play.twirl.api.Html
 
   val annualTaxSummary = Html(
-    """<h2>Your Annual Tax Summary for 2009-10 is now ready</h2>
+    """<h1>Your Annual Tax Summary for 2009-10 is now ready</h1>
                                 |
                                 |<p class="message_time faded-text--small">This message was sent to you on 1 March 2016</p>
                                 |
@@ -32,7 +32,7 @@ object MessageContentPartialStubs {
   )
 
   val newTaxStatement = Html(
-    """<h2>You have a new tax statement</h2>
+    """<h1>You have a new tax statement</h1>
                                |<p class="message_time faded-text--small">This message was sent to you on 13 April 2016</p>
                                |
                                |<p>Your new Self Assessment statement has been prepared. You'll be able to view it online within 4 working days.</p>
@@ -45,7 +45,7 @@ object MessageContentPartialStubs {
   )
 
   val stoppingSA = Html(
-    """<h2>Stopping Self Assessment</h2>
+    """<h1>Stopping Self Assessment</h1>
                           |<p class="message_time faded-text--small">This message was sent to you on 18 December 2015</p>
                           |
                           |<p>You don’t have to send a tax return after the 2013 to 2014 tax year unless:</p>
@@ -54,7 +54,7 @@ object MessageContentPartialStubs {
                           |<li>HM Revenue and Customs tell you to</li>
                           |</ul>
                           |
-                          |<h3>What you still need to do</h3>
+                          |<h2>What you still need to do</h2>
                           |<p>You currently owe £5,335.69</p>
                           |<h3>You must still send the following tax return:</h3>
                           |<ul class="bullets">
@@ -74,20 +74,20 @@ object MessageContentPartialStubs {
   )
 
   val overduePayment = Html(
-    """<h2>Pay your 2012 to 2013 tax bill now - it's overdue</h2>
+    """<h1>Pay your 2012 to 2013 tax bill now - it's overdue</h1>
                           |<p class="message_time faded-text--small">This message was sent to you on 17 February 2016</p>
                           |
                           |<p>You didn't pay your 2012 to 2013 tax bill on time.</p>
                           |
                           |<p>The deadline date was 31 January 2014.</p>
                           |
-                          |<h3>What you need to do</h3>
+                          |<h2>What you need to do</h2>
                           |<p>You need to pay your tax bills now. You're being charged daily interest on the amount. Legal action will be taken if you don't pay now.</p>
                           |
-                          |<h3>After you pay</h3>
+                          |<h2>After you pay</h2>
                           |<p>You will need to pay a penalty on any tax paid late. The total penalty will be confirmed after you pay this tax bill.</p>
                           |
-                          |<h3>Get help</h3>
+                          |<h2>Get help</h2>
                           |<p>Contact HMRC if you can't pay the full amount or disagree with your tax bill. You may be able to pay in instalments, get more time to pay or appeal the tax bill.</p>
                           |<strong>Ignore this message if you have already paid this tax bill in total.</strong>
                           |
