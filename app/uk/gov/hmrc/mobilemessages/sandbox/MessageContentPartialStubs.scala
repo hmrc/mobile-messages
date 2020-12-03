@@ -56,7 +56,7 @@ object MessageContentPartialStubs {
                           |
                           |<h2>What you still need to do</h2>
                           |<p>You currently owe £5,335.69</p>
-                          |<h3>You must still send the following tax return:</h3>
+                          |<h2>You must still send the following tax return:</h2>
                           |<ul class="bullets">
                           |<li>2013 to 2014</li>
                           |</ul>
