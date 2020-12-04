@@ -9,6 +9,13 @@ Read Message
 * **Method:**
 
   `POST`
+  
+*  **URL Params**
+
+   **Required:**
+   `journeyId=[String]`
+
+    a string which is included for journey tracking purposes but has no functional impact
 
 *  **Request body**
 
