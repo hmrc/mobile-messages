@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package uk.gov.hmrc.mobilemessages.utils
 
 import java.time.LocalDateTime
-
 import eu.timepit.refined.auto._
 import play.api.Configuration
 import play.api.libs.json.{JsValue, Json, Reads}
@@ -28,15 +27,14 @@ import play.twirl.api.Html
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.crypto.CryptoWithKeysFromConfig
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.mobilemessages.config.WSHttpImpl
 import uk.gov.hmrc.mobilemessages.connector.{MessageConnector, ShutteringConnector}
 import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
 import uk.gov.hmrc.mobilemessages.domain.types.ModelTypes.JourneyId
 import uk.gov.hmrc.mobilemessages.domain.{MessageHeader, MessageId, Shuttering}
-import uk.gov.hmrc.mobilemessages.mocks.{MessagesStub, ShutteringStub, StubApplicationConfiguration, AuthorisationStub}
+import uk.gov.hmrc.mobilemessages.mocks.{AuthorisationStub, MessagesStub, ShutteringStub, StubApplicationConfiguration}
 import uk.gov.hmrc.mobilemessages.services.MobileMessagesService
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -75,8 +73,9 @@ trait Setup extends AuthorisationStub with MessagesStub with StubApplicationConf
   val configuration: Configuration = Configuration("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")
 
   val nino = Nino("CS700100A")
-  val journeyId:    JourneyId        = "87144372-6bda-4cc9-87db-1d52fd96498f"
-  val acceptHeader: (String, String) = "Accept" -> "application/vnd.hmrc.1.0+json"
+  val journeyId:    JourneyId                = "87144372-6bda-4cc9-87db-1d52fd96498f"
+  val acceptHeader: (String, String)         = "Accept" -> "application/vnd.hmrc.1.0+json"
+  val headers:      Map[String, Seq[String]] = Map("Accept" -> Seq("application/vnd.hmrc.1.0+json"))
 
   val encrypter: CryptoWithKeysFromConfig =
     new CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption", configuration.underlying)

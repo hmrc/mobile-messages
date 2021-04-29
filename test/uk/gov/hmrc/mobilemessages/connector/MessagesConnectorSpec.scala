@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,10 +57,10 @@ class MessagesConnectorSpec extends WordSpecLike with Matchers with FutureAwaits
     )
 
   lazy val PostSuccessResult: Future[AnyRef with HttpResponse] =
-    Future.successful(HttpResponse(200, Some(toJson(html.body))))
+    Future.successful(HttpResponse(200, toJson(html.body), headers))
 
   lazy val PostSuccessRendererResult: Future[AnyRef with HttpResponse] =
-    Future.successful(HttpResponse(200, Some(toJson(responseRenderer))))
+    Future.successful(HttpResponse(200, toJson(responseRenderer), headers))
 
   lazy val connector: MessageConnector =
     new MessageConnector(
@@ -74,7 +74,7 @@ class MessagesConnectorSpec extends WordSpecLike with Matchers with FutureAwaits
       mockHttp
     )
 
-  private val upstream5xxResponse = Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)
+  private val upstream5xxResponse = UpstreamErrorResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)
   private val badRequestException = new BadRequestException("")
 
   "messages()" should {
@@ -99,7 +99,7 @@ class MessagesConnectorSpec extends WordSpecLike with Matchers with FutureAwaits
     "throw Upstream5xxResponse when a 500 response is returned" in {
       messagesGetFailure(upstream5xxResponse)
 
-      intercept[Upstream5xxResponse] {
+      intercept[UpstreamErrorResponse] {
         await(connector.messages())
       }
     }
@@ -132,7 +132,7 @@ class MessagesConnectorSpec extends WordSpecLike with Matchers with FutureAwaits
     "throw Upstream5xxResponse when a 500 response is returned" in {
       messageByGetFailure(upstream5xxResponse)
 
-      intercept[Upstream5xxResponse] {
+      intercept[UpstreamErrorResponse] {
         await(connector.getMessageBy(messageId))
       }
     }
@@ -163,7 +163,7 @@ class MessagesConnectorSpec extends WordSpecLike with Matchers with FutureAwaits
     "throw Upstream5xxResponse when a 500 response is returned" in {
       renderGetFailure(upstream5xxResponse)
 
-      intercept[Upstream5xxResponse] {
+      intercept[UpstreamErrorResponse] {
         await(connector.render(message.convertedFrom(messageBodyToRender), hc))
       }
     }
@@ -188,7 +188,7 @@ class MessagesConnectorSpec extends WordSpecLike with Matchers with FutureAwaits
     "throw Upstream5xxResponse when a 500 response is returned" in {
       markAsReadPostFailure(upstream5xxResponse)
 
-      intercept[Upstream5xxResponse] {
+      intercept[UpstreamErrorResponse] {
         await(connector.markAsRead(messageToBeMarkedAsRead))
       }
     }
