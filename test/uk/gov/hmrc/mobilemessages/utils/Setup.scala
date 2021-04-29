@@ -73,8 +73,9 @@ trait Setup extends AuthorisationStub with MessagesStub with StubApplicationConf
   val configuration: Configuration = Configuration("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")
 
   val nino = Nino("CS700100A")
-  val journeyId:    JourneyId        = "87144372-6bda-4cc9-87db-1d52fd96498f"
-  val acceptHeader: (String, String) = "Accept" -> "application/vnd.hmrc.1.0+json"
+  val journeyId:    JourneyId                = "87144372-6bda-4cc9-87db-1d52fd96498f"
+  val acceptHeader: (String, String)         = "Accept" -> "application/vnd.hmrc.1.0+json"
+  val headers:      Map[String, Seq[String]] = Map("Accept" -> Seq("application/vnd.hmrc.1.0+json"))
 
   val encrypter: CryptoWithKeysFromConfig =
     new CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption", configuration.underlying)
