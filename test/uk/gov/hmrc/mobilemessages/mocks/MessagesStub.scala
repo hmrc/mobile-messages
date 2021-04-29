@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,38 +27,50 @@ trait MessagesStub extends MockFactory {
 
   def messagesGetSuccess(response: UpstreamMessageHeadersResponse)(implicit http: WSHttpImpl): Unit =
     (http
-      .GET(_: String)(_: HttpReads[UpstreamMessageHeadersResponse], _: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *)
+      .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(_: HttpReads[UpstreamMessageHeadersResponse],
+                                                                          _: HeaderCarrier,
+                                                                          _: ExecutionContext))
+      .expects(*, *, *, *, *, *)
       .returns(Future successful response)
 
   def messagesGetFailure(response: Exception)(implicit http: WSHttpImpl): Unit =
     (http
-      .GET(_: String)(_: HttpReads[UpstreamMessageHeadersResponse], _: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *)
+      .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(_: HttpReads[UpstreamMessageHeadersResponse],
+                                                                          _: HeaderCarrier,
+                                                                          _: ExecutionContext))
+      .expects(*, *, *, *, *, *)
       .returns(Future failed response)
 
   def messageByGetSuccess(response: UpstreamMessageResponse)(implicit http: WSHttpImpl): Unit =
     (http
-      .GET(_: String)(_: HttpReads[UpstreamMessageResponse], _: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *)
+      .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(_: HttpReads[UpstreamMessageResponse],
+                                                                          _: HeaderCarrier,
+                                                                          _: ExecutionContext))
+      .expects(*, *, *, *, *, *)
       .returns(Future successful response)
 
   def messageByGetFailure(response: Exception)(implicit http: WSHttpImpl): Unit =
     (http
-      .GET(_: String)(_: HttpReads[UpstreamMessageResponse], _: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *)
+      .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(_: HttpReads[UpstreamMessageResponse],
+                                                                          _: HeaderCarrier,
+                                                                          _: ExecutionContext))
+      .expects(*, *, *, *, *, *)
       .returns(Future failed response)
 
   def renderGetSuccess(response: Future[HttpResponse])(implicit http: WSHttpImpl): Unit =
     (http
-      .GET(_: String)(_: HttpReads[HttpResponse], _: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *)
+      .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(_: HttpReads[HttpResponse],
+                                                                          _: HeaderCarrier,
+                                                                          _: ExecutionContext))
+      .expects(*, *, *, *, *, *)
       .returns(response)
 
   def renderGetFailure(response: Exception)(implicit http: WSHttpImpl): Unit =
     (http
-      .GET(_: String)(_: HttpReads[HttpResponse], _: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *)
+      .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(_: HttpReads[HttpResponse],
+                                                                          _: HeaderCarrier,
+                                                                          _: ExecutionContext))
+      .expects(*, *, *, *, *, *)
       .returns(Future failed response)
 
   def markAsReadPostSuccess(response: Future[HttpResponse])(implicit http: WSHttpImpl): Unit =

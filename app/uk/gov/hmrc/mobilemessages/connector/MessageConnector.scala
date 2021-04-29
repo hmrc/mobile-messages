@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import play.api.Configuration
 import play.api.libs.crypto.CookieSigner
 import play.twirl.api.Html
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageHeadersResponse, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
@@ -78,10 +77,8 @@ class MessageConnector @Inject() (
   ): Future[Html] = {
     val authToken: Authorization =
       hc.authorization.getOrElse(throw new IllegalArgumentException("Failed to find auth header!"))
-    val userId: String =
-      auth.flatMap(_.userID).getOrElse(throw new IllegalArgumentException("Failed to find the user!"))
 
-    val keys = Seq(SessionKeys.authToken -> encode(authToken.value, UTF_8), SessionKeys.userId -> userId)
+    val keys = Seq(SessionKeys.authToken -> encode(authToken.value, UTF_8))
 
     val session:            (String, String) = withSession(keys: _*)
     implicit val updatedHc: HeaderCarrier    = hc.withExtraHeaders(session)

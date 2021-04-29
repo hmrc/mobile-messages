@@ -4,8 +4,8 @@ private object AppDependencies {
 
   import play.core.PlayVersion
 
-  private val play26Bootstrap     = "1.5.0"
-  private val playHmrcApiVersion  = "4.1.0-play-26"
+  private val play26Bootstrap     = "4.3.0"
+  private val playHmrcApiVersion  = "6.2.0-play-26"
   private val domainVersion       = "5.6.0-play-26"
   private val emailAddressVersion = "3.4.0"
 
@@ -17,11 +17,11 @@ private object AppDependencies {
   private val refinedVersion       = "0.9.4"
 
   val compile = Seq(
-    "uk.gov.hmrc" %% "bootstrap-play-26" % play26Bootstrap,
-    "uk.gov.hmrc" %% "play-hmrc-api"     % playHmrcApiVersion,
-    "uk.gov.hmrc" %% "domain"            % domainVersion,
-    "uk.gov.hmrc" %% "emailaddress"      % emailAddressVersion,
-    "eu.timepit"  %% "refined"           % refinedVersion
+    "uk.gov.hmrc" %% "bootstrap-backend-play-26" % play26Bootstrap,
+    "uk.gov.hmrc" %% "play-hmrc-api"             % playHmrcApiVersion,
+    "uk.gov.hmrc" %% "domain"                    % domainVersion,
+    "uk.gov.hmrc" %% "emailaddress"              % emailAddressVersion,
+    "eu.timepit"  %% "refined"                   % refinedVersion
   )
 
   trait TestDependencies {
