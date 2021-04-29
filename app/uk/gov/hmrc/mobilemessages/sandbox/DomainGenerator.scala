@@ -36,10 +36,9 @@ object DomainGenerator {
 
   def nextSaUtr: SaUtr = saUtrGenerator.nextSaUtr
 
-  val nino:  Nino  = nextNino
-  val saUtr: SaUtr = nextSaUtr
-
-  val readMessageId = MessageId("543e8c6001000001003e4a9e")
+  val nino:          Nino      = nextNino
+  val saUtr:         SaUtr     = nextSaUtr
+  val readMessageId: MessageId = MessageId("543e8c6001000001003e4a9e")
 
   def readMessageHeader(saUtr: SaUtr = nextSaUtr): MessageHeader =
     MessageHeader(readMessageId,
@@ -48,7 +47,7 @@ object DomainGenerator {
                   Some(dateTime.minusDays(1)),
                   sentInError = false)
 
-  val unreadMessageId = MessageId("643e8c5f01000001003e4a8f")
+  val unreadMessageId: MessageId = MessageId("643e8c5f01000001003e4a8f")
 
   def unreadMessageHeader(saUtr: SaUtr = nextSaUtr): MessageHeader =
     MessageHeader(unreadMessageId, "Stopping Self Assessment", dateTime.toLocalDate, None, sentInError = false)

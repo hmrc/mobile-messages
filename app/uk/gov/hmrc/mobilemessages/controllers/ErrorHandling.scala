@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilemessages.controllers
 import play.api.mvc.Result
 import uk.gov.hmrc.api.controllers.ErrorResponse
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 
 import scala.concurrent.{ExecutionContext, Future}
 
