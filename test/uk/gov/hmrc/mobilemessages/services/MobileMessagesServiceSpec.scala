@@ -75,8 +75,8 @@ class MobileMessagesServiceSpec
           )
         )
       (mockMessageConnector
-        .render(_: Message, _: HeaderCarrier)(_: ExecutionContext, _: Option[Authority]))
-        .expects(*, *, *, *)
+        .render(_: Message, _: HeaderCarrier)(_: ExecutionContext))
+        .expects(*, *, *)
         .returns(Future successful html)
       (mockMessageConnector
         .markAsRead(_: UnreadMessage)(_: HeaderCarrier, _: ExecutionContext))
@@ -97,8 +97,8 @@ class MobileMessagesServiceSpec
         .expects(*, *, *)
         .returns(Future successful message.convertedFrom(message.bodyWith(id = messageId.value)))
       (mockMessageConnector
-        .render(_: Message, _: HeaderCarrier)(_: ExecutionContext, _: Option[Authority]))
-        .expects(*, *, *, *)
+        .render(_: Message, _: HeaderCarrier)(_: ExecutionContext))
+        .expects(*, *, *)
         .returns(Future successful html)
 
       await(service.readMessageContent(messageId)) shouldBe MessageWithHeader(

@@ -55,6 +55,8 @@ trait Authorisation extends Results with AuthorisedFunctions {
   lazy val lowConfidenceLevel    = new AccountWithLowCL
   lazy val upstreamException     = new Upstream4xxResponse(("userId not found"), 401, 401)
 
+  val logger: Logger = Logger(this.getClass)
+
   def grantAccess()(implicit hc: HeaderCarrier): Future[Authority] =
     authorised(ConfidenceLevel.L200)
       .retrieve(nino and internalId) {
@@ -76,11 +78,11 @@ trait Authorisation extends Results with AuthorisedFunctions {
       }
       .recover {
         case _: uk.gov.hmrc.http.Upstream4xxResponse =>
-          Logger.info("Unauthorized! Failed to grant access since 4xx response!")
+          logger.info("Unauthorized! Failed to grant access since 4xx response!")
           Unauthorized(toJson(ErrorUnauthorizedMicroService))
 
         case _: NinoNotFoundOnAccount =>
-          Logger.info("Unauthorized! NINO not found on account!")
+          logger.info("Unauthorized! NINO not found on account!")
           Forbidden(toJson(ErrorForbidden))
       }
   }

@@ -53,6 +53,8 @@ class MobileMessagesController @Inject() (
     with AccessControl
     with ControllerChecks {
 
+  override val logger: Logger = Logger(this.getClass)
+
   override def parser: BodyParser[AnyContent] = controllerComponents.parsers.anyContent
 
   val crypto: Encrypter with Decrypter =
@@ -82,17 +84,15 @@ class MobileMessagesController @Inject() (
               .validate[RenderMessageRequest]
               .fold(
                 errors => {
-                  Logger.warn("Received JSON error with read endpoint: " + errors)
+                  logger.warn("Received JSON error with read endpoint: " + errors)
                   Future.successful(BadRequest(Json.toJson(ErrorGenericBadRequest(errors))))
                 },
-                renderMessageRequest => {
-                  implicit val auth: Option[Authority] = authenticated.authority
+                renderMessageRequest =>
                   errorWrapper {
                     service
                       .readMessageContent(renderMessageRequest.toMessageIdUsing(crypto))
                       .map(message => Ok(message.html).withHeaders(buildResponseHeaders(message): _*))
                   }
-                }
               )
           }
         }

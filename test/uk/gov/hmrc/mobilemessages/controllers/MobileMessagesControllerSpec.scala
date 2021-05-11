@@ -54,8 +54,8 @@ class MobileMessagesControllerSpec
 
   def readMessageContentMock(response: Html): Unit =
     (mockMobileMessagesService
-      .readMessageContent(_: MessageId)(_: HeaderCarrier, _: ExecutionContext, _: Option[Authority]))
-      .expects(*, *, *, *)
+      .readMessageContent(_: MessageId)(_: HeaderCarrier, _: ExecutionContext))
+      .expects(*, *, *)
       .returns(
         Future successful MessageWithHeader(response,
                                             Some("2wsm-advisor"),

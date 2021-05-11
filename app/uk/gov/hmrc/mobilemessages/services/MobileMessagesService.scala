@@ -48,8 +48,7 @@ class MobileMessagesService @Inject() (
   def readMessageContent(
     messageId:   MessageId
   )(implicit hc: HeaderCarrier,
-    ec:          ExecutionContext,
-    auth:        Option[Authority]
+    ec:          ExecutionContext
   ): Future[MessageWithHeader] =
     withAudit("readMessageContent", Map.empty) {
       messageConnector.getMessageBy(messageId) flatMap { message =>
