@@ -27,7 +27,7 @@ import play.api.libs.crypto.CookieSigner
 import play.twirl.api.Html
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageHeadersResponse, UpstreamMessageResponse}
-import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
+import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -72,8 +72,7 @@ class MessageConnector @Inject() (
   def render(
     message:     Message,
     hc:          HeaderCarrier
-  )(implicit ec: ExecutionContext,
-    auth:        Option[Authority]
+  )(implicit ec: ExecutionContext
   ): Future[Html] = {
     val authToken: Authorization =
       hc.authorization.getOrElse(throw new IllegalArgumentException("Failed to find auth header!"))

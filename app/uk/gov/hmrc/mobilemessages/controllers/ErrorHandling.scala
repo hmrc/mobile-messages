@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilemessages.controllers
 
+import play.api.Logger
 import play.api.mvc.Result
 import uk.gov.hmrc.api.controllers.ErrorResponse
 import uk.gov.hmrc.http._
@@ -40,20 +41,23 @@ trait ErrorHandling {
   import play.api.{Logger, mvc}
   import uk.gov.hmrc.api.controllers.{ErrorInternalServerError, ErrorNotFound, ErrorUnauthorizedLowCL}
 
+  val logger: Logger = Logger(this.getClass)
+
   def errorWrapper(
     func:        => Future[mvc.Result]
   )(implicit hc: HeaderCarrier,
     ec:          ExecutionContext
   ): Future[Result] =
     func.recover {
-      case _: NotFoundException => Status(ErrorNotFound.httpStatusCode)(Json.toJson(ErrorNotFound))
+      case ex: Upstream4xxResponse if ex.upstreamResponseCode == 404 =>
+        Status(ErrorNotFound.httpStatusCode)(Json.toJson(ErrorNotFound))
 
       case _: UnauthorizedException => Unauthorized(Json.toJson(ErrorUnauthorizedMicroService))
 
       case _: ForbiddenException => Unauthorized(Json.toJson(ErrorUnauthorizedLowCL))
 
       case e: Throwable =>
-        Logger.error(s"Internal server error: ${e.getMessage}", e)
+        logger.error(s"Internal server error: ${e.getMessage}", e)
         Status(ErrorInternalServerError.httpStatusCode)(Json.toJson(ErrorInternalServerError))
     }
 }

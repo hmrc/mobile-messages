@@ -4,20 +4,20 @@ private object AppDependencies {
 
   import play.core.PlayVersion
 
-  private val play26Bootstrap     = "4.3.0"
-  private val playHmrcApiVersion  = "6.2.0-play-26"
-  private val domainVersion       = "5.6.0-play-26"
+  private val play27Bootstrap     = "5.1.0"
+  private val playHmrcApiVersion  = "6.2.0-play-27"
+  private val domainVersion       = "5.11.0-play-27"
   private val emailAddressVersion = "3.4.0"
 
   private val scalaMockVersion     = "4.4.0"
   private val scalaTestVersion     = "3.0.8"
   private val wireMockVersion      = "2.21.0"
   private val pegdownVersion       = "1.6.0"
-  private val scalaTestPlusVersion = "3.1.2"
+  private val scalaTestPlusVersion = "4.0.3"
   private val refinedVersion       = "0.9.4"
 
   val compile = Seq(
-    "uk.gov.hmrc" %% "bootstrap-backend-play-26" % play26Bootstrap,
+    "uk.gov.hmrc" %% "bootstrap-backend-play-27" % play27Bootstrap,
     "uk.gov.hmrc" %% "play-hmrc-api"             % playHmrcApiVersion,
     "uk.gov.hmrc" %% "domain"                    % domainVersion,
     "uk.gov.hmrc" %% "emailaddress"              % emailAddressVersion,

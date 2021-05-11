@@ -31,9 +31,11 @@ class RenderMessageLocationImpl @Inject() (@Named("baseUrl") _baseUrl: String =>
 
   import play.api.libs.json.Json
 
+  val logger: Logger = Logger(this.getClass)
+
   implicit def toUrl(renderMessageLocation: RenderMessageLocation): String = {
     val url = s"${_baseUrl(renderMessageLocation.service)}${renderMessageLocation.url}"
-    Logger.info(s"Sending request to $url")
+    logger.info(s"Sending request to $url")
     url
   }
 
