@@ -50,14 +50,14 @@ trait ErrorHandling {
   ): Future[Result] =
     func.recover {
       case ex: Upstream4xxResponse if ex.upstreamResponseCode == 404 =>
-        Status(ErrorNotFound.httpStatusCode)(Json.toJson(ErrorNotFound))
+        Status(ErrorNotFound.httpStatusCode)(Json.toJson[ErrorResponse](ErrorNotFound))
 
-      case _: UnauthorizedException => Unauthorized(Json.toJson(ErrorUnauthorizedMicroService))
+      case _: UnauthorizedException => Unauthorized(Json.toJson[ErrorResponse](ErrorUnauthorizedMicroService))
 
-      case _: ForbiddenException => Unauthorized(Json.toJson(ErrorUnauthorizedLowCL))
+      case _: ForbiddenException => Unauthorized(Json.toJson[ErrorResponse](ErrorUnauthorizedLowCL))
 
       case e: Throwable =>
         logger.error(s"Internal server error: ${e.getMessage}", e)
-        Status(ErrorInternalServerError.httpStatusCode)(Json.toJson(ErrorInternalServerError))
+        Status(ErrorInternalServerError.httpStatusCode)(Json.toJson[ErrorResponse](ErrorInternalServerError))
     }
 }
