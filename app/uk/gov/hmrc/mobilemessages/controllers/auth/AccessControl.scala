@@ -20,7 +20,7 @@ import play.api.Logger
 import play.api.libs.json.Json.toJson
 import play.api.libs.json.{Json, OFormat, Reads}
 import play.api.mvc._
-import uk.gov.hmrc.api.controllers.{ErrorAcceptHeaderInvalid, HeaderValidator}
+import uk.gov.hmrc.api.controllers.{ErrorAcceptHeaderInvalid, ErrorResponse, HeaderValidator}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.~
@@ -79,11 +79,11 @@ trait Authorisation extends Results with AuthorisedFunctions {
       .recover {
         case _: uk.gov.hmrc.http.Upstream4xxResponse =>
           logger.info("Unauthorized! Failed to grant access since 4xx response!")
-          Unauthorized(toJson(ErrorUnauthorizedMicroService))
+          Unauthorized(toJson[ErrorResponse](ErrorUnauthorizedMicroService))
 
         case _: NinoNotFoundOnAccount =>
           logger.info("Unauthorized! NINO not found on account!")
-          Forbidden(toJson(ErrorForbidden))
+          Forbidden(toJson[ErrorResponse](ErrorForbidden))
       }
   }
 
@@ -105,6 +105,6 @@ trait AccessControl extends HeaderValidator with Authorisation {
         if (rules(request.headers.get("Accept"))) {
           if (requiresAuth) invokeAuthBlock(request, block)
           else block(AuthenticatedRequest(None, request))
-        } else Future.successful(Status(ErrorAcceptHeaderInvalid.httpStatusCode)(toJson(ErrorAcceptHeaderInvalid)))
+        } else Future.successful(Status(ErrorAcceptHeaderInvalid.httpStatusCode)(toJson[ErrorResponse](ErrorAcceptHeaderInvalid)))
     }
 }
