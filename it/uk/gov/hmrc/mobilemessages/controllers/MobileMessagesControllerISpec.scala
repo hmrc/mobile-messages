@@ -11,6 +11,7 @@ import uk.gov.hmrc.mobilemessages.mocks.ShutteringMock._
 import uk.gov.hmrc.mobilemessages.support.BaseISpec
 
 class MobileMessagesControllerISpec extends BaseISpec {
+  val authorisationJsonHeader: (String, String) = "AUTHORIZATION" -> "Bearer 123"
 
   def request(
     url:       String,
@@ -31,7 +32,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
       messagesAreFound()
       stubForShutteringDisabled
 
-      await(request(url, journeyId).get()).status shouldBe 200
+      await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).get()).status shouldBe 200
     }
 
     "return a 400 without a journeyId" in {
@@ -51,13 +52,13 @@ class MobileMessagesControllerISpec extends BaseISpec {
     "return 403 when authority record does not have a high enough confidence level" in {
       authRecordExistsWithLowCL()
 
-      await(request(url, journeyId).get()).status shouldBe 403
+      await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).get()).status shouldBe 403
     }
 
     "return 403 when authority record does not contain a NINO" in {
       authRecordExistsWithoutNino()
 
-      await(request(url, journeyId).get()).status shouldBe 403
+      await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).get()).status shouldBe 403
     }
 
     "return a 406 when request does not contain an Accept header" in {
@@ -69,7 +70,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
       messagesNotFoundException()
       stubForShutteringDisabled
 
-      await(request(url, journeyId).get()).status shouldBe 404
+      await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).get()).status shouldBe 404
     }
 
     "return a valid response when MessageConnector returns 500" in {
@@ -77,7 +78,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
       messagesServiceUnavailableException()
       stubForShutteringDisabled
 
-      await(request(url, journeyId).get()).status shouldBe 500
+      await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).get()).status shouldBe 500
     }
 
     "return 401 with authorise call fails" in {
@@ -89,7 +90,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
       authRecordExists()
       stubForShutteringEnabled
 
-      val response = await(request(url, journeyId).get())
+      val response = await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).get())
 
       response.status shouldBe 521
       val shuttering: Shuttering = Json.parse(response.body).as[Shuttering]
@@ -181,13 +182,13 @@ class MobileMessagesControllerISpec extends BaseISpec {
     "return 403 when authority record does not have a high enough confidence level" in {
       authRecordExistsWithLowCL()
 
-      await(request(url, journeyId).post(toJson(messageUrl))).status shouldBe 403
+      await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).post(toJson(messageUrl))).status shouldBe 403
     }
 
     "return 403 when authority record does not contain a NINO" in {
       authRecordExistsWithoutNino()
 
-      await(request(url, journeyId).post(toJson(messageUrl))).status shouldBe 403
+      await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).post(toJson(messageUrl))).status shouldBe 403
     }
 
     "return a 406 when request does not contain an Accept header" in {
@@ -221,7 +222,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
       authRecordExists()
       stubForShutteringEnabled
 
-      val response = await(request(url, journeyId).addHttpHeaders(authHeader).post(toJson(messageUrl)))
+      val response = await(request(url, journeyId).addHttpHeaders(authHeader, authorisationJsonHeader).post(toJson(messageUrl)))
 
       response.status shouldBe 521
       val shuttering: Shuttering = Json.parse(response.body).as[Shuttering]
