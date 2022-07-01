@@ -193,4 +193,31 @@ class MessagesConnectorSpec extends WordSpecLike with Matchers with FutureAwaits
       }
     }
   }
+
+  "messageCount()" should {
+
+    "return a message count when a 200 response is received with a payload" in {
+      val messageCountResponse = MessageCountResponse(MessageCount(total = 2, unread = 1))
+
+      messageCountGetSuccess(messageCountResponse)
+
+      await(connector.messageCount()) shouldBe messageCountResponse
+    }
+
+    "throw BadRequestException when a 400 response is returned" in {
+      messagesGetFailure(badRequestException)
+
+      intercept[BadRequestException] {
+        await(connector.messageCount())
+      }
+    }
+
+    "throw Upstream5xxResponse when a 500 response is returned" in {
+      messagesGetFailure(upstream5xxResponse)
+
+      intercept[UpstreamErrorResponse] {
+        await(connector.messageCount())
+      }
+    }
+  }
 }

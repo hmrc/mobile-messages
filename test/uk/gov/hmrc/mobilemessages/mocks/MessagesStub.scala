@@ -20,6 +20,7 @@ import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilemessages.config.WSHttpImpl
 import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageHeadersResponse, UpstreamMessageResponse}
+import uk.gov.hmrc.mobilemessages.domain.MessageCountResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -87,5 +88,21 @@ trait MessagesStub extends MockFactory {
                                                       _: HeaderCarrier,
                                                       _: ExecutionContext))
       .expects(*, *, *, *, *)
+      .returns(Future failed response)
+
+  def messageCountGetSuccess(response: MessageCountResponse)(implicit http: WSHttpImpl): Unit =
+    (http
+      .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(_: HttpReads[MessageCountResponse],
+        _: HeaderCarrier,
+        _: ExecutionContext))
+      .expects(*, *, *, *, *, *)
+      .returns(Future successful response)
+
+  def messageCountGetFailure(response: Exception)(implicit http: WSHttpImpl): Unit =
+    (http
+      .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(_: HttpReads[MessageCountResponse],
+        _: HeaderCarrier,
+        _: ExecutionContext))
+      .expects(*, *, *, *, *, *)
       .returns(Future failed response)
 }

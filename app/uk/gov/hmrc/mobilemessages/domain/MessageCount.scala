@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.domain.types
+package uk.gov.hmrc.mobilemessages.domain
 
-import eu.timepit.refined._
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.boolean.{False, True}
-import eu.timepit.refined.string.MatchesRegex
+import play.api.libs.json.{Json, OFormat}
 
-object ModelTypes {
+final case class MessageCount(
+  total:  Int,
+  unread: Int)
 
-  type JourneyId = String Refined ValidJourneyId
-
-  private type ValidJourneyId =
-    MatchesRegex[W.`"""[A-Fa-f0-9]{8}\\-[A-Fa-f0-9]{4}\\-[A-Fa-f0-9]{4}\\-[A-Fa-f0-9]{4}\\-[A-Fa-f0-9]{12}"""`.T]
-
+case object MessageCount {
+  implicit val format: OFormat[MessageCount] = Json.format[MessageCount]
 }
+
+final case class MessageCountResponse(count: MessageCount)
+
+case object MessageCountResponse {
+  implicit val format: OFormat[MessageCountResponse] = Json.format[MessageCountResponse]
+}
+

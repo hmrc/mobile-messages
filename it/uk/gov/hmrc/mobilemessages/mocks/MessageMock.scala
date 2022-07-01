@@ -1,6 +1,8 @@
 package uk.gov.hmrc.mobilemessages.mocks
 
 import com.github.tomakehurst.wiremock.client.WireMock._
+import play.api.test.Helpers.contentAsJson
+import uk.gov.hmrc.mobilemessages.domain.{MessageCount, MessageCountResponse}
 
 object MessageMock {
 

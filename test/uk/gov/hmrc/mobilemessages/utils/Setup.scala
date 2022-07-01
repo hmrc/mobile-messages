@@ -33,7 +33,7 @@ import uk.gov.hmrc.mobilemessages.connector.{MessageConnector, ShutteringConnect
 import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
 import uk.gov.hmrc.mobilemessages.domain.types.ModelTypes.JourneyId
-import uk.gov.hmrc.mobilemessages.domain.{MessageHeader, MessageId, Shuttering}
+import uk.gov.hmrc.mobilemessages.domain.{MessageCount, MessageCountResponse, MessageHeader, MessageId, Shuttering}
 import uk.gov.hmrc.mobilemessages.mocks.{AuthorisationStub, MessagesStub, ShutteringStub, StubApplicationConfiguration}
 import uk.gov.hmrc.mobilemessages.services.MobileMessagesService
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
@@ -89,6 +89,8 @@ trait Setup extends AuthorisationStub with MessagesStub with StubApplicationConf
     message.headerWith(id = "id2"),
     message.headerWith(id = "id3")
   )
+
+  val messageCountResponse = MessageCountResponse(MessageCount(total = 2, unread = 1))
 
   val getMessageResponseItemList: Seq[MessageHeaderResponseBody] =
     MessageHeaderResponseBody.fromAll(messageHeaders = messageServiceHeadersResponse)(encrypter)

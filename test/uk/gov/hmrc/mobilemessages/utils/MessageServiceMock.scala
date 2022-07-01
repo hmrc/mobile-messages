@@ -73,6 +73,12 @@ class MessageServiceMock(authToken: String) {
   ): MessageHeader =
     MessageHeader(MessageId(id), subject, validFrom, readTime, sentInError)
 
+  def countWith(
+    total:       Int,
+    unread:      Int
+                ): MessageCount =
+    MessageCount(total, unread)
+
   def jsonRepresentationOf(message: UpstreamMessageResponse): String =
     if (message.markAsReadUrl.isDefined) {
       s"""
@@ -109,6 +115,17 @@ class MessageServiceMock(authToken: String) {
        | "count": {
        | "total":     ${messageHeaders.size},
        | "read":     ${messageHeaders.count(header => header.readTime.isDefined)}
+       |}
+       |
+      }
+      """.stripMargin
+
+  def jsonRepresentationOfCount(messageCount: MessageCount): String =
+    s"""
+       | {
+       | "count": {
+       | "total":     ${messageCount.total},
+       | "unread":    ${messageCount.unread}
        |}
        |
       }

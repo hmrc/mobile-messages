@@ -52,6 +52,12 @@ class MobileMessagesControllerSpec
       .expects(*, *)
       .returns(Future successful response)
 
+  def readMessageCountMock(response: MessageCountResponse): Unit =
+    (mockMobileMessagesService
+      .countOnlyMessages()(_: HeaderCarrier, _: ExecutionContext))
+      .expects(*, *)
+      .returns(Future successful response)
+
   def readMessageContentMock(response: Html): Unit =
     (mockMobileMessagesService
       .readMessageContent(_: MessageId)(_: HeaderCarrier, _: ExecutionContext))
@@ -83,7 +89,7 @@ class MobileMessagesControllerSpec
 
       val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
 
-      status(result)                                           shouldBe 200
+      status(result) shouldBe 200
       contentAsJson(result).as[Seq[MessageHeaderResponseBody]] shouldBe Seq.empty[MessageHeaderResponseBody]
     }
 
@@ -94,7 +100,7 @@ class MobileMessagesControllerSpec
 
       val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
 
-      status(result)                                           shouldBe 200
+      status(result) shouldBe 200
       contentAsJson(result).as[Seq[MessageHeaderResponseBody]] shouldBe Seq.empty[MessageHeaderResponseBody]
     }
 
@@ -105,7 +111,7 @@ class MobileMessagesControllerSpec
 
       val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
 
-      status(result)                                           shouldBe 200
+      status(result) shouldBe 200
       contentAsJson(result).as[Seq[MessageHeaderResponseBody]] shouldBe getMessageResponseItemList
     }
 
@@ -148,99 +154,159 @@ class MobileMessagesControllerSpec
       status(result) shouldBe 521
       val jsonBody = contentAsJson(result)
       (jsonBody \ "shuttered").as[Boolean] shouldBe true
-      (jsonBody \ "title").as[String]      shouldBe "Shuttered"
-      (jsonBody \ "message").as[String]    shouldBe "Messages are currently not available"
+      (jsonBody \ "title").as[String] shouldBe "Shuttered"
+      (jsonBody \ "message").as[String] shouldBe "Messages are currently not available"
     }
   }
 
-  "read() Live" should {
+    "getMessagesCount()" should {
 
-    "read a valid html response and header from the read service" in {
-      stubAuthorisationGrantAccess(Some(nino.nino) and userId)
-      readMessageContentMock(html)
-      stubShutteringResponse(notShuttered)
+      "return a message count successfully" in {
+        stubAuthorisationGrantAccess(Some(nino.nino) and userId)
+        readMessageCountMock(messageCountResponse)
+        stubShutteringResponse(notShuttered)
 
-      val result = liveController.read(journeyId)(readTimeRequest)
+        val result = liveController.getMessageCount(journeyId)(emptyRequestWithAcceptHeader)
 
-      val `type`   = Await.result(result.map[String](h => h.header.headers("type")), 1 second)
-      val threadId = Await.result(result.map[String](h => h.header.headers("threadId")), 1 second)
+        status(result) shouldBe 200
+        contentAsJson(result).as[MessageCountResponse] shouldBe messageCountResponse
+      }
 
-      status(result)          shouldBe 200
-      contentAsString(result) shouldBe html.toString()
-      `type`                  shouldBe "2wsm-advisor"
-      threadId                shouldBe "9794f96d-f595-4b03-84dc-1861408918fb"
+      "return forbidden when authority record does not contain a NINO" in {
+        stubAuthorisationGrantAccess(None and userId)
+
+        val result = liveController.getMessageCount(journeyId)(emptyRequestWithAcceptHeader)
+
+        status(result) shouldBe 403
+      }
+
+      "return unauthorized when auth call fails" in {
+        stubAuthorisationUnauthorised()
+
+        val result = liveController.getMessageCount(journeyId)(emptyRequestWithAcceptHeader)
+
+        status(result) shouldBe 401
+      }
+
+      "return status code 406 when the headers are invalid" in {
+        val result = liveController.getMessageCount(journeyId)(FakeRequest())
+
+        status(result) shouldBe 406
+      }
+
+      "return 521 when shuttered" in {
+        stubShutteringResponse(shuttered)
+        stubAuthorisationGrantAccess(Some(nino.nino) and userId)
+
+        val result = liveController.getMessageCount(journeyId)(emptyRequestWithAcceptHeader)
+
+        status(result) shouldBe 521
+        val jsonBody = contentAsJson(result)
+        (jsonBody \ "shuttered").as[Boolean] shouldBe true
+        (jsonBody \ "title").as[String] shouldBe "Shuttered"
+        (jsonBody \ "message").as[String] shouldBe "Messages are currently not available"
+      }
     }
 
-    "return forbidden when authority record does not contain a NINO" in {
-      stubAuthorisationGrantAccess(None and userId)
+    "read() Live" should {
 
-      val result = liveController.read(journeyId)(readTimeRequest)
+      "read a valid html response and header from the read service" in {
+        stubAuthorisationGrantAccess(Some(nino.nino) and userId)
+        readMessageContentMock(html)
+        stubShutteringResponse(notShuttered)
 
-      status(result) shouldBe 403
+        val result = liveController.read(journeyId)(readTimeRequest)
+
+        val `type` = Await.result(result.map[String](h => h.header.headers("type")), 1 second)
+        val threadId = Await.result(result.map[String](h => h.header.headers("threadId")), 1 second)
+
+        status(result) shouldBe 200
+        contentAsString(result) shouldBe html.toString()
+        `type` shouldBe "2wsm-advisor"
+        threadId shouldBe "9794f96d-f595-4b03-84dc-1861408918fb"
+      }
+
+      "return forbidden when authority record does not contain a NINO" in {
+        stubAuthorisationGrantAccess(None and userId)
+
+        val result = liveController.read(journeyId)(readTimeRequest)
+
+        status(result) shouldBe 403
+      }
+
+      "return unauthorized when auth call fails" in {
+        stubAuthorisationUnauthorised()
+
+        val result = liveController.read(journeyId)(readTimeRequest)
+
+        status(result) shouldBe 401
+      }
+
+      "return status code 406 when the headers are invalid" in {
+        val result = liveController.read(journeyId)(readTimeRequestNoAcceptHeader)
+
+        status(result) shouldBe 406
+      }
+
+      "return unauthorized when unable to retrieve authority record uri" in {
+        stubAuthorisationGrantAccess(Some(nino.nino) and None)
+
+        val result = liveController.read(journeyId)(readTimeRequest)
+
+        status(result) shouldBe 401
+      }
+
+      "return 521 when shuttered" in {
+        stubShutteringResponse(shuttered)
+        stubAuthorisationGrantAccess(Some(nino.nino) and userId)
+
+        val result = liveController.read(journeyId)(readTimeRequest)
+
+        status(result) shouldBe 521
+        val jsonBody = contentAsJson(result)
+        (jsonBody \ "shuttered").as[Boolean] shouldBe true
+        (jsonBody \ "title").as[String] shouldBe "Shuttered"
+        (jsonBody \ "message").as[String] shouldBe "Messages are currently not available"
+      }
     }
 
-    "return unauthorized when auth call fails" in {
-      stubAuthorisationUnauthorised()
+    val sandboxController =
+      new SandboxMobileMessagesController(
+        Configuration.from(Map("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")),
+        stubControllerComponents()
+      )
 
-      val result = liveController.read(journeyId)(readTimeRequest)
+    "getMessages() Sandbox" should {
+      "return messages" in {
+        val result = sandboxController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
 
-      status(result) shouldBe 401
+        status(result) shouldBe 200
+
+        val jsonResponse: JsValue = contentAsJson(result)
+        val restTime: Long = (jsonResponse \ 0 \ "readTime").as[Long]
+        jsonResponse shouldBe Json.parse(messages(restTime))
+      }
+    }
+    "getMessageCount() Sandbox" should {
+      "return message count" in {
+        val result = sandboxController.getMessageCount(journeyId)(emptyRequestWithAcceptHeader)
+
+        status(result) shouldBe 200
+
+        val jsonResponse: MessageCountResponse = contentAsJson(result).as[MessageCountResponse]
+        jsonResponse.count.total shouldBe 2
+        jsonResponse.count.unread shouldBe 1
+      }
     }
 
-    "return status code 406 when the headers are invalid" in {
-      val result = liveController.read(journeyId)(readTimeRequestNoAcceptHeader)
+    "read() Sandbox" should {
 
-      status(result) shouldBe 406
+      "return messages" in {
+        val result = sandboxController.read(journeyId)(readTimeRequest)
+
+        status(result) shouldBe 200
+
+        contentAsString(result) shouldEqual newTaxStatement.toString()
+      }
     }
-
-    "return unauthorized when unable to retrieve authority record uri" in {
-      stubAuthorisationGrantAccess(Some(nino.nino) and None)
-
-      val result = liveController.read(journeyId)(readTimeRequest)
-
-      status(result) shouldBe 401
-    }
-
-    "return 521 when shuttered" in {
-      stubShutteringResponse(shuttered)
-      stubAuthorisationGrantAccess(Some(nino.nino) and userId)
-
-      val result = liveController.read(journeyId)(readTimeRequest)
-
-      status(result) shouldBe 521
-      val jsonBody = contentAsJson(result)
-      (jsonBody \ "shuttered").as[Boolean] shouldBe true
-      (jsonBody \ "title").as[String]      shouldBe "Shuttered"
-      (jsonBody \ "message").as[String]    shouldBe "Messages are currently not available"
-    }
-  }
-
-  val sandboxController =
-    new SandboxMobileMessagesController(
-      Configuration.from(Map("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")),
-      stubControllerComponents()
-    )
-
-  "getMessages() Sandbox" should {
-    "return messages" in {
-      val result = sandboxController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
-
-      status(result) shouldBe 200
-
-      val jsonResponse: JsValue = contentAsJson(result)
-      val restTime:     Long    = (jsonResponse \ 0 \ "readTime").as[Long]
-      jsonResponse shouldBe Json.parse(messages(restTime))
-    }
-  }
-
-  "read() Sandbox" should {
-
-    "return messages" in {
-      val result = sandboxController.read(journeyId)(readTimeRequest)
-
-      status(result) shouldBe 200
-
-      contentAsString(result) shouldEqual newTaxStatement.toString()
-    }
-  }
 }

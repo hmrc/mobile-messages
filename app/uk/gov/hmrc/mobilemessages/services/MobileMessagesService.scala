@@ -17,13 +17,14 @@
 package uk.gov.hmrc.mobilemessages.services
 
 import com.google.inject._
+
 import javax.inject.Named
 import play.api.Configuration
 import play.twirl.api.Html
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilemessages.connector._
 import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
-import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
+import uk.gov.hmrc.mobilemessages.domain.{Message, MessageCount, MessageCountResponse, MessageHeader, MessageId, UnreadMessage}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.service.Auditor
 
@@ -44,6 +45,13 @@ class MobileMessagesService @Inject() (
     withAudit("readAndUnreadMessages", Map.empty) {
       messageConnector.messages()
     }
+
+  def countOnlyMessages(
+                           )(implicit hc: HeaderCarrier,
+                             ec:          ExecutionContext
+                           ): Future[MessageCountResponse] = {
+    messageConnector.messageCount()
+  }
 
   def readMessageContent(
     messageId:   MessageId
