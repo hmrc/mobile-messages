@@ -20,6 +20,7 @@ API
 |--------|----|----|
 | ```/messages``` | GET | Returns all the user's digital messages. [More...](docs/messages.md)  |
 | ```/messages/read``` | POST | Returns a specific user message as an HTML partial. [More...](docs/read-message.md)  |
+| ```/messages/count``` | GET | Returns a count of all the user's digital messages. [More...](docs/messages-count.md)  |
 
 
 # Sandbox
@@ -37,7 +38,8 @@ See each linked file for details:
 | *Task* | *Supported Methods* | *Description* |
 |--------|----|----|
 | ```/messages``` | GET | Acts as a stub for the related live endpoint. [More...](docs/sandbox/messages.md)  |
-| ```/read-message``` | GET | Acts as a stub for the related live endpoint. [More...](docs/sandbox/read-message.md)  |
+| ```/read-message``` | POST | Acts as a stub for the related live endpoint. [More...](docs/sandbox/read-message.md)  |
+| ```/read-message``` | GET | Acts as a stub for the related live endpoint. [More...](docs/sandbox/messages-count.md)  |
 
 
 # Version

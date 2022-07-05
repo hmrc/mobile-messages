@@ -2,6 +2,6 @@
 
 GET         /messages                        @uk.gov.hmrc.mobilemessages.controllers.MobileMessagesController.getMessages(journeyId: JourneyId)
 
-GET         /messages                        @uk.gov.hmrc.mobilemessages.controllers.MobileMessagesController.getMessageCount(journeyId: JourneyId)
+GET         /messages/count                  @uk.gov.hmrc.mobilemessages.controllers.MobileMessagesController.getMessageCount(journeyId: JourneyId)
 
 POST        /messages/read                   @uk.gov.hmrc.mobilemessages.controllers.MobileMessagesController.read(journeyId: JourneyId)

@@ -47,11 +47,10 @@ class MobileMessagesService @Inject() (
     }
 
   def countOnlyMessages(
-                           )(implicit hc: HeaderCarrier,
-                             ec:          ExecutionContext
-                           ): Future[MessageCountResponse] = {
+  )(implicit hc: HeaderCarrier,
+    ec:          ExecutionContext
+  ): Future[MessageCountResponse] =
     messageConnector.messageCount()
-  }
 
   def readMessageContent(
     messageId:   MessageId

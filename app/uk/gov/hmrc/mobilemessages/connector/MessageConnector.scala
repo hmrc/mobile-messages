@@ -63,9 +63,9 @@ class MessageConnector @Inject() (
     http.GET[UpstreamMessageHeadersResponse](s"$messageBaseUrl/messages").map(_.items)
 
   def messageCount(
-                  )(implicit hc: HeaderCarrier,
-                    ec:          ExecutionContext
-                  ): Future[MessageCountResponse] =
+  )(implicit hc: HeaderCarrier,
+    ec:          ExecutionContext
+  ): Future[MessageCountResponse] =
     http.GET[MessageCountResponse](s"$messageBaseUrl/messages?countOnly=true")
 
   def getMessageBy(

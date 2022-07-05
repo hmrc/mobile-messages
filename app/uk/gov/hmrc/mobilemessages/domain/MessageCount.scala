@@ -31,4 +31,3 @@ final case class MessageCountResponse(count: MessageCount)
 case object MessageCountResponse {
   implicit val format: OFormat[MessageCountResponse] = Json.format[MessageCountResponse]
 }
-
