@@ -18,8 +18,8 @@ package uk.gov.hmrc.mobilemessages.connector
 
 import java.net.URLEncoder.encode
 import java.time.LocalDateTime
-
 import com.typesafe.config.Config
+
 import javax.inject.{Inject, Named}
 import org.apache.commons.codec.CharEncoding.UTF_8
 import play.api.Configuration
@@ -28,7 +28,7 @@ import play.twirl.api.Html
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageHeadersResponse, UpstreamMessageResponse}
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.mobilemessages.domain.{Message, MessageHeader, MessageId, UnreadMessage}
+import uk.gov.hmrc.mobilemessages.domain.{Message, MessageCountResponse, MessageHeader, MessageId, UnreadMessage}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -61,6 +61,12 @@ class MessageConnector @Inject() (
     ec:          ExecutionContext
   ): Future[Seq[MessageHeader]] =
     http.GET[UpstreamMessageHeadersResponse](s"$messageBaseUrl/messages").map(_.items)
+
+  def messageCount(
+  )(implicit hc: HeaderCarrier,
+    ec:          ExecutionContext
+  ): Future[MessageCountResponse] =
+    http.GET[MessageCountResponse](s"$messageBaseUrl/messages?countOnly=true")
 
   def getMessageBy(
     id:          MessageId

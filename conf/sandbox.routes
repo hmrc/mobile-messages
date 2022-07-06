@@ -2,4 +2,6 @@
 
 GET         /messages             @uk.gov.hmrc.mobilemessages.controllers.SandboxMobileMessagesController.getMessages(journeyId: JourneyId)
 
+GET         /messages/count       @uk.gov.hmrc.mobilemessages.controllers.SandboxMobileMessagesController.getMessageCount(journeyId: JourneyId)
+
 POST        /messages/read        @uk.gov.hmrc.mobilemessages.controllers.SandboxMobileMessagesController.read(journeyId: JourneyId)

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.mobilemessages.controllers
 
 import com.google.inject.Singleton
+
 import javax.inject.Inject
 import play.api.libs.crypto.CookieSigner
 import play.api.libs.json._
@@ -29,7 +30,7 @@ import uk.gov.hmrc.domain.SaUtr
 import uk.gov.hmrc.mobilemessages.connector.ShutteringConnector
 import uk.gov.hmrc.mobilemessages.controllers.auth.{AccessControl, Authority}
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
-import uk.gov.hmrc.mobilemessages.domain.MessageHeader
+import uk.gov.hmrc.mobilemessages.domain.{MessageCount, MessageCountResponse, MessageHeader}
 import uk.gov.hmrc.mobilemessages.domain.types.ModelTypes.JourneyId
 import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator.{nextSaUtr, readMessageHeader, unreadMessageHeader}
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
@@ -75,6 +76,21 @@ class MobileMessagesController @Inject() (
       }
     }
 
+  def getMessageCount(journeyId: JourneyId): Action[AnyContent] =
+    validateAcceptWithAuth(acceptHeaderValidationRules).async { implicit authenticated =>
+      shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
+        withShuttering(shuttered) {
+          errorWrapper(
+            service
+              .countOnlyMessages()
+              .map(messageCount =>
+                Ok(Json.toJson(messageCount))
+              )
+          )
+        }
+      }
+    }
+
   def read(journeyId: JourneyId): Action[JsValue] =
     validateAcceptWithAuth(acceptHeaderValidationRules).async(controllerComponents.parsers.json) {
       implicit authenticated =>
@@ -101,9 +117,9 @@ class MobileMessagesController @Inject() (
   def buildResponseHeaders(message: MessageWithHeader): Seq[(String, String)] =
     (message.`type`, message.threadId) match {
       case (Some(messageType), Some(threadId)) => Seq(("type", messageType), ("threadId", threadId))
-      case (Some(messageType), None)           => Seq(("type", messageType))
-      case (None, Some(threadId))              => Seq(("threadId", threadId))
-      case (None, None)                        => Seq.empty
+      case (Some(messageType), None) => Seq(("type", messageType))
+      case (None, Some(threadId)) => Seq(("threadId", threadId))
+      case (None, None) => Seq.empty
 
     }
 }
@@ -138,16 +154,31 @@ class SandboxMobileMessagesController @Inject() (
       })
     }
 
+  def getMessageCount(journeyId: JourneyId): Action[AnyContent] =
+    validateAccept(acceptHeaderValidationRules).async { implicit request =>
+      Future successful (request.headers.get("SANDBOX-CONTROL") match {
+        case Some("ERROR-401") => Unauthorized
+        case Some("ERROR-403") => Forbidden
+        case Some("ERROR-500") => InternalServerError
+        case _ =>
+          Ok(
+            Json.toJson(
+              MessageCountResponse(MessageCount(total = 2, unread = 1))
+            )
+          )
+      })
+    }
+
   def read(journeyId: JourneyId): Action[JsValue] =
     validateAccept(acceptHeaderValidationRules).async(controllerComponents.parsers.json) { implicit request =>
       Future successful (request.headers.get("SANDBOX-CONTROL") match {
         case Some("ANNUAL-TAX-SUMMARY") => Ok(annualTaxSummary)
-        case Some("STOPPING-SA")        => Ok(stoppingSA)
-        case Some("OVERDUE-PAYMENT")    => Ok(overduePayment)
-        case Some("ERROR-401")          => Unauthorized
-        case Some("ERROR-403")          => Forbidden
-        case Some("ERROR-500")          => InternalServerError
-        case _                          => Ok(newTaxStatement)
+        case Some("STOPPING-SA") => Ok(stoppingSA)
+        case Some("OVERDUE-PAYMENT") => Ok(overduePayment)
+        case Some("ERROR-401") => Unauthorized
+        case Some("ERROR-403") => Forbidden
+        case Some("ERROR-500") => InternalServerError
+        case _ => Ok(newTaxStatement)
       })
     }
 }

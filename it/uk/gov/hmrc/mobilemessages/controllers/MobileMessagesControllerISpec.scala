@@ -4,7 +4,7 @@ import play.api.libs.json.Json
 import play.api.libs.json.Json.toJson
 import play.api.libs.ws.{WSRequest, WSResponse}
 import uk.gov.hmrc.mobilemessages.controllers.model.RenderMessageRequest
-import uk.gov.hmrc.mobilemessages.domain.Shuttering
+import uk.gov.hmrc.mobilemessages.domain.{MessageCountResponse, Shuttering}
 import uk.gov.hmrc.mobilemessages.mocks.AuthMock._
 import uk.gov.hmrc.mobilemessages.mocks.MessageMock._
 import uk.gov.hmrc.mobilemessages.mocks.ShutteringMock._
@@ -33,6 +33,86 @@ class MobileMessagesControllerISpec extends BaseISpec {
       stubForShutteringDisabled
 
       await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).get()).status shouldBe 200
+    }
+
+    "return a 400 without a journeyId" in {
+      authRecordExists()
+      messagesAreFound()
+
+      await(wsUrl(url).get()).status shouldBe 400
+    }
+
+    "return a 400 with invalid journeyId" in {
+      authRecordExists()
+      messagesAreFound()
+
+      await(request(url, "ThisIsAnInvalidJourneyId").get()).status shouldBe 400
+    }
+
+    "return 403 when authority record does not have a high enough confidence level" in {
+      authRecordExistsWithLowCL()
+
+      await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).get()).status shouldBe 403
+    }
+
+    "return 403 when authority record does not contain a NINO" in {
+      authRecordExistsWithoutNino()
+
+      await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).get()).status shouldBe 403
+    }
+
+    "return a 406 when request does not contain an Accept header" in {
+      await(requestWithoutAcceptHeader(url, journeyId).get()).status shouldBe 406
+    }
+
+    "return a valid response when MessageConnector returns 404" in {
+      authRecordExists()
+      messagesNotFoundException()
+      stubForShutteringDisabled
+
+      await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).get()).status shouldBe 404
+    }
+
+    "return a valid response when MessageConnector returns 500" in {
+      authRecordExists()
+      messagesServiceUnavailableException()
+      stubForShutteringDisabled
+
+      await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).get()).status shouldBe 500
+    }
+
+    "return 401 with authorise call fails" in {
+      authFailure()
+      await(request(url, journeyId).get()).status shouldBe 401
+    }
+
+    "return shuttered when shuttered" in {
+      authRecordExists()
+      stubForShutteringEnabled
+
+      val response = await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).get())
+
+      response.status shouldBe 521
+      val shuttering: Shuttering = Json.parse(response.body).as[Shuttering]
+      shuttering.shuttered shouldBe true
+      shuttering.title     shouldBe Some("Shuttered")
+      shuttering.message   shouldBe Some("Messages are currently not available")
+    }
+  }
+
+  "GET /messages/count" should {
+    val url = "/messages/count"
+
+    "return a valid response with a journeyId" in {
+      authRecordExists()
+      messagesAreFound()
+      stubForShutteringDisabled
+
+      val response = await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).get())
+      response.status shouldBe 200
+      val parsedResponse = Json.parse(response.body).as[MessageCountResponse]
+      parsedResponse.count.unread shouldBe 1
+      parsedResponse.count.total  shouldBe 2
     }
 
     "return a 400 without a journeyId" in {
@@ -222,7 +302,8 @@ class MobileMessagesControllerISpec extends BaseISpec {
       authRecordExists()
       stubForShutteringEnabled
 
-      val response = await(request(url, journeyId).addHttpHeaders(authHeader, authorisationJsonHeader).post(toJson(messageUrl)))
+      val response =
+        await(request(url, journeyId).addHttpHeaders(authHeader, authorisationJsonHeader).post(toJson(messageUrl)))
 
       response.status shouldBe 521
       val shuttering: Shuttering = Json.parse(response.body).as[Shuttering]
