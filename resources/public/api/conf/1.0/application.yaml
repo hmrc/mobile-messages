@@ -1,0 +1,284 @@
+openapi: 3.0.0
+info:
+  title: Mobile Messages
+  description: >-
+    ### What is this API for?
+
+    The API is used to retrieve messages.
+  contact: {}
+  version: '1.0'
+servers:
+  - url: https://test-api.service.hmrc.gov.uk/mobile-messages
+    description: Sandbox
+  - url: https://api.service.hmrc.gov.uk/mobile-messages
+    description: Production
+    variables: {}
+paths:
+  /mobile-messages/messages:
+    get:
+      tags:
+        - mobile-messages
+      summary: Get messages
+      description: This endpoint retrieves the messages.
+      operationId: Getmessages
+      parameters:
+        - name: journeyId
+          in: query
+          description: ''
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MobileMessagesMessagesresponse'
+                description: ''
+                example:
+                  - id: 543e8c6001000001003e4a9e
+                    subject: You have a new tax statement
+                    validFrom: 2018-06-25
+                    readTime: 1530087139233
+                    readTimeUrl: eHFVWklrN2RaR1dudk9qK1hBUEFvbXNLRmo5M3dNdjkzU2tNL1lVamxMbz0=
+                    sentInError: false
+                  - id: 643e8c5f01000001003e4a8f
+                    subject: Stopping Self Assessment
+                    validFrom: 2018-06-28
+                    readTimeUrl: cEE1N0hEcGpmdmdsNUtmMWpqYUp3RFRNNSt4Y21HcW4rN29zcEtkOWcwcz0=
+                    sentInError: false
+              examples:
+                example-1:
+                  value:
+                    - id: 543e8c6001000001003e4a9e
+                      subject: You have a new tax statement
+                      validFrom: 2018-06-25
+                      readTime: 1530087139233
+                      readTimeUrl: eHFVWklrN2RaR1dudk9qK1hBUEFvbXNLRmo5M3dNdjkzU2tNL1lVamxMbz0=
+                      sentInError: false
+                    - id: 643e8c5f01000001003e4a8f
+                      subject: Stopping Self Assessment
+                      validFrom: 2018-06-28
+                      readTimeUrl: cEE1N0hEcGpmdmdsNUtmMWpqYUp3RFRNNSt4Y21HcW4rN29zcEtkOWcwcz0=
+                      sentInError: false
+      deprecated: false
+      security:
+        - userRestricted:
+            - read:native-apps-api-orchestration
+  /mobile-messages/messages/read:
+    post:
+      tags:
+        - mobile-messages
+      summary: Read message
+      description: This endpoint retrieves the message.
+      operationId: Readmessage
+      parameters:
+        - name: journeyId
+          in: query
+          description: ''
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MobileMessagesMessagesReadresponse'
+                description: ''
+                example:
+                  - id: 543e8c6001000001003e4a9e
+                    subject: You have a new tax statement
+                    validFrom: 2018-06-25
+                    readTime: 1530087139233
+                    readTimeUrl: eHFVWklrN2RaR1dudk9qK1hBUEFvbXNLRmo5M3dNdjkzU2tNL1lVamxMbz0=
+                    sentInError: false
+                  - id: 643e8c5f01000001003e4a8f
+                    subject: Stopping Self Assessment
+                    validFrom: 2018-06-28
+                    readTimeUrl: cEE1N0hEcGpmdmdsNUtmMWpqYUp3RFRNNSt4Y21HcW4rN29zcEtkOWcwcz0=
+                    sentInError: false
+              examples:
+                example-1:
+                  value:
+                    - id: 543e8c6001000001003e4a9e
+                      subject: You have a new tax statement
+                      validFrom: 2018-06-25
+                      readTime: 1530087139233
+                      readTimeUrl: eHFVWklrN2RaR1dudk9qK1hBUEFvbXNLRmo5M3dNdjkzU2tNL1lVamxMbz0=
+                      sentInError: false
+                    - id: 643e8c5f01000001003e4a8f
+                      subject: Stopping Self Assessment
+                      validFrom: 2018-06-28
+                      readTimeUrl: cEE1N0hEcGpmdmdsNUtmMWpqYUp3RFRNNSt4Y21HcW4rN29zcEtkOWcwcz0=
+                      sentInError: false
+      deprecated: false
+      security:
+        - userRestricted:
+            - read:native-apps-api-orchestration
+  /mobile-messages/messages/count:
+    get:
+      tags:
+        - mobile-messages
+      summary: Get message count
+      description: This endpoint retrieves the number of messages.
+      operationId: Getmessagecount
+      parameters:
+        - name: journeyId
+          in: query
+          description: ''
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/MobileMessagesMessagesCountresponse'
+                  - example:
+                      count:
+                        total: 5
+                        unread: 2
+              examples:
+                example-1:
+                  value:
+                    count:
+                      total: 5
+                      unread: 2
+      deprecated: false
+      security:
+        - userRestricted:
+            - read:native-apps-api-orchestration
+components:
+  securitySchemes:
+    userRestricted:
+      type: oauth2
+      description: |
+        HMRC supports OAuth 2.0 for authenticating user-restricted API requests using an OAuth 2.0 Bearer Token in the
+        AUTHORIZATION header.
+        See https://developer.service.hmrc.gov.uk/api-documentation/docs/authorisation/user-restricted-endpoints for details.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://api.service.hmrc.gov.uk/oauth/authorize
+          tokenUrl: https://api.service.hmrc.gov.uk/oauth/token
+          refreshUrl: https://api.service.hmrc.gov.uk/oauth/refresh
+          scopes:
+            read:native-apps-api-orchestration: Allow mobile apps to to retrieve messages.
+  schemas:
+    errorResponse:
+      title: errorResponse
+      required:
+        - code
+      type: object
+      properties:
+        code:
+          type: string
+    Count:
+      title: Count
+      required:
+        - total
+        - unread
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int32
+        unread:
+          type: integer
+          format: int32
+      example:
+        total: 5
+        unread: 2
+    MobileMessagesMessagesCountresponse:
+      title: MobileMessagesMessagesCountresponse
+      required:
+        - count
+      type: object
+      properties:
+        count:
+          $ref: '#/components/schemas/Count'
+      example:
+        count:
+          total: 5
+          unread: 2
+    MobileMessagesMessagesReadresponse:
+      title: MobileMessagesMessagesReadresponse
+      required:
+        - id
+        - subject
+        - validFrom
+        - readTimeUrl
+        - sentInError
+      type: object
+      properties:
+        id:
+          type: string
+        subject:
+          type: string
+        validFrom:
+          type: string
+        readTime:
+          type: integer
+          format: int64
+        readTimeUrl:
+          type: string
+        sentInError:
+          type: boolean
+      example:
+        id: 543e8c6001000001003e4a9e
+        subject: You have a new tax statement
+        validFrom: 2018-06-25
+        readTime: 1530087139233
+        readTimeUrl: eHFVWklrN2RaR1dudk9qK1hBUEFvbXNLRmo5M3dNdjkzU2tNL1lVamxMbz0=
+        sentInError: false
+    MobileMessagesMessagesresponse:
+      title: MobileMessagesMessagesresponse
+      required:
+        - id
+        - subject
+        - validFrom
+        - readTimeUrl
+        - sentInError
+      type: object
+      properties:
+        id:
+          type: string
+        subject:
+          type: string
+        validFrom:
+          type: string
+        readTime:
+          type: integer
+          format: int64
+        readTimeUrl:
+          type: string
+        sentInError:
+          type: boolean
+      example:
+        id: 543e8c6001000001003e4a9e
+        subject: You have a new tax statement
+        validFrom: 2018-06-25
+        readTime: 1530087139233
+        readTimeUrl: eHFVWklrN2RaR1dudk9qK1hBUEFvbXNLRmo5M3dNdjkzU2tNL1lVamxMbz0=
+        sentInError: false
+tags:
+  - name: mobile-messages
+    description: ''
