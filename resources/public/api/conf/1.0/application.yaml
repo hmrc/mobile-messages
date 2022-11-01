@@ -70,7 +70,7 @@ paths:
       deprecated: false
       security:
         - userRestricted:
-            - read:native-apps-api-orchestration
+            - read:messages
   /mobile-messages/messages/read:
     post:
       tags:
@@ -127,7 +127,7 @@ paths:
       deprecated: false
       security:
         - userRestricted:
-            - read:native-apps-api-orchestration
+            - read:messages
   /mobile-messages/messages/count:
     get:
       tags:
@@ -166,7 +166,7 @@ paths:
       deprecated: false
       security:
         - userRestricted:
-            - read:native-apps-api-orchestration
+            - read:messages
 components:
   securitySchemes:
     userRestricted:
@@ -181,7 +181,7 @@ components:
           tokenUrl: https://api.service.hmrc.gov.uk/oauth/token
           refreshUrl: https://api.service.hmrc.gov.uk/oauth/refresh
           scopes:
-            read:native-apps-api-orchestration: Allow mobile apps to to retrieve messages.
+            read:messages: Allow mobile apps to to retrieve messages.
   schemas:
     errorResponse:
       title: errorResponse
