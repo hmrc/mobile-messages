@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,6 +76,7 @@ class MessagesConnectorSpec extends WordSpecLike with Matchers with FutureAwaits
 
   private val upstream5xxResponse = UpstreamErrorResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)
   private val badRequestException = new BadRequestException("")
+  private val tooManyRequestException = new TooManyRequestException("")
 
   "messages()" should {
 
@@ -100,6 +101,14 @@ class MessagesConnectorSpec extends WordSpecLike with Matchers with FutureAwaits
       messagesGetFailure(upstream5xxResponse)
 
       intercept[UpstreamErrorResponse] {
+        await(connector.messages())
+      }
+    }
+
+    "throw TooManyRequestException when a 429 is returned" in {
+      messagesGetFailure(tooManyRequestException)
+
+      intercept[TooManyRequestException] {
         await(connector.messages())
       }
     }

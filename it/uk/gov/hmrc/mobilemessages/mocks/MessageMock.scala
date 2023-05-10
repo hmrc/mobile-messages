@@ -43,6 +43,9 @@ object MessageMock {
   def messagesNotFoundException(): Unit =
     stubFor(get(urlPathEqualTo("/messages")).willReturn(aResponse().withStatus(404)))
 
+  def messagesTooManyRequestsException(): Unit =
+    stubFor(get(urlPathEqualTo("/messages")).willReturn(aResponse().withStatus(429)))
+
   def messagesServiceUnavailableException(): Unit =
     stubFor(get(urlPathEqualTo("/messages")).willReturn(aResponse().withStatus(500)))
 
