@@ -17,7 +17,6 @@ private object AppDependencies {
   private val refinedVersion       = "0.9.4"
 
   val compile = Seq(
-    "uk.gov.hmrc" %% "bootstrap-backend-play-28" % play28Bootstrap,
     "uk.gov.hmrc" %% "play-hmrc-api"             % playHmrcApiVersion,
     "uk.gov.hmrc" %% "domain"                    % domainVersion,
     "uk.gov.hmrc" %% "emailaddress"              % emailAddressVersion,

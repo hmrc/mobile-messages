@@ -26,7 +26,6 @@ import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import play.twirl.api.Html
 import uk.gov.hmrc.auth.core.syntax.retrieved._
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
 import uk.gov.hmrc.mobilemessages.controllers.model.MessageHeaderResponseBody
 import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
