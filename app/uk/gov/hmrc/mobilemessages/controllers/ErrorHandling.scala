@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.mobilemessages.controllers
 
-import play.api.Logger
 import play.api.mvc.Result
 import uk.gov.hmrc.api.controllers.ErrorResponse
 import uk.gov.hmrc.http._
@@ -33,6 +32,8 @@ class AccountWithLowCL extends GrantAccessException("Unauthorised! Account with 
 case object ErrorUnauthorizedMicroService extends ErrorResponse(401, "UNAUTHORIZED", "Unauthorized")
 
 case object ErrorForbidden extends ErrorResponse(403, "FORBIDDEN", "Forbidden")
+
+case object ErrorTooManyRequests extends ErrorResponse(429,"TOO_MANY_REQUESTS","Too many requests have been please try again later")
 
 trait ErrorHandling {
   self: BackendBaseController =>
@@ -51,7 +52,8 @@ trait ErrorHandling {
     func.recover {
       case ex: Upstream4xxResponse if ex.upstreamResponseCode == 404 =>
         Status(ErrorNotFound.httpStatusCode)(Json.toJson[ErrorResponse](ErrorNotFound))
-
+      case ex: Upstream4xxResponse if ex.upstreamResponseCode == 429 =>
+        Status(ErrorTooManyRequests.httpStatusCode)(Json.toJson[ErrorResponse](ErrorTooManyRequests))
       case _: UnauthorizedException => Unauthorized(Json.toJson[ErrorResponse](ErrorUnauthorizedMicroService))
 
       case _: ForbiddenException => Unauthorized(Json.toJson[ErrorResponse](ErrorUnauthorizedLowCL))

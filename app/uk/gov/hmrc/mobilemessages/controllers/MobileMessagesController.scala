@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.crypto.{CryptoWithKeysFromConfig, Decrypter, Encrypter}
 import uk.gov.hmrc.domain.SaUtr
 import uk.gov.hmrc.mobilemessages.connector.ShutteringConnector
-import uk.gov.hmrc.mobilemessages.controllers.auth.{AccessControl, Authority}
+import uk.gov.hmrc.mobilemessages.controllers.auth.AccessControl
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
 import uk.gov.hmrc.mobilemessages.domain.{MessageCount, MessageCountResponse, MessageHeader}
 import uk.gov.hmrc.mobilemessages.domain.types.ModelTypes.JourneyId
