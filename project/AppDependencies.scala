@@ -34,6 +34,7 @@ private object AppDependencies {
       new TestDependencies {
 
         override lazy val test: Seq[ModuleID] = testCommon(scope) ++ Seq(
+            "uk.gov.hmrc"   %% "bootstrap-test-play-28" % play28Bootstrap % scope,
             "org.scalamock" %% "scalamock" % scalaMockVersion % scope,
             "org.scalatest" %% "scalatest" % scalaTestVersion % scope
           )
