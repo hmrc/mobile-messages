@@ -33,7 +33,7 @@ import uk.gov.hmrc.mobilemessages.domain.{Message, MessageCountResponse, Message
 import scala.concurrent.{ExecutionContext, Future}
 
 class MessageConnector @Inject() (
-  @Named("message") val messageBaseUrl:                               String,
+  @Named("secure-message") val messageBaseUrl:                        String,
   @Named("sa-message-renderer") val saMessageRendererBaseUrl:         String,
   @Named("ats-message-renderer") val atsMessageRendererBaseUrl:       String,
   @Named("secure-message-renderer") val secureMessageRendererBaseUrl: String,
