@@ -38,7 +38,7 @@ class MessageConnector @Inject() (
   @Named("ats-message-renderer") val atsMessageRendererBaseUrl:       String,
   @Named("secure-message-renderer") val secureMessageRendererBaseUrl: String,
   @Named("two-way-message") val twoWayMessageBaseUrl:                 String,
-  configuration:                                                      Configuration,
+  configuration:                                                       Configuration,
   val cookieSigner:                                                   CookieSigner,
   val http:                                                           CoreGet with CorePost)
     extends SessionCookieEncryptionSupport
@@ -49,7 +49,7 @@ class MessageConnector @Inject() (
   implicit val now: LocalDateTime = LocalDateTime.now
 
   lazy val servicesToUrl: Map[String, String] = Map(
-    "message"                 -> messageBaseUrl,
+    "secure-message"          -> messageBaseUrl,
     "sa-message-renderer"     -> saMessageRendererBaseUrl,
     "ats-message-renderer"    -> atsMessageRendererBaseUrl,
     "secure-message-renderer" -> secureMessageRendererBaseUrl,
@@ -66,7 +66,7 @@ class MessageConnector @Inject() (
   )(implicit hc: HeaderCarrier,
     ec:          ExecutionContext
   ): Future[MessageCountResponse] =
-    http.GET[MessageCountResponse](s"$messageBaseUrl/messages?countOnly=true")
+    http.GET[MessageCountResponse](s"$messageBaseUrl/messages?count")
 
   def getMessageBy(
     id:          MessageId

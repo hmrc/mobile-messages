@@ -64,7 +64,7 @@ class MessagesConnectorSpec extends WordSpecLike with Matchers with FutureAwaits
 
   lazy val connector: MessageConnector =
     new MessageConnector(
-      message.fullUrlFor("message", ""),
+      message.fullUrlFor("secure-message", ""),
       message.fullUrlFor("sa-message-renderer", ""),
       message.fullUrlFor("ats-message-renderer", ""),
       message.fullUrlFor("secure-message-renderer", ""),

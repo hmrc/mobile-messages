@@ -189,7 +189,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
 
     "return a valid response with a journeyId with empty render payload and headers from message service" in {
       authRecordExists()
-      messageFound("url1", "message")
+      messageFound("url1", "secure-message")
       messageIsRenderedSuccessfully()
       stubForShutteringDisabled
 
@@ -204,7 +204,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
 
     "return a valid response with a journeyId with empty render payload and no headers from message service" in {
       authRecordExists()
-      messageFound("url1", "message", false)
+      messageFound("url1", "secure-message", false)
       messageIsRenderedSuccessfully()
       stubForShutteringDisabled
 
