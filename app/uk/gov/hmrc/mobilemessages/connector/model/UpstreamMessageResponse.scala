@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilemessages.connector.model
 
-import play.api.libs.json.{Format, Json, Reads}
+import play.api.libs.json.Reads
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageId, ReadMessage, UnreadMessage}
 
 final case class ResourceActionLocation(
@@ -28,38 +28,23 @@ final case class ResourceActionLocation(
 final case class UpstreamMessageResponse(
   id:            String,
   renderUrl:     ResourceActionLocation,
-  markAsReadUrl: Option[ResourceActionLocation],
-  body:          Option[Details]) {
+  markAsReadUrl: Option[ResourceActionLocation]) {
 
   def toMessageUsing(servicesToUrl: Map[String, String]): Message = {
-    val `type`:   Option[String] = body.flatMap(details => details.`type`)
-    val threadId: Option[String] = body.flatMap(details => details.threadId)
 
     markAsReadUrl.fold[Message](
       ReadMessage(
         MessageId(id),
-        renderUrl.toUrlUsing(servicesToUrl(renderUrl.service)),
-        `type`,
-        threadId
+        renderUrl.toUrlUsing(servicesToUrl(renderUrl.service))
       )
     )(res =>
       UnreadMessage(
         MessageId(id),
         renderUrl.toUrlUsing(servicesToUrl(renderUrl.service)),
-        res.toUrlUsing(servicesToUrl(res.service)),
-        `type`,
-        threadId
+        res.toUrlUsing(servicesToUrl(res.service))
       )
     )
   }
-}
-
-case class Details(
-  `type`:   Option[String],
-  threadId: Option[String])
-
-object Details {
-  implicit val format: Format[Details] = Json.format[Details]
 }
 
 object ResourceActionLocation {

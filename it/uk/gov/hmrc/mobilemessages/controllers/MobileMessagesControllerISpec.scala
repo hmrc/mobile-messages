@@ -73,6 +73,14 @@ class MobileMessagesControllerISpec extends BaseISpec {
       await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).get()).status shouldBe 404
     }
 
+    "return a valid response when MessageConnector returns 429" in {
+      authRecordExists()
+      messagesTooManyRequestsException()
+      stubForShutteringDisabled
+
+      await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).get()).status shouldBe 429
+    }
+
     "return a valid response when MessageConnector returns 500" in {
       authRecordExists()
       messagesServiceUnavailableException()
@@ -105,7 +113,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
 
     "return a valid response with a journeyId" in {
       authRecordExists()
-      messagesAreFound()
+      messageCountFound()
       stubForShutteringDisabled
 
       val response = await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).get())
@@ -147,7 +155,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
 
     "return a valid response when MessageConnector returns 404" in {
       authRecordExists()
-      messagesNotFoundException()
+      messagesCountNotFoundException()
       stubForShutteringDisabled
 
       await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).get()).status shouldBe 404
@@ -155,10 +163,18 @@ class MobileMessagesControllerISpec extends BaseISpec {
 
     "return a valid response when MessageConnector returns 500" in {
       authRecordExists()
-      messagesServiceUnavailableException()
+      messagesCountServiceUnavailableException()
       stubForShutteringDisabled
 
       await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).get()).status shouldBe 500
+    }
+
+    "return a valid response when MessageConnector returns 429" in {
+      authRecordExists()
+      messagesCountTooManyRequestsException()
+      stubForShutteringDisabled
+
+      await(request(url, journeyId).addHttpHeaders(authorisationJsonHeader).get()).status shouldBe 429
     }
 
     "return 401 with authorise call fails" in {
@@ -185,21 +201,15 @@ class MobileMessagesControllerISpec extends BaseISpec {
     val messageUrl = RenderMessageRequest("L2U5NkwzTCtUdmQvSS9VVyt0MGh6UT09")
     val authHeader = ("Authorization", "auth1")
 
-    def messagesRequest(journeyId: String) = request(url, journeyId).addHttpHeaders(authHeader)
-
     "return a valid response with a journeyId with empty render payload and headers from message service" in {
       authRecordExists()
       messageFound("url1", "secure-message")
       messageIsRenderedSuccessfully()
       stubForShutteringDisabled
 
-      val result:         WSResponse     = await(request(url, journeyId).addHttpHeaders(authHeader).post(toJson(messageUrl)))
-      val typeHeader:     Option[String] = result.headers("type").headOption
-      val threadIdHeader: Option[String] = result.headers("threadId").headOption
+      val result: WSResponse = await(request(url, journeyId).addHttpHeaders(authHeader).post(toJson(messageUrl)))
 
-      result.status  shouldBe 200
-      typeHeader     shouldBe Some("2wsm-advisor")
-      threadIdHeader shouldBe Some("9794f96d-f595-4b03-84dc-1861408918fb")
+      result.status shouldBe 200
     }
 
     "return a valid response with a journeyId with empty render payload and no headers from message service" in {

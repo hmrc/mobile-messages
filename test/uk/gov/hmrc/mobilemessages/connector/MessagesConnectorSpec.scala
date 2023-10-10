@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.mobilemessages.connector
 
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Configuration
 import play.api.http.SecretConfiguration
 import play.api.libs.crypto.DefaultCookieSigner
@@ -32,7 +33,7 @@ import uk.gov.hmrc.mobilemessages.utils.Setup
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class MessagesConnectorSpec extends WordSpecLike with Matchers with FutureAwaits with DefaultAwaitTimeout with Setup {
+class MessagesConnectorSpec extends AnyWordSpecLike with Matchers with FutureAwaits with DefaultAwaitTimeout with Setup {
 
   def testBaseUrl(serviceName: String): String = "http://localhost:8089"
 
@@ -51,9 +52,7 @@ class MessagesConnectorSpec extends WordSpecLike with Matchers with FutureAwaits
     UnreadMessage(
       MessageId(messageToBeMarkedAsReadBody.id),
       messageToBeMarkedAsReadBody.renderUrl.url,
-      "markAsReadUrl",
-      Some("2wsm-advisor"),
-      Some("9794f96d-f595-4b03-84dc-1861408918fb")
+      "markAsReadUrl"
     )
 
   lazy val PostSuccessResult: Future[AnyRef with HttpResponse] =

@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.mobilemessages.controllers
 
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Configuration
 import play.api.http.SecretConfiguration
 import play.api.libs.crypto.{CookieSigner, DefaultCookieSigner}
@@ -29,7 +30,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilemessages.controllers.model.MessageHeaderResponseBody
 import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
-import uk.gov.hmrc.mobilemessages.services.MessageWithHeader
+import uk.gov.hmrc.mobilemessages.services.RenderedMessage
 import uk.gov.hmrc.mobilemessages.utils.Setup
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -37,7 +38,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 class MobileMessagesControllerSpec
-    extends WordSpecLike
+    extends AnyWordSpecLike
     with Matchers
     with FutureAwaits
     with DefaultAwaitTimeout
@@ -62,9 +63,7 @@ class MobileMessagesControllerSpec
       .readMessageContent(_: MessageId)(_: HeaderCarrier, _: ExecutionContext))
       .expects(*, *, *)
       .returns(
-        Future successful MessageWithHeader(response,
-                                            Some("2wsm-advisor"),
-                                            Some("9794f96d-f595-4b03-84dc-1861408918fb"))
+        Future successful RenderedMessage(response)
       )
 
   val userId: Option[String] = Some("userId123")
@@ -218,13 +217,8 @@ class MobileMessagesControllerSpec
 
       val result = liveController.read(journeyId)(readTimeRequest)
 
-      val `type`   = Await.result(result.map[String](h => h.header.headers("type")), 1 second)
-      val threadId = Await.result(result.map[String](h => h.header.headers("threadId")), 1 second)
-
       status(result)          shouldBe 200
       contentAsString(result) shouldBe html.toString()
-      `type`                  shouldBe "2wsm-advisor"
-      threadId                shouldBe "9794f96d-f595-4b03-84dc-1861408918fb"
     }
 
     "return forbidden when authority record does not contain a NINO" in {

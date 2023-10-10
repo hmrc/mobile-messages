@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.mobilemessages.controllers.model
 
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.mobilemessages.domain.MessageId
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 import uk.gov.hmrc.mobilemessages.utils.{MessageServiceMock, UnitTestCrypto}
 
-class RenderMessageRequestSpec extends WordSpecLike with Matchers with FutureAwaits with DefaultAwaitTimeout {
+class RenderMessageRequestSpec extends AnyWordSpecLike with Matchers with FutureAwaits with DefaultAwaitTimeout {
 
   val message = new MessageServiceMock("authToken")
 

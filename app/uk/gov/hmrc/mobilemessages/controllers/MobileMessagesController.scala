@@ -34,7 +34,7 @@ import uk.gov.hmrc.mobilemessages.domain.{MessageCount, MessageCountResponse, Me
 import uk.gov.hmrc.mobilemessages.domain.types.ModelTypes.JourneyId
 import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator.{nextSaUtr, readMessageHeader, unreadMessageHeader}
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
-import uk.gov.hmrc.mobilemessages.services.{MessageWithHeader, MobileMessagesService}
+import uk.gov.hmrc.mobilemessages.services.{MobileMessagesService, RenderedMessage}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -83,9 +83,7 @@ class MobileMessagesController @Inject() (
           errorWrapper(
             service
               .countOnlyMessages()
-              .map(messageCount =>
-                Ok(Json.toJson(messageCount))
-              )
+              .map(messageCount => Ok(Json.toJson(messageCount)))
           )
         }
       }
@@ -107,20 +105,11 @@ class MobileMessagesController @Inject() (
                   errorWrapper {
                     service
                       .readMessageContent(renderMessageRequest.toMessageIdUsing(crypto))
-                      .map(message => Ok(message.html).withHeaders(buildResponseHeaders(message): _*))
+                      .map(message => Ok(message.html))
                   }
               )
           }
         }
-    }
-
-  def buildResponseHeaders(message: MessageWithHeader): Seq[(String, String)] =
-    (message.`type`, message.threadId) match {
-      case (Some(messageType), Some(threadId)) => Seq(("type", messageType), ("threadId", threadId))
-      case (Some(messageType), None) => Seq(("type", messageType))
-      case (None, Some(threadId)) => Seq(("threadId", threadId))
-      case (None, None) => Seq.empty
-
     }
 }
 
@@ -173,12 +162,12 @@ class SandboxMobileMessagesController @Inject() (
     validateAccept(acceptHeaderValidationRules).async(controllerComponents.parsers.json) { implicit request =>
       Future successful (request.headers.get("SANDBOX-CONTROL") match {
         case Some("ANNUAL-TAX-SUMMARY") => Ok(annualTaxSummary)
-        case Some("STOPPING-SA") => Ok(stoppingSA)
-        case Some("OVERDUE-PAYMENT") => Ok(overduePayment)
-        case Some("ERROR-401") => Unauthorized
-        case Some("ERROR-403") => Forbidden
-        case Some("ERROR-500") => InternalServerError
-        case _ => Ok(newTaxStatement)
+        case Some("STOPPING-SA")        => Ok(stoppingSA)
+        case Some("OVERDUE-PAYMENT")    => Ok(overduePayment)
+        case Some("ERROR-401")          => Unauthorized
+        case Some("ERROR-403")          => Forbidden
+        case Some("ERROR-500")          => InternalServerError
+        case _                          => Ok(newTaxStatement)
       })
     }
 }

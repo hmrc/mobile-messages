@@ -17,7 +17,8 @@
 package uk.gov.hmrc.mobilemessages.controllers
 
 import com.typesafe.config.Config
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Configuration
 import play.api.http.SecretConfiguration
 import play.api.libs.crypto.{CookieSigner, DefaultCookieSigner}
@@ -26,7 +27,7 @@ import uk.gov.hmrc.mobilemessages.connector.SessionCookieEncryptionSupport
 import uk.gov.hmrc.mobilemessages.mocks.StubApplicationConfiguration
 
 class CookieEncryptionSupportSpec
-    extends WordSpecLike
+    extends AnyWordSpecLike
     with Matchers
     with FutureAwaits
     with DefaultAwaitTimeout
