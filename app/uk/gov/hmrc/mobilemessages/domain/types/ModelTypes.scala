@@ -18,7 +18,6 @@ package uk.gov.hmrc.mobilemessages.domain.types
 
 import eu.timepit.refined._
 import eu.timepit.refined.api.Refined
-import eu.timepit.refined.boolean.{False, True}
 import eu.timepit.refined.string.MatchesRegex
 
 object ModelTypes {

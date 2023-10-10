@@ -17,10 +17,10 @@ private object AppDependencies {
   private val refinedVersion       = "0.9.4"
 
   val compile = Seq(
-    "uk.gov.hmrc" %% "play-hmrc-api"             % playHmrcApiVersion,
-    "uk.gov.hmrc" %% "domain"                    % domainVersion,
-    "uk.gov.hmrc" %% "emailaddress"              % emailAddressVersion,
-    "eu.timepit"  %% "refined"                   % refinedVersion
+    "uk.gov.hmrc" %% "play-hmrc-api" % playHmrcApiVersion,
+    "uk.gov.hmrc" %% "domain"        % domainVersion,
+    "uk.gov.hmrc" %% "emailaddress"  % emailAddressVersion,
+    "eu.timepit"  %% "refined"       % refinedVersion
   )
 
   trait TestDependencies {
@@ -34,7 +34,6 @@ private object AppDependencies {
       new TestDependencies {
 
         override lazy val test: Seq[ModuleID] = testCommon(scope) ++ Seq(
-            "uk.gov.hmrc"   %% "bootstrap-test-play-28" % play28Bootstrap % scope,
             "org.scalamock" %% "scalamock" % scalaMockVersion % scope,
             "org.scalatest" %% "scalatest" % scalaTestVersion % scope
           )
@@ -54,31 +53,10 @@ private object AppDependencies {
   }
 
   private def testCommon(scope: String) = Seq(
-    "org.pegdown"            % "pegdown"             % pegdownVersion       % scope,
-    "com.typesafe.play"      %% "play-test"          % PlayVersion.current  % scope,
-    "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % scope
-  )
-
-  // Transitive dependencies in scalatest/scalatestplusplay drag in a newer version of jetty that is not
-  // compatible with wiremock, so we need to pin the jetty stuff to the older version.
-  // see https://groups.google.com/forum/#!topic/play-framework/HAIM1ukUCnI
-  val jettyVersion = "9.2.13.v20150730"
-
-  val overrides: Seq[ModuleID] = Seq(
-    "org.eclipse.jetty"           % "jetty-server"       % jettyVersion,
-    "org.eclipse.jetty"           % "jetty-servlet"      % jettyVersion,
-    "org.eclipse.jetty"           % "jetty-security"     % jettyVersion,
-    "org.eclipse.jetty"           % "jetty-servlets"     % jettyVersion,
-    "org.eclipse.jetty"           % "jetty-continuation" % jettyVersion,
-    "org.eclipse.jetty"           % "jetty-webapp"       % jettyVersion,
-    "org.eclipse.jetty"           % "jetty-xml"          % jettyVersion,
-    "org.eclipse.jetty"           % "jetty-client"       % jettyVersion,
-    "org.eclipse.jetty"           % "jetty-http"         % jettyVersion,
-    "org.eclipse.jetty"           % "jetty-io"           % jettyVersion,
-    "org.eclipse.jetty"           % "jetty-util"         % jettyVersion,
-    "org.eclipse.jetty.websocket" % "websocket-api"      % jettyVersion,
-    "org.eclipse.jetty.websocket" % "websocket-common"   % jettyVersion,
-    "org.eclipse.jetty.websocket" % "websocket-client"   % jettyVersion
+    "org.pegdown"            % "pegdown"                 % pegdownVersion       % scope,
+    "com.typesafe.play"      %% "play-test"              % PlayVersion.current  % scope,
+    "org.scalatestplus.play" %% "scalatestplus-play"     % scalaTestPlusVersion % scope,
+    "uk.gov.hmrc"            %% "bootstrap-test-play-28" % play28Bootstrap      % scope
   )
 
   def apply(): Seq[ModuleID] = compile ++ Test() ++ IntegrationTest()

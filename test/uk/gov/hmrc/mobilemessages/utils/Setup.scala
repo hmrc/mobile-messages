@@ -55,7 +55,7 @@ trait Setup extends AuthorisationStub with MessagesStub with StubApplicationConf
   )
 
   lazy val ReadSuccessEmptyResult: Future[AnyRef with HttpResponse] =
-    Future.successful(HttpResponse(200, None, Map.empty, None))
+    Future.successful(HttpResponse(200, ""))
 
   implicit val reads:                   Reads[MessageHeaderResponseBody] = Json.reads[MessageHeaderResponseBody]
   implicit val hc:                      HeaderCarrier                    = HeaderCarrier(Some(Authorization("authToken")))

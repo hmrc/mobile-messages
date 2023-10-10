@@ -55,12 +55,12 @@ class MobileMessagesService @Inject() (
     messageId:   MessageId
   )(implicit hc: HeaderCarrier,
     ec:          ExecutionContext
-  ): Future[MessageWithHeader] =
+  ): Future[RenderedMessage] =
     withAudit("readMessageContent", Map.empty) {
       messageConnector.getMessageBy(messageId) flatMap { message =>
         messageConnector.render(message, hc) map { renderedMessage =>
           markAsReadIfUnread.apply(message)
-          MessageWithHeader(renderedMessage, message.`type`, message.threadId)
+          RenderedMessage(renderedMessage)
 
         }
       }
@@ -70,14 +70,11 @@ class MobileMessagesService @Inject() (
     implicit hc: HeaderCarrier,
     ec:          ExecutionContext
   ): Message => Unit = {
-    case unreadMessage @ UnreadMessage(_, _, _, _, _) => messageConnector.markAsRead(unreadMessage)
-    case _                                            => ()
+    case unreadMessage @ UnreadMessage(_, _, _) => messageConnector.markAsRead(unreadMessage)
+    case _                                      => ()
   }
 }
 
-case class MessageWithHeader(
-  html:     Html,
-  `type`:   Option[String],
-  threadId: Option[String])
+case class RenderedMessage(html: Html)
 
-object MessageWithHeader
+object RenderedMessage

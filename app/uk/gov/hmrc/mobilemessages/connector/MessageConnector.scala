@@ -22,6 +22,7 @@ import com.typesafe.config.Config
 
 import javax.inject.{Inject, Named}
 import org.apache.commons.codec.CharEncoding.UTF_8
+import org.apache.commons.codec.binary.Base64
 import play.api.Configuration
 import play.api.libs.crypto.CookieSigner
 import play.twirl.api.Html
@@ -38,7 +39,7 @@ class MessageConnector @Inject() (
   @Named("ats-message-renderer") val atsMessageRendererBaseUrl:       String,
   @Named("secure-message-renderer") val secureMessageRendererBaseUrl: String,
   @Named("two-way-message") val twoWayMessageBaseUrl:                 String,
-  configuration:                                                       Configuration,
+  configuration:                                                      Configuration,
   val cookieSigner:                                                   CookieSigner,
   val http:                                                           CoreGet with CorePost)
     extends SessionCookieEncryptionSupport
@@ -66,14 +67,18 @@ class MessageConnector @Inject() (
   )(implicit hc: HeaderCarrier,
     ec:          ExecutionContext
   ): Future[MessageCountResponse] =
-    http.GET[MessageCountResponse](s"$messageBaseUrl/messages?count")
+    http.GET[MessageCountResponse](s"$messageBaseUrl/messages/count")
 
   def getMessageBy(
     id:          MessageId
   )(implicit hc: HeaderCarrier,
     ec:          ExecutionContext
   ): Future[Message] =
-    http.GET[UpstreamMessageResponse](s"$messageBaseUrl/messages/${id.value}").map(_.toMessageUsing(servicesToUrl))
+    http
+      .GET[UpstreamMessageResponse](
+        s"$messageBaseUrl/messages/${Base64.encodeBase64String(id.value.getBytes)}"
+      )
+      .map(_.toMessageUsing(servicesToUrl))
 
   def render(
     message:     Message,

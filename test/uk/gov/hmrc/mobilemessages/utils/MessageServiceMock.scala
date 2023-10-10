@@ -18,7 +18,7 @@ package uk.gov.hmrc.mobilemessages.utils
 
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
 
-import uk.gov.hmrc.mobilemessages.connector.model.{Details, ResourceActionLocation, UpstreamMessageResponse}
+import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.domain._
 
 class MessageServiceMock(authToken: String) {
@@ -38,16 +38,12 @@ class MessageServiceMock(authToken: String) {
         UnreadMessage(
           MessageId(messageBody.id),
           fullUrlFor(messageBody.renderUrl.service, messageBody.renderUrl.url),
-          fullUrlFor(location.service, location.url),
-          Some("2wsm-advisor"),
-          Some("9794f96d-f595-4b03-84dc-1861408918fb")
+          fullUrlFor(location.service, location.url)
         )
       case _ =>
         ReadMessage(
           MessageId(messageBody.id),
-          fullUrlFor(messageBody.renderUrl.service, messageBody.renderUrl.url),
-          Some("2wsm-advisor"),
-          Some("9794f96d-f595-4b03-84dc-1861408918fb")
+          fullUrlFor(messageBody.renderUrl.service, messageBody.renderUrl.url)
         )
     }
 
@@ -58,8 +54,7 @@ class MessageServiceMock(authToken: String) {
   ): UpstreamMessageResponse =
     UpstreamMessageResponse(id,
                             renderUrl,
-                            markAsReadUrl,
-                            Some(Details(Some("2wsm-advisor"), Some("9794f96d-f595-4b03-84dc-1861408918fb"))))
+                            markAsReadUrl)
 
   def bodyToBeMarkedAsReadWith(id: String): UpstreamMessageResponse =
     bodyWith(id = id, markAsReadUrl = Some(ResourceActionLocation("message", s"/messages/$id/read-time")))

@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.mobilemessages.services
 
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilemessages.connector.model.ResourceActionLocation
@@ -28,7 +29,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 class MobileMessagesServiceSpec
-    extends WordSpecLike
+    extends AnyWordSpecLike
     with Matchers
     with FutureAwaits
     with DefaultAwaitTimeout
@@ -82,10 +83,8 @@ class MobileMessagesServiceSpec
         .expects(*, *, *)
         .returns(ReadSuccessEmptyResult)
 
-      await(service.readMessageContent(messageId)) shouldBe MessageWithHeader(
-        html,
-        Some("2wsm-advisor"),
-        Some("9794f96d-f595-4b03-84dc-1861408918fb")
+      await(service.readMessageContent(messageId)) shouldBe RenderedMessage(
+        html
       )
     }
 
@@ -100,10 +99,8 @@ class MobileMessagesServiceSpec
         .expects(*, *, *)
         .returns(Future successful html)
 
-      await(service.readMessageContent(messageId)) shouldBe MessageWithHeader(
-        html,
-        Some("2wsm-advisor"),
-        Some("9794f96d-f595-4b03-84dc-1861408918fb")
+      await(service.readMessageContent(messageId)) shouldBe RenderedMessage(
+        html
       )
     }
 

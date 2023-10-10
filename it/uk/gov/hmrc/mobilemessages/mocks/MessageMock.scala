@@ -1,8 +1,7 @@
 package uk.gov.hmrc.mobilemessages.mocks
 
 import com.github.tomakehurst.wiremock.client.WireMock._
-import play.api.test.Helpers.contentAsJson
-import uk.gov.hmrc.mobilemessages.domain.{MessageCount, MessageCountResponse}
+import org.apache.commons.codec.binary.Base64
 
 object MessageMock {
 
@@ -23,6 +22,15 @@ object MessageMock {
       |        "sentInError": true
       |      }
       |   ],
+      |   "count": {
+      |      "total": 2,
+      |      "unread": 1
+      |   }
+      |}
+      |""".stripMargin
+
+  val messagesCountJson: String =
+    """{
       |   "count": {
       |      "total": 2,
       |      "unread": 1
@@ -57,10 +65,6 @@ object MessageMock {
        |    "service": "$service",
        |    "url": "messagesByUrl"
        |  },
-       |  "body": {
-       |    "type": "2wsm-advisor",
-       |    "threadId": "9794f96d-f595-4b03-84dc-1861408918fb"
-       |  },
        |  "markAsReadUrl": {
        |    "service": "$service",
        |    "url": "url2"
@@ -87,7 +91,7 @@ object MessageMock {
     headers: Boolean = true
   ): Unit =
     stubFor(
-      get(urlPathEqualTo(s"/messages/$id")).willReturn(
+      get(urlPathEqualTo(s"/messages/${Base64.encodeBase64String(id.getBytes)}")).willReturn(
         aResponse()
           .withStatus(200)
           .withHeader("Content-Type", "application.json")
@@ -97,14 +101,14 @@ object MessageMock {
 
   def messagesNotFound(id: String): Unit =
     stubFor(
-      get(urlPathEqualTo(s"/messages/$id")).willReturn(
+      get(urlPathEqualTo(s"/messages/${Base64.encodeBase64String(id.getBytes)}")).willReturn(
         aResponse().withStatus(404)
       )
     )
 
   def messagesServiceIsUnavailable(id: String): Unit =
     stubFor(
-      get(urlPathEqualTo(s"/messages/$id")).willReturn(
+      get(urlPathEqualTo(s"/messages/${Base64.encodeBase64String(id.getBytes)}")).willReturn(
         aResponse().withStatus(500)
       )
     )
@@ -115,5 +119,24 @@ object MessageMock {
         aResponse().withStatus(200)
       )
     )
+
+  def messageCountFound(): Unit =
+    stubFor(
+      get(urlPathEqualTo("/messages/count")).willReturn(
+        aResponse()
+          .withStatus(200)
+          .withHeader("Content-Type", "application/json")
+          .withBody(messagesCountJson)
+      )
+    )
+
+  def messagesCountNotFoundException(): Unit =
+    stubFor(get(urlPathEqualTo("/messages/count")).willReturn(aResponse().withStatus(404)))
+
+  def messagesCountTooManyRequestsException(): Unit =
+    stubFor(get(urlPathEqualTo("/messages/count")).willReturn(aResponse().withStatus(429)))
+
+  def messagesCountServiceUnavailableException(): Unit =
+    stubFor(get(urlPathEqualTo("/messages/count")).willReturn(aResponse().withStatus(500)))
 
 }

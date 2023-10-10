@@ -21,21 +21,15 @@ final case class MessageId(value: String)
 trait Message {
   def id:        MessageId
   def renderUrl: String
-  def `type`:    Option[String]
-  def threadId:  Option[String]
 }
 
 final case class ReadMessage(
   override val id:        MessageId,
-  override val renderUrl: String,
-  override val `type`:    Option[String],
-  override val threadId:  Option[String])
+  override val renderUrl: String)
     extends Message
 
 final case class UnreadMessage(
   override val id:        MessageId,
   override val renderUrl: String,
-  markAsReadUrl:          String,
-  override val `type`:    Option[String],
-  override val threadId:  Option[String])
+  markAsReadUrl:          String)
     extends Message
