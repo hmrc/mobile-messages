@@ -61,13 +61,13 @@ class MessageConnector @Inject() (
   )(implicit hc: HeaderCarrier,
     ec:          ExecutionContext
   ): Future[Seq[MessageHeader]] =
-    http.GET[UpstreamMessageHeadersResponse](s"$messageBaseUrl/messages").map(_.items)
+    http.GET[UpstreamMessageHeadersResponse](s"$messageBaseUrl/secure-messaging/messages").map(_.items)
 
   def messageCount(
   )(implicit hc: HeaderCarrier,
     ec:          ExecutionContext
   ): Future[MessageCountResponse] =
-    http.GET[MessageCountResponse](s"$messageBaseUrl/messages/count")
+    http.GET[MessageCountResponse](s"$messageBaseUrl/secure-messaging/messages/count")
 
   def getMessageBy(
     id:          MessageId
@@ -76,7 +76,7 @@ class MessageConnector @Inject() (
   ): Future[Message] =
     http
       .GET[UpstreamMessageResponse](
-        s"$messageBaseUrl/messages/${Base64.encodeBase64String(id.value.getBytes)}"
+        s"$messageBaseUrl/secure-messaging/messages/${Base64.encodeBase64String(id.value.getBytes)}"
       )
       .map(_.toMessageUsing(servicesToUrl))
 

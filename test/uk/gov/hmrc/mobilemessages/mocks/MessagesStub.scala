@@ -93,16 +93,16 @@ trait MessagesStub extends MockFactory {
   def messageCountGetSuccess(response: MessageCountResponse)(implicit http: WSHttpImpl): Unit =
     (http
       .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(_: HttpReads[MessageCountResponse],
-        _: HeaderCarrier,
-        _: ExecutionContext))
+                                                                          _: HeaderCarrier,
+                                                                          _: ExecutionContext))
       .expects(*, *, *, *, *, *)
       .returns(Future successful response)
 
   def messageCountGetFailure(response: Exception)(implicit http: WSHttpImpl): Unit =
     (http
       .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(_: HttpReads[MessageCountResponse],
-        _: HeaderCarrier,
-        _: ExecutionContext))
+                                                                          _: HeaderCarrier,
+                                                                          _: ExecutionContext))
       .expects(*, *, *, *, *, *)
       .returns(Future failed response)
 }
