@@ -40,7 +40,7 @@ object MessageMock {
 
   def messagesAreFound(): Unit =
     stubFor(
-      get(urlPathEqualTo("/messages")).willReturn(
+      get(urlPathEqualTo("/secure-messaging/messages")).willReturn(
         aResponse()
           .withStatus(200)
           .withHeader("Content-Type", "application/json")
@@ -49,13 +49,13 @@ object MessageMock {
     )
 
   def messagesNotFoundException(): Unit =
-    stubFor(get(urlPathEqualTo("/messages")).willReturn(aResponse().withStatus(404)))
+    stubFor(get(urlPathEqualTo("/secure-messaging/messages")).willReturn(aResponse().withStatus(404)))
 
   def messagesTooManyRequestsException(): Unit =
-    stubFor(get(urlPathEqualTo("/messages")).willReturn(aResponse().withStatus(429)))
+    stubFor(get(urlPathEqualTo("/secure-messaging/messages")).willReturn(aResponse().withStatus(429)))
 
   def messagesServiceUnavailableException(): Unit =
-    stubFor(get(urlPathEqualTo("/messages")).willReturn(aResponse().withStatus(500)))
+    stubFor(get(urlPathEqualTo("/secure-messaging/messages")).willReturn(aResponse().withStatus(500)))
 
   def messagesResponse(service: String): String =
     s"""
@@ -91,7 +91,7 @@ object MessageMock {
     headers: Boolean = true
   ): Unit =
     stubFor(
-      get(urlPathEqualTo(s"/messages/${Base64.encodeBase64String(id.getBytes)}")).willReturn(
+      get(urlPathEqualTo(s"/secure-messaging/messages/${Base64.encodeBase64String(id.getBytes)}")).willReturn(
         aResponse()
           .withStatus(200)
           .withHeader("Content-Type", "application.json")
@@ -101,14 +101,14 @@ object MessageMock {
 
   def messagesNotFound(id: String): Unit =
     stubFor(
-      get(urlPathEqualTo(s"/messages/${Base64.encodeBase64String(id.getBytes)}")).willReturn(
+      get(urlPathEqualTo(s"/secure-messaging/messages/${Base64.encodeBase64String(id.getBytes)}")).willReturn(
         aResponse().withStatus(404)
       )
     )
 
   def messagesServiceIsUnavailable(id: String): Unit =
     stubFor(
-      get(urlPathEqualTo(s"/messages/${Base64.encodeBase64String(id.getBytes)}")).willReturn(
+      get(urlPathEqualTo(s"/secure-messaging/messages/${Base64.encodeBase64String(id.getBytes)}")).willReturn(
         aResponse().withStatus(500)
       )
     )
@@ -122,7 +122,7 @@ object MessageMock {
 
   def messageCountFound(): Unit =
     stubFor(
-      get(urlPathEqualTo("/messages/count")).willReturn(
+      get(urlPathEqualTo("/secure-messaging/messages/count")).willReturn(
         aResponse()
           .withStatus(200)
           .withHeader("Content-Type", "application/json")
@@ -131,12 +131,12 @@ object MessageMock {
     )
 
   def messagesCountNotFoundException(): Unit =
-    stubFor(get(urlPathEqualTo("/messages/count")).willReturn(aResponse().withStatus(404)))
+    stubFor(get(urlPathEqualTo("/secure-messaging/messages/count")).willReturn(aResponse().withStatus(404)))
 
   def messagesCountTooManyRequestsException(): Unit =
-    stubFor(get(urlPathEqualTo("/messages/count")).willReturn(aResponse().withStatus(429)))
+    stubFor(get(urlPathEqualTo("/secure-messaging/messages/count")).willReturn(aResponse().withStatus(429)))
 
   def messagesCountServiceUnavailableException(): Unit =
-    stubFor(get(urlPathEqualTo("/messages/count")).willReturn(aResponse().withStatus(500)))
+    stubFor(get(urlPathEqualTo("/secure-messaging/messages/count")).willReturn(aResponse().withStatus(500)))
 
 }
