@@ -12,7 +12,7 @@ object MessageMock {
       |        "id" : "543e8c6001000001003e4a9e",
       |        "subject" : "Your Tax Return",
       |        "validFrom" : "2013-06-04",
-      |        "readTime": "2014-05-02T17:17:45.618Z",
+      |        "readTime": "2014-05-02T17:17:45.618+0000",
       |        "sentInError": true
       |      },
       |      {

@@ -34,8 +34,7 @@ import uk.gov.hmrc.mobilemessages.services.RenderedMessage
 import uk.gov.hmrc.mobilemessages.utils.Setup
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
 class MobileMessagesControllerSpec
     extends AnyWordSpecLike

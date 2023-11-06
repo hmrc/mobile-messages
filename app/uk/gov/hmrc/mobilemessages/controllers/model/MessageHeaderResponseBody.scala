@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.mobilemessages.controllers.model
 
-import java.time.{LocalDate, LocalDateTime, ZoneOffset}
-
+import java.time.{LocalDate, OffsetDateTime}
 import org.apache.commons.codec.binary.Base64.encodeBase64String
 import play.api.libs.json._
 import uk.gov.hmrc.crypto.{Encrypter, PlainText}
@@ -25,10 +24,10 @@ import uk.gov.hmrc.mobilemessages.domain.MessageHeader
 
 trait WriteDatesAsLongs {
 
-  implicit val dateTimeWrites: Writes[LocalDateTime] = new Writes[LocalDateTime] {
+  implicit val dateTimeWrites: Writes[OffsetDateTime] = new Writes[OffsetDateTime] {
 
-    override def writes(o: LocalDateTime): JsValue =
-      JsNumber(o.toInstant(ZoneOffset.UTC).toEpochMilli)
+    override def writes(o: OffsetDateTime): JsValue =
+      JsNumber(o.toInstant.toEpochMilli)
   }
 }
 
@@ -36,7 +35,7 @@ final case class MessageHeaderResponseBody(
   id:          String,
   subject:     String,
   validFrom:   LocalDate,
-  readTime:    Option[LocalDateTime],
+  readTime:    Option[OffsetDateTime],
   readTimeUrl: String,
   sentInError: Boolean)
 

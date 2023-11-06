@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.mobilemessages.utils
 
-import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
-
+import java.time.{Instant, LocalDate, OffsetDateTime, ZoneId}
 import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.domain._
 
@@ -63,7 +62,7 @@ class MessageServiceMock(authToken: String) {
     id:          String,
     subject:     String = "message subject",
     validFrom:   LocalDate = Instant.ofEpochMilli(29348L).atZone(ZoneId.of("UTC")).toLocalDate,
-    readTime:    Option[LocalDateTime] = None,
+    readTime:    Option[OffsetDateTime] = None,
     sentInError: Boolean = false
   ): MessageHeader =
     MessageHeader(MessageId(id), subject, validFrom, readTime, sentInError)
