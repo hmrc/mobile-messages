@@ -14,13 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilemessages.domain
+package uk.gov.hmrc.mobilemessages.connector.model
 
-import java.time.{LocalDate, OffsetDateTime}
+import play.api.libs.json.{Reads, Writes}
 
-final case class MessageHeader(
-  id:          MessageId,
-  subject:     String,
-  validFrom:   LocalDate,
-  readTime:    Option[OffsetDateTime],
-  sentInError: Boolean)
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+
+object DateTimeFormats {
+  val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+
+  implicit val offsetDateTimeReads: Reads[OffsetDateTime] =
+    Reads.offsetDateTimeReads(formatter)
+
+  implicit val offsetDateTimeWrites: Writes[OffsetDateTime] =
+    Writes.of[String].contramap(formatter.format)
+}

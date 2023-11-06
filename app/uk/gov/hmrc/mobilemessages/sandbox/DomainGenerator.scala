@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.mobilemessages.sandbox
 
-import java.time.LocalDateTime
-
+import java.time.OffsetDateTime
 import uk.gov.hmrc.domain.{Nino, SaUtr}
 import uk.gov.hmrc.mobilemessages.domain.{MessageHeader, MessageId}
 
@@ -27,7 +26,7 @@ object DomainGenerator {
 
   import uk.gov.hmrc.domain.Generator
 
-  val dateTime: LocalDateTime = LocalDateTime.now
+  val dateTime: OffsetDateTime = OffsetDateTime.now
 
   val generator      = new Generator()
   val saUtrGenerator = new SaUtrGenerator()

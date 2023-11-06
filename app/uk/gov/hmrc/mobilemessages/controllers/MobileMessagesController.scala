@@ -34,7 +34,7 @@ import uk.gov.hmrc.mobilemessages.domain.{MessageCount, MessageCountResponse, Me
 import uk.gov.hmrc.mobilemessages.domain.types.ModelTypes.JourneyId
 import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator.{nextSaUtr, readMessageHeader, unreadMessageHeader}
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
-import uk.gov.hmrc.mobilemessages.services.{MobileMessagesService, RenderedMessage}
+import uk.gov.hmrc.mobilemessages.services.MobileMessagesService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 
 import scala.concurrent.{ExecutionContext, Future}

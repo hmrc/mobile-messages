@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.mobilemessages.connector.model
 
-import java.time.{LocalDate, LocalDateTime}
-
+import java.time.{LocalDate, OffsetDateTime}
 import uk.gov.hmrc.mobilemessages.domain.{MessageHeader, MessageId}
 
 final case class UpstreamMessageHeadersResponse(items: Seq[MessageHeader])
@@ -26,12 +25,13 @@ object UpstreamMessageHeadersResponse {
 
   import play.api.libs.functional.syntax._
   import play.api.libs.json._
+  import DateTimeFormats._
 
   implicit val messageHeaderReads: Reads[MessageHeader] = (
     (__ \ "id").read[String] and
     (__ \ "subject").read[String] and
     (__ \ "validFrom").read[LocalDate] and
-    (__ \ "readTime").readNullable[LocalDateTime] and
+    (__ \ "readTime").readNullable[OffsetDateTime] and
     (__ \ "sentInError").read[Boolean]
   )((id, subject, validFrom, readTime, sentInError) =>
     MessageHeader(MessageId(id), subject, validFrom, readTime, sentInError)
