@@ -99,7 +99,7 @@ class MobileMessagesController @Inject() (
               .fold(
                 errors => {
                   logger.warn("Received JSON error with read endpoint: " + errors)
-                  Future.successful(BadRequest(Json.toJson[ErrorResponse](ErrorGenericBadRequest(errors))))
+                  Future.successful(BadRequest(Json.toJson[ErrorResponse](ErrorGenericBadRequest())))
                 },
                 renderMessageRequest =>
                   errorWrapper {

@@ -37,6 +37,7 @@ import uk.gov.hmrc.mobilemessages.domain.{MessageCount, MessageCountResponse, Me
 import uk.gov.hmrc.mobilemessages.mocks.{AuthorisationStub, MessagesStub, ShutteringStub, StubApplicationConfiguration}
 import uk.gov.hmrc.mobilemessages.services.MobileMessagesService
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
+import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
 import scala.concurrent.Future
@@ -59,9 +60,7 @@ trait Setup extends AuthorisationStub with MessagesStub with StubApplicationConf
 
   implicit val reads:                   Reads[MessageHeaderResponseBody] = Json.reads[MessageHeaderResponseBody]
   implicit val hc:                      HeaderCarrier                    = HeaderCarrier(Some(Authorization("authToken")))
-  implicit val mockHttp:                WSHttpImpl                       = mock[WSHttpImpl]
   implicit val mockAuthConnector:       AuthConnector                    = mock[AuthConnector]
-  implicit val mockAuditConnector:      AuditConnector                   = mock[AuditConnector]
   implicit val mockMessageConnector:    MessageConnector                 = mock[MessageConnector]
   implicit val mockShutteringConnector: ShutteringConnector              = mock[ShutteringConnector]
   implicit val authUser:                Option[Authority]                = Some(Authority(Nino("CS700100A"), Some("someId")))

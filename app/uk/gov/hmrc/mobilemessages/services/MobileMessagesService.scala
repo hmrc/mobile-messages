@@ -34,14 +34,14 @@ class MobileMessagesService @Inject() (
   @Named("appName") val appName: String,
   val messageConnector:          MessageConnector,
   val auditConnector:            AuditConnector,
-  val appNameConfiguration:      Configuration)
-    extends Auditor {
+  val appNameConfiguration:      Configuration,
+  auditService: AuditService) {
 
   def readAndUnreadMessages(
   )(implicit hc: HeaderCarrier,
     ec:          ExecutionContext
   ): Future[Seq[MessageHeader]] =
-    withAudit("readAndUnreadMessages", Map.empty) {
+    auditService.withAudit("readAndUnreadMessages", Map.empty) {
       messageConnector.messages()
     }
 
@@ -56,7 +56,7 @@ class MobileMessagesService @Inject() (
   )(implicit hc: HeaderCarrier,
     ec:          ExecutionContext
   ): Future[RenderedMessage] =
-    withAudit("readMessageContent", Map.empty) {
+    auditService.withAudit("readMessageContent", Map.empty) {
       messageConnector.getMessageBy(messageId) flatMap { message =>
         messageConnector.render(message, hc) map { renderedMessage =>
           markAsReadIfUnread.apply(message)
