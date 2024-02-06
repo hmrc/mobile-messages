@@ -17,7 +17,6 @@
 package uk.gov.hmrc.mobilemessages.controllers.api
 
 import controllers.Assets
-import org.apache.commons.lang3.mutable.Mutable
 
 import javax.inject.{Inject, Singleton}
 import play.api.http.HttpErrorHandler

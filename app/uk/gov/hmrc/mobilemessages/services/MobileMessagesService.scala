@@ -25,8 +25,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilemessages.connector._
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageCountResponse, MessageHeader, MessageId, UnreadMessage}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.service.Auditor
-
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton

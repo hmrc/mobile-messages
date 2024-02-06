@@ -46,8 +46,7 @@ trait ErrorHandling {
 
   def errorWrapper(
     func:        => Future[mvc.Result]
-  )(implicit hc: HeaderCarrier,
-    ec:          ExecutionContext
+  )(implicit ec: ExecutionContext
   ): Future[Result] =
     func.recover {
       case ex: Upstream4xxResponse if ex.upstreamResponseCode == 404 =>

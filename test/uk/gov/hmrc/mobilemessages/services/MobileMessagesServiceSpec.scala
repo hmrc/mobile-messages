@@ -18,7 +18,6 @@ package uk.gov.hmrc.mobilemessages.services
 
 import org.scalamock.handlers.CallHandler3
 import org.scalamock.matchers.MatcherBase
-import org.scalatest.freespec.AnyFreeSpecLike
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
