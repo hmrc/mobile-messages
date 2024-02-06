@@ -219,7 +219,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
       stubForShutteringDisabled
 
       val result:  WSResponse               = await(request(url, journeyId).addHttpHeaders(authHeader).post(toJson(messageUrl)))
-      val headers: Map[String, Seq[String]] = result.headers
+      val headers: Map[String, collection.Seq[String]] = result.headers
 
       result.status                    shouldBe 200
       headers.find(_._1 == "type")     shouldBe None

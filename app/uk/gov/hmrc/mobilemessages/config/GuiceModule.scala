@@ -16,17 +16,17 @@
 
 package uk.gov.hmrc.mobilemessages.config
 
-import javax.inject.Named
+import com.google.inject.name.Named
 import com.google.inject.name.Names.named
 import com.google.inject.{AbstractModule, Provides}
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.{CoreGet, CorePost}
 import uk.gov.hmrc.mobilemessages.controllers.api.ApiAccess
-import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.http.HttpClient
+
 import scala.jdk.CollectionConverters._
 
 class GuiceModule(

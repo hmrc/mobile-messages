@@ -61,7 +61,6 @@ class MobileMessagesService @Inject() (
         messageConnector.render(message, hc) map { renderedMessage =>
           markAsReadIfUnread.apply(message)
           RenderedMessage(renderedMessage)
-
         }
       }
     }

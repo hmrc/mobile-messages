@@ -75,7 +75,7 @@ class MobileMessagesServiceSpec
       .returns(Future successful Success)
   }
 
-  implicit val auditConnector: AuditConnector = mock[AuditConnector]
+  val auditConnector: AuditConnector = mock[AuditConnector]
   val auditService: AuditService = new AuditService(auditConnector, "mobile-messages")
 
   val service: MobileMessagesService =
@@ -83,30 +83,31 @@ class MobileMessagesServiceSpec
 
   "readAndUnreadMessages()" should {
     "return an empty seq of messages" in {
-      mockAudit("readAndUnreadMessages")
+
       (mockMessageConnector
         .messages()(_: HeaderCarrier, _: ExecutionContext))
         .expects(*, *)
         .returns(Future successful Seq.empty)
+      mockAudit("readAndUnreadMessages")
 
       await(service.readAndUnreadMessages()) shouldBe Seq.empty
     }
 
     "return a populated seq of messages" in {
 
-      mockAudit("readAndUnreadMessages")
+
       (mockMessageConnector
         .messages()(_: HeaderCarrier, _: ExecutionContext))
         .expects(*, *)
         .returns(Future successful messageServiceHeadersResponse)
-
+      mockAudit("readAndUnreadMessages")
       await(service.readAndUnreadMessages()) shouldBe messageServiceHeadersResponse
     }
   }
 
   "readMessageContent(messageId: MessageId)" should {
     "return an html page with headers and mark an unread message as read" in {
-      mockAudit("readAndUnreadMessages")
+
       (mockMessageConnector
         .getMessageBy(_: MessageId)(_: HeaderCarrier, _: ExecutionContext))
         .expects(*, *, *)
@@ -116,6 +117,7 @@ class MobileMessagesServiceSpec
                              markAsReadUrl = Some(ResourceActionLocation("sa-message-renderer", "url")))
           )
         )
+      stubAuditReadMessageContent()(auditConnector)
       (mockMessageConnector
         .render(_: Message, _: HeaderCarrier)(_: ExecutionContext))
         .expects(*, *, *)

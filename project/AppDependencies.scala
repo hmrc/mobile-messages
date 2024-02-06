@@ -15,12 +15,15 @@ private object AppDependencies {
   private val pegdownVersion       = "1.6.0"
   private val scalaTestPlusVersion = "5.1.0"
   private val refinedVersion        = "0.9.26"
+  private val commonsCodecVersion  = "1.16.0"
 
   val compile = Seq(
-    "uk.gov.hmrc" %% "play-hmrc-api"         % playHmrcApiVersion,
-    "uk.gov.hmrc" %% "domain"                % domainVersion,
-    "uk.gov.hmrc" %% "emailaddress-play-28"  % emailAddressVersion,
-    "eu.timepit"  %% "refined"                % refinedVersion
+    "uk.gov.hmrc" %% "bootstrap-backend-play-28" % play28Bootstrap,
+    "uk.gov.hmrc" %% "play-hmrc-api"             % playHmrcApiVersion,
+    "uk.gov.hmrc" %% "domain"                    % domainVersion,
+    "uk.gov.hmrc" %% "emailaddress-play-28"      % emailAddressVersion,
+    "eu.timepit"  %% "refined"                    % refinedVersion,
+    "commons-codec" % "commons-codec"            % commonsCodecVersion
   )
 
   trait TestDependencies {
