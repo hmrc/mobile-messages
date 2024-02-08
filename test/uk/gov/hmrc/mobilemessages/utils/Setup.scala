@@ -25,7 +25,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.POST
 import play.twirl.api.Html
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.crypto.{CryptoWithKeysFromConfig, Decrypter, Encrypter, SymmetricCryptoFactory}
+import uk.gov.hmrc.crypto.{Decrypter, Encrypter, SymmetricCryptoFactory}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.mobilemessages.connector.{MessageConnector, ShutteringConnector}
