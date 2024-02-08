@@ -17,13 +17,12 @@
 package uk.gov.hmrc.mobilemessages.connector
 
 import java.net.URLDecoder
-
 import com.typesafe.config.Config
 import org.apache.commons.codec.CharEncoding
 import org.apache.commons.lang3.StringUtils
 import play.api.http.HeaderNames
 import play.api.libs.crypto.CookieSigner
-import uk.gov.hmrc.crypto.{Crypted, CryptoGCMWithKeysFromConfig, PlainText}
+import uk.gov.hmrc.crypto.{Crypted, Decrypter, Encrypter, PlainText, SymmetricCryptoFactory}
 
 trait SessionCookieEncryptionSupport {
   val SignSeparator     = "-"
@@ -32,7 +31,7 @@ trait SessionCookieEncryptionSupport {
   def config:       Config
   def cookieSigner: CookieSigner
 
-  lazy val cipher = new CryptoGCMWithKeysFromConfig("cookie.encryption", config)
+  lazy val cipher: Encrypter with Decrypter = SymmetricCryptoFactory.aesGcmCryptoFromConfig("cookie.encryption", config)
 
   private def createPopulatedSessionCookie(payload: String): String = {
     val signedPayload = cookieSigner.sign(payload) + SignSeparator + payload

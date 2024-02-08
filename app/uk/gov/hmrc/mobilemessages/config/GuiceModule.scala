@@ -23,12 +23,11 @@ import play.api.{Configuration, Environment}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.{CoreGet, CorePost}
 import uk.gov.hmrc.mobilemessages.controllers.api.ApiAccess
-import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.http.HttpClient
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class GuiceModule(
   environment:   Environment,
@@ -45,7 +44,6 @@ class GuiceModule(
     bind(classOf[CorePost]).to(classOf[WSHttpImpl])
     bind(classOf[HttpClient]).to(classOf[WSHttpImpl])
 
-    bind(classOf[Audit]).to(classOf[MicroserviceAudit])
     bind(classOf[AuthConnector]).to(classOf[DefaultAuthConnector])
 
     bind(classOf[ApiAccess]).toInstance(

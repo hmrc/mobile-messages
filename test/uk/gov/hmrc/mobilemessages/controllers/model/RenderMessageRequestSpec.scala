@@ -39,8 +39,8 @@ class RenderMessageRequestSpec extends AnyWordSpecLike with Matchers with Future
   }
 
   "invalid data" should {
-    "cause security exception" in {
-      intercept[SecurityException] {
+    "cause illegal argument exception" in {
+      intercept[IllegalArgumentException] {
         RenderMessageRequest("invalidDataThatIsNeitherMessageIdNorEncrypted").toMessageIdUsing(crypto)
       }
     }

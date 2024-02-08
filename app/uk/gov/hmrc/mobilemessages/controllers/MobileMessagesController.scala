@@ -25,7 +25,8 @@ import play.api.mvc._
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.api.controllers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.crypto.{CryptoWithKeysFromConfig, Decrypter, Encrypter}
+import uk.gov.hmrc.crypto.SymmetricCryptoFactory.aesCryptoFromConfig
+import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 import uk.gov.hmrc.domain.SaUtr
 import uk.gov.hmrc.mobilemessages.connector.ShutteringConnector
 import uk.gov.hmrc.mobilemessages.controllers.auth.AccessControl
@@ -58,8 +59,7 @@ class MobileMessagesController @Inject() (
 
   override def parser: BodyParser[AnyContent] = controllerComponents.parsers.anyContent
 
-  val crypto: Encrypter with Decrypter =
-    new CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption", configuration.underlying)
+  val crypto: Encrypter with Decrypter = aesCryptoFromConfig(baseConfigKey = "cookie.encryption", configuration.underlying)
 
   def getMessages(journeyId: JourneyId): Action[AnyContent] =
     validateAcceptWithAuth(acceptHeaderValidationRules).async { implicit authenticated =>
@@ -99,7 +99,7 @@ class MobileMessagesController @Inject() (
               .fold(
                 errors => {
                   logger.warn("Received JSON error with read endpoint: " + errors)
-                  Future.successful(BadRequest(Json.toJson[ErrorResponse](ErrorGenericBadRequest(errors))))
+                  Future.successful(BadRequest(Json.toJson[ErrorResponse](ErrorGenericBadRequest())))
                 },
                 renderMessageRequest =>
                   errorWrapper {
@@ -123,8 +123,7 @@ class SandboxMobileMessagesController @Inject() (
 
   override def parser: BodyParser[AnyContent] = controllerComponents.parsers.anyContent
 
-  val crypto: Encrypter with Decrypter =
-    new CryptoWithKeysFromConfig(baseConfigKey = "cookie.encryption", config.underlying)
+  val crypto: Encrypter with Decrypter = aesCryptoFromConfig(baseConfigKey = "cookie.encryption", config.underlying)
 
   val saUtr: SaUtr = nextSaUtr
 

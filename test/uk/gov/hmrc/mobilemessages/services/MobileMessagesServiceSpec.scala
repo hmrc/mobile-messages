@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilemessages.services
 
+import org.scalamock.handlers.CallHandler3
+import org.scalamock.matchers.MatcherBase
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
@@ -24,6 +26,9 @@ import uk.gov.hmrc.mobilemessages.connector.model.ResourceActionLocation
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageId, UnreadMessage}
 import uk.gov.hmrc.mobilemessages.mocks.AuditStub
 import uk.gov.hmrc.mobilemessages.utils.Setup
+import uk.gov.hmrc.play.audit.http.connector.AuditResult.Success
+import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
+import uk.gov.hmrc.play.audit.model._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
@@ -36,35 +41,72 @@ class MobileMessagesServiceSpec
     with Setup
     with AuditStub {
 
+  val appName: String = "mobile-messages"
+  def mockAudit(
+                 transactionName: String,
+                 detail: Map[String, String] = Map.empty
+               ): CallHandler3[DataEvent, HeaderCarrier, ExecutionContext, Future[
+    AuditResult
+  ]] = {
+    def dataEventWith(
+                       auditSource: String,
+                       auditType: String,
+                       tags: Map[String, String]
+                     ): MatcherBase =
+      argThat { (dataEvent: DataEvent) =>
+        dataEvent.auditSource.equals(auditSource) &&
+          dataEvent.auditType.equals(auditType) &&
+          dataEvent.tags.equals(tags) &&
+          dataEvent.detail.equals(detail)
+      }
+
+    (auditConnector
+      .sendEvent(_: DataEvent)(_: HeaderCarrier, _: ExecutionContext))
+      .expects(
+        dataEventWith(
+          appName,
+          auditType = "ServiceResponseSent",
+          tags = Map("transactionName" -> transactionName)
+        ),
+        *,
+        *
+      )
+      .returns(Future successful Success)
+  }
+
+  val auditConnector: AuditConnector = mock[AuditConnector]
+  val auditService: AuditService = new AuditService(auditConnector, "mobile-messages")
+
   val service: MobileMessagesService =
-    new MobileMessagesService("mobile-messages", mockMessageConnector, mockAuditConnector, configuration)
+    new MobileMessagesService("mobile-messages", mockMessageConnector, auditConnector, configuration, auditService)
 
   "readAndUnreadMessages()" should {
     "return an empty seq of messages" in {
-      stubAuditReadAndUnreadMessages()
+
       (mockMessageConnector
         .messages()(_: HeaderCarrier, _: ExecutionContext))
         .expects(*, *)
         .returns(Future successful Seq.empty)
+      mockAudit("readAndUnreadMessages")
 
       await(service.readAndUnreadMessages()) shouldBe Seq.empty
     }
 
     "return a populated seq of messages" in {
 
-      stubAuditReadAndUnreadMessages()
+
       (mockMessageConnector
         .messages()(_: HeaderCarrier, _: ExecutionContext))
         .expects(*, *)
         .returns(Future successful messageServiceHeadersResponse)
-
+      mockAudit("readAndUnreadMessages")
       await(service.readAndUnreadMessages()) shouldBe messageServiceHeadersResponse
     }
   }
 
   "readMessageContent(messageId: MessageId)" should {
     "return an html page with headers and mark an unread message as read" in {
-      stubAuditReadMessageContent()
+
       (mockMessageConnector
         .getMessageBy(_: MessageId)(_: HeaderCarrier, _: ExecutionContext))
         .expects(*, *, *)
@@ -74,6 +116,7 @@ class MobileMessagesServiceSpec
                              markAsReadUrl = Some(ResourceActionLocation("sa-message-renderer", "url")))
           )
         )
+      stubAuditReadMessageContent()(auditConnector)
       (mockMessageConnector
         .render(_: Message, _: HeaderCarrier)(_: ExecutionContext))
         .expects(*, *, *)
@@ -89,7 +132,7 @@ class MobileMessagesServiceSpec
     }
 
     "return an html page with headers when receiving read messages" in {
-      stubAuditReadMessageContent()
+      mockAudit("readMessageContent")
       (mockMessageConnector
         .getMessageBy(_: MessageId)(_: HeaderCarrier, _: ExecutionContext))
         .expects(*, *, *)
@@ -105,4 +148,6 @@ class MobileMessagesServiceSpec
     }
 
   }
+
+
 }

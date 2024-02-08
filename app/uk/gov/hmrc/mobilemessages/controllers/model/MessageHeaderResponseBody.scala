@@ -21,7 +21,6 @@ import org.apache.commons.codec.binary.Base64.encodeBase64String
 import play.api.libs.json._
 import uk.gov.hmrc.crypto.{Encrypter, PlainText}
 import uk.gov.hmrc.mobilemessages.domain.MessageHeader
-
 trait WriteDatesAsLongs {
 
   implicit val dateTimeWrites: Writes[OffsetDateTime] = new Writes[OffsetDateTime] {

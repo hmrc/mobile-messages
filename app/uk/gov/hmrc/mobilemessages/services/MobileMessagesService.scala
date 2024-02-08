@@ -25,8 +25,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilemessages.connector._
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageCountResponse, MessageHeader, MessageId, UnreadMessage}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.service.Auditor
-
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -34,14 +32,14 @@ class MobileMessagesService @Inject() (
   @Named("appName") val appName: String,
   val messageConnector:          MessageConnector,
   val auditConnector:            AuditConnector,
-  val appNameConfiguration:      Configuration)
-    extends Auditor {
+  val appNameConfiguration:      Configuration,
+  auditService: AuditService) {
 
   def readAndUnreadMessages(
   )(implicit hc: HeaderCarrier,
     ec:          ExecutionContext
   ): Future[Seq[MessageHeader]] =
-    withAudit("readAndUnreadMessages", Map.empty) {
+    auditService.withAudit("readAndUnreadMessages", Map.empty) {
       messageConnector.messages()
     }
 
@@ -56,12 +54,11 @@ class MobileMessagesService @Inject() (
   )(implicit hc: HeaderCarrier,
     ec:          ExecutionContext
   ): Future[RenderedMessage] =
-    withAudit("readMessageContent", Map.empty) {
+    auditService.withAudit("readMessageContent", Map.empty) {
       messageConnector.getMessageBy(messageId) flatMap { message =>
         messageConnector.render(message, hc) map { renderedMessage =>
           markAsReadIfUnread.apply(message)
           RenderedMessage(renderedMessage)
-
         }
       }
     }

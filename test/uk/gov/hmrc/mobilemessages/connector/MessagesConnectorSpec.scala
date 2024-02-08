@@ -26,6 +26,7 @@ import play.api.libs.json.{Json, OFormat}
 import play.api.test.Helpers.SERVICE_UNAVAILABLE
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.mobilemessages.config.WSHttpImpl
 import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageHeadersResponse, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.domain._
 import uk.gov.hmrc.mobilemessages.utils.Setup
@@ -43,6 +44,7 @@ class MessagesConnectorSpec extends AnyWordSpecLike with Matchers with FutureAwa
 
   val responseRenderer = RenderMessageLocation("sa-message-renderer", "http://somelocation")
   val renderPath       = "/some/render/path"
+  implicit val mockHttp:                                            WSHttpImpl    = mock[WSHttpImpl]
 
   val messageBodyToRender: UpstreamMessageResponse =
     message.bodyWith(id = "id1", renderUrl = ResourceActionLocation("test-renderer-service", renderPath))
