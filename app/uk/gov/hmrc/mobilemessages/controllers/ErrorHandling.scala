@@ -33,7 +33,8 @@ case object ErrorUnauthorizedMicroService extends ErrorResponse(401, "UNAUTHORIZ
 
 case object ErrorForbidden extends ErrorResponse(403, "FORBIDDEN", "Forbidden")
 
-case object ErrorTooManyRequests extends ErrorResponse(429,"TOO_MANY_REQUESTS","Too many requests have been please try again later")
+case object ErrorTooManyRequests
+    extends ErrorResponse(429, "TOO_MANY_REQUESTS", "Too many requests have been please try again later")
 
 trait ErrorHandling {
   self: BackendBaseController =>
@@ -44,15 +45,14 @@ trait ErrorHandling {
 
   val logger: Logger = Logger(this.getClass)
 
-  def errorWrapper(
-    func:        => Future[mvc.Result]
-  )(implicit ec: ExecutionContext
-  ): Future[Result] =
+  def errorWrapper(func: => Future[mvc.Result])(implicit ec: ExecutionContext): Future[Result] =
     func.recover {
-      case ex: Upstream4xxResponse if ex.upstreamResponseCode == 404 =>
+      case ex: uk.gov.hmrc.http.UpstreamErrorResponse if (ex.statusCode == 404) =>
         Status(ErrorNotFound.httpStatusCode)(Json.toJson[ErrorResponse](ErrorNotFound))
-      case ex: Upstream4xxResponse if ex.upstreamResponseCode == 429 =>
+
+      case ex: uk.gov.hmrc.http.UpstreamErrorResponse if (ex.statusCode == 429) =>
         Status(ErrorTooManyRequests.httpStatusCode)(Json.toJson[ErrorResponse](ErrorTooManyRequests))
+
       case _: UnauthorizedException => Unauthorized(Json.toJson[ErrorResponse](ErrorUnauthorizedMicroService))
 
       case _: ForbiddenException => Unauthorized(Json.toJson[ErrorResponse](ErrorUnauthorizedLowCL))
