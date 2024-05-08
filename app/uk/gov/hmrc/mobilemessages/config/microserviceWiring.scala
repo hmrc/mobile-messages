@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilemessages.config
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import com.typesafe.config.Config
 import javax.inject.{Inject, Named}
 import play.api.Configuration

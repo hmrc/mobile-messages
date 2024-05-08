@@ -18,18 +18,16 @@ package uk.gov.hmrc.mobilemessages.controllers.auth
 
 import play.api.Logger
 import play.api.libs.json.Json.toJson
-import play.api.libs.json.{Json, OFormat, Reads}
 import play.api.mvc._
 import uk.gov.hmrc.api.controllers.{ErrorAcceptHeaderInvalid, ErrorResponse, HeaderValidator}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.{HeaderCarrier, Upstream4xxResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.mobilemessages.controllers._
 import uk.gov.hmrc.play.http.HeaderCarrierConverter.fromRequest
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 final case class Authority(
@@ -41,23 +39,18 @@ final case class AuthenticatedRequest[A](
   request:   Request[A])
     extends WrappedRequest(request)
 
-case class AuthorityRecord(uri: String)
-
-object AuthorityRecord {
-  implicit val format: OFormat[AuthorityRecord] = Json.format[AuthorityRecord]
-  implicit val reads:  Reads[AuthorityRecord]   = Json.reads[AuthorityRecord]
-}
-
 trait Authorisation extends Results with AuthorisedFunctions {
 
   lazy val requiresAuth: Boolean = true
   lazy val ninoNotFoundOnAccount = new NinoNotFoundOnAccount
-  lazy val lowConfidenceLevel    = new AccountWithLowCL
-  lazy val upstreamException     = new Upstream4xxResponse(("userId not found"), 401, 401)
+  lazy val upstreamException     = UpstreamErrorResponse(("userId not found"), 401, 401)
 
   val logger: Logger = Logger(this.getClass)
 
-  def grantAccess()(implicit hc: HeaderCarrier): Future[Authority] =
+  def grantAccess(
+  )(implicit hc: HeaderCarrier,
+    ec:          ExecutionContext
+  ): Future[Authority] =
     authorised(ConfidenceLevel.L200)
       .retrieve(nino and internalId) {
         case None ~ _ => throw ninoNotFoundOnAccount
@@ -67,8 +60,9 @@ trait Authorisation extends Results with AuthorisedFunctions {
       }
 
   def invokeAuthBlock[A](
-    request: Request[A],
-    block:   AuthenticatedRequest[A] => Future[Result]
+    request:     Request[A],
+    block:       AuthenticatedRequest[A] => Future[Result]
+  )(implicit ec: ExecutionContext
   ): Future[Result] = {
     implicit val hc: HeaderCarrier = fromRequest(request)
 
@@ -77,13 +71,14 @@ trait Authorisation extends Results with AuthorisedFunctions {
         block(AuthenticatedRequest(Some(authority), request))
       }
       .recover {
-        case _: uk.gov.hmrc.http.Upstream4xxResponse =>
-          logger.info("Unauthorized! Failed to grant access since 4xx response!")
-          Unauthorized(toJson[ErrorResponse](ErrorUnauthorizedMicroService))
-
         case _: NinoNotFoundOnAccount =>
           logger.info("Unauthorized! NINO not found on account!")
           Forbidden(toJson[ErrorResponse](ErrorForbidden))
+
+        case ex: uk.gov.hmrc.http.UpstreamErrorResponse if (ex.statusCode > 399 && ex.statusCode < 500) =>
+          logger.info("Unauthorized! Failed to grant access since 4xx response!")
+          Unauthorized(toJson[ErrorResponse](ErrorUnauthorizedMicroService))
+
       }
   }
 
@@ -92,7 +87,10 @@ trait Authorisation extends Results with AuthorisedFunctions {
 trait AccessControl extends HeaderValidator with Authorisation {
   outer =>
 
-  def validateAcceptWithAuth(rules: Option[String] => Boolean): ActionBuilder[AuthenticatedRequest, AnyContent] =
+  def validateAcceptWithAuth(
+    rules:       Option[String] => Boolean
+  )(implicit ec: ExecutionContext
+  ): ActionBuilder[AuthenticatedRequest, AnyContent] =
     new ActionBuilder[AuthenticatedRequest, AnyContent] {
 
       override def parser:                     BodyParser[AnyContent] = outer.parser
@@ -105,6 +103,9 @@ trait AccessControl extends HeaderValidator with Authorisation {
         if (rules(request.headers.get("Accept"))) {
           if (requiresAuth) invokeAuthBlock(request, block)
           else block(AuthenticatedRequest(None, request))
-        } else Future.successful(Status(ErrorAcceptHeaderInvalid.httpStatusCode)(toJson[ErrorResponse](ErrorAcceptHeaderInvalid)))
+        } else
+          Future.successful(
+            Status(ErrorAcceptHeaderInvalid.httpStatusCode)(toJson[ErrorResponse](ErrorAcceptHeaderInvalid))
+          )
     }
 }
