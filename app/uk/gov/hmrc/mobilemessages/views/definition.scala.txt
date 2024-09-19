@@ -3,13 +3,6 @@
 
 @(apiAccess: ApiAccess)
 {
-  "scopes":[
-    {
-      "key":"read:messages",
-      "name":"Execute messages call",
-      "description":"Retrieve the messages"
-    }
-  ],
   "api":{
     "name":"Mobile Messages",
     "description":"The API is used to retrieve messages.",
