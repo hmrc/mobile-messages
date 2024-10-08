@@ -30,8 +30,7 @@ final case class UpstreamMessageResponse(
   renderUrl:     ResourceActionLocation,
   markAsReadUrl: Option[ResourceActionLocation]) {
 
-  def toMessageUsing(servicesToUrl: Map[String, String]): Message = {
-
+  def toMessageUsing(servicesToUrl: Map[String, String]): Message =
     markAsReadUrl.fold[Message](
       ReadMessage(
         MessageId(id),
@@ -44,7 +43,6 @@ final case class UpstreamMessageResponse(
         res.toUrlUsing(servicesToUrl(res.service))
       )
     )
-  }
 }
 
 object ResourceActionLocation {

@@ -16,27 +16,23 @@
 
 package uk.gov.hmrc.mobilemessages.mocks
 
-import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
-import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
+import uk.gov.hmrc.auth.core.retrieve._
+import uk.gov.hmrc.http.UpstreamErrorResponse
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
-trait AuthorisationStub extends MockFactory {
+trait AuthorisationStub {
 
   type GrantAccess = Option[String] ~ Option[String]
 
   def stubAuthorisationGrantAccess(response: GrantAccess)(implicit authConnector: AuthConnector): Unit =
-    (authConnector
-      .authorise(_: Predicate, _: Retrieval[GrantAccess])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *)
-      .returning(Future successful response)
+    when(authConnector.authorise[GrantAccess](any(), any())(any(), any())).thenReturn(Future successful response)
 
   def stubAuthorisationUnauthorised()(implicit authConnector: AuthConnector): Unit =
-    (authConnector
-      .authorise(_: Predicate, _: Retrieval[GrantAccess])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *)
-      .returning(Future failed UpstreamErrorResponse("401", 401, 401))
+    when(authConnector.authorise[GrantAccess](any(), any())(any(), any()))
+      .thenReturn(Future failed UpstreamErrorResponse("401", 401, 401))
+
 }

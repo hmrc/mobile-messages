@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +59,8 @@ class MobileMessagesController @Inject() (
 
   override def parser: BodyParser[AnyContent] = controllerComponents.parsers.anyContent
 
-  val crypto: Encrypter with Decrypter = aesCryptoFromConfig(baseConfigKey = "cookie.encryption", configuration.underlying)
+  val crypto: Encrypter with Decrypter =
+    aesCryptoFromConfig(baseConfigKey = "cookie.encryption", configuration.underlying)
 
   def getMessages(journeyId: JourneyId): Action[AnyContent] =
     validateAcceptWithAuth(acceptHeaderValidationRules).async { implicit authenticated =>

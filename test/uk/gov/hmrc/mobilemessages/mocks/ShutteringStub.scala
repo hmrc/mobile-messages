@@ -16,23 +16,15 @@
 
 package uk.gov.hmrc.mobilemessages.mocks
 
-import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilemessages.connector.ShutteringConnector
+import org.mockito.Mockito.when
 import uk.gov.hmrc.mobilemessages.domain.Shuttering
-import uk.gov.hmrc.mobilemessages.domain.types.ModelTypes.JourneyId
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
-trait ShutteringStub extends MockFactory {
+trait ShutteringStub extends MessagesStub {
 
-  def stubShutteringResponse(
-    response:                     Shuttering
-  )(implicit shutteringConnector: ShutteringConnector
-  ): CallHandler[Future[Shuttering]] =
-    (shutteringConnector
-      .getShutteringStatus(_: JourneyId)(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *)
-      .returning(Future successful response)
+  def stubShutteringResponse(response: Shuttering) =
+    when(requestBuilderExecute[Shuttering])
+      .thenReturn(Future.successful(response))
+
 }

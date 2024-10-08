@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,9 +51,7 @@ class MessageServiceMock(authToken: String) {
     renderUrl:     ResourceActionLocation = ResourceActionLocation("sa-message-renderer", "/utr/render"),
     markAsReadUrl: Option[ResourceActionLocation] = None
   ): UpstreamMessageResponse =
-    UpstreamMessageResponse(id,
-                            renderUrl,
-                            markAsReadUrl)
+    UpstreamMessageResponse(id, renderUrl, markAsReadUrl)
 
   def bodyToBeMarkedAsReadWith(id: String): UpstreamMessageResponse =
     bodyWith(id = id, markAsReadUrl = Some(ResourceActionLocation("message", s"/messages/$id/read-time")))
@@ -68,9 +66,9 @@ class MessageServiceMock(authToken: String) {
     MessageHeader(MessageId(id), subject, validFrom, readTime, sentInError)
 
   def countWith(
-    total:       Int,
-    unread:      Int
-                ): MessageCount =
+    total:  Int,
+    unread: Int
+  ): MessageCount =
     MessageCount(total, unread)
 
   def jsonRepresentationOf(message: UpstreamMessageResponse): String =

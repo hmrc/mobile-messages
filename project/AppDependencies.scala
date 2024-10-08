@@ -2,10 +2,10 @@ import sbt._
 
 private object AppDependencies {
 
-  private val playBootstrapVersion = "8.5.0"
+  private val playBootstrapVersion = "9.5.0"
   private val playHmrcApiVersion   = "8.0.0"
-  private val domainVersion        = "9.0.0"
-  private val emailAddressVersion  = "4.0.0"
+  private val domainVersion        = "10.0.0"
+  private val emailAddressVersion  = "4.1.0"
 
   private val scalaMockVersion    = "5.2.0"
   private val refinedVersion      = "0.11.1"
@@ -16,7 +16,7 @@ private object AppDependencies {
     "uk.gov.hmrc"   %% "play-hmrc-api-play-30"     % playHmrcApiVersion,
     "uk.gov.hmrc"   %% "domain-play-30"            % domainVersion,
     "uk.gov.hmrc"   %% "emailaddress-play-30"      % emailAddressVersion,
-    "eu.timepit"    %% "refined"                    % refinedVersion,
+    "eu.timepit"    %% "refined"                   % refinedVersion,
     "commons-codec" % "commons-codec"              % commonsCodecVersion
   )
 

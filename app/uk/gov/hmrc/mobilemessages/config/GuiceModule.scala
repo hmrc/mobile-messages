@@ -21,11 +21,9 @@ import com.google.inject.name.Names.named
 import com.google.inject.{AbstractModule, Provides}
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.http.{CoreGet, CorePost}
 import uk.gov.hmrc.mobilemessages.controllers.api.ApiAccess
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.http.HttpClient
 
 class GuiceModule(
   environment:   Environment,
@@ -38,9 +36,6 @@ class GuiceModule(
   import servicesConfig.baseUrl
 
   override def configure(): Unit = {
-    bind(classOf[CoreGet]).to(classOf[WSHttpImpl])
-    bind(classOf[CorePost]).to(classOf[WSHttpImpl])
-    bind(classOf[HttpClient]).to(classOf[WSHttpImpl])
 
     bind(classOf[AuthConnector]).to(classOf[DefaultAuthConnector])
 

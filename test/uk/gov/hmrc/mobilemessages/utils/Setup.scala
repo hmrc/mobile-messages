@@ -18,6 +18,8 @@ package uk.gov.hmrc.mobilemessages.utils
 
 import java.time.LocalDateTime
 import eu.timepit.refined.auto._
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
 import play.api.libs.json.{JsValue, Json, Reads}
 import play.api.mvc.AnyContentAsEmpty
@@ -27,21 +29,23 @@ import play.twirl.api.Html
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.crypto.{Decrypter, Encrypter, SymmetricCryptoFactory}
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.mobilemessages.connector.{MessageConnector, ShutteringConnector}
+import uk.gov.hmrc.mobilemessages.connector.MessageConnector
 import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
 import uk.gov.hmrc.mobilemessages.domain.types.ModelTypes.JourneyId
 import uk.gov.hmrc.mobilemessages.domain.{MessageCount, MessageCountResponse, MessageHeader, MessageId, Shuttering}
-import uk.gov.hmrc.mobilemessages.mocks.{AuthorisationStub, MessagesStub, ShutteringStub, StubApplicationConfiguration}
+import uk.gov.hmrc.mobilemessages.mocks.{AuditStub, AuthorisationStub, MessagesStub, ShutteringStub, StubApplicationConfiguration}
 import uk.gov.hmrc.mobilemessages.services.MobileMessagesService
 import uk.gov.hmrc.mobilemessages.utils.EncryptionUtils.encrypted
 
 import scala.concurrent.Future
 
-trait Setup extends AuthorisationStub with MessagesStub with StubApplicationConfiguration with ShutteringStub {
+trait Setup extends PlaySpec with AuthorisationStub with StubApplicationConfiguration with AuditStub with MockitoSugar {
 
   lazy val html = Html.apply("<div>some snippet</div>")
+
   lazy val emptyRequestWithAcceptHeader: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withHeaders(acceptHeader)
 
   lazy val readTimeRequest: FakeRequest[JsValue] =
@@ -55,12 +59,12 @@ trait Setup extends AuthorisationStub with MessagesStub with StubApplicationConf
   lazy val ReadSuccessEmptyResult: Future[AnyRef with HttpResponse] =
     Future.successful(HttpResponse(200, ""))
 
-  implicit val reads:                   Reads[MessageHeaderResponseBody] = Json.reads[MessageHeaderResponseBody]
-  implicit val hc:                      HeaderCarrier                    = HeaderCarrier(Some(Authorization("authToken")))
-  implicit val mockAuthConnector:       AuthConnector                    = mock[AuthConnector]
-  implicit val mockMessageConnector:    MessageConnector                 = mock[MessageConnector]
-  implicit val mockShutteringConnector: ShutteringConnector              = mock[ShutteringConnector]
-  implicit val authUser:                Option[Authority]                = Some(Authority(Nino("CS700100A"), Some("someId")))
+  implicit val reads:                Reads[MessageHeaderResponseBody] = Json.reads[MessageHeaderResponseBody]
+  implicit val hc:                   HeaderCarrier                    = HeaderCarrier(Some(Authorization("authToken")))
+  implicit val mockAuthConnector:    AuthConnector                    = mock[AuthConnector]
+  implicit val mockMessageConnector: MessageConnector                 = mock[MessageConnector]
+  // lazy val components:               ControllerComponents             = app.injector.instanceOf[ControllerComponents]
+  implicit val authUser: Option[Authority] = Some(Authority(Nino("CS700100A"), Some("someId")))
 
   val shuttered =
     Shuttering(shuttered = true, Some("Shuttered"), Some("Messages are currently not available"))
@@ -68,12 +72,13 @@ trait Setup extends AuthorisationStub with MessagesStub with StubApplicationConf
 
   val configuration: Configuration = Configuration("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")
 
-  val nino: Nino = Nino("CS700100A")
+  val nino:         Nino                     = Nino("CS700100A")
   val journeyId:    JourneyId                = "87144372-6bda-4cc9-87db-1d52fd96498f"
   val acceptHeader: (String, String)         = "Accept" -> "application/vnd.hmrc.1.0+json"
   val headers:      Map[String, Seq[String]] = Map("Accept" -> Seq("application/vnd.hmrc.1.0+json"))
 
-  val encrypter: Encrypter with Decrypter = SymmetricCryptoFactory.aesCryptoFromConfig(baseConfigKey = "cookie.encryption", configuration.underlying)
+  val encrypter: Encrypter with Decrypter =
+    SymmetricCryptoFactory.aesCryptoFromConfig(baseConfigKey = "cookie.encryption", configuration.underlying)
 
   val message = new MessageServiceMock("authToken")
 
