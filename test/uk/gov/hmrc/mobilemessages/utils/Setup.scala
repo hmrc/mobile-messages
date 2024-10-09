@@ -63,8 +63,7 @@ trait Setup extends PlaySpec with AuthorisationStub with StubApplicationConfigur
   implicit val hc:                   HeaderCarrier                    = HeaderCarrier(Some(Authorization("authToken")))
   implicit val mockAuthConnector:    AuthConnector                    = mock[AuthConnector]
   implicit val mockMessageConnector: MessageConnector                 = mock[MessageConnector]
-  // lazy val components:               ControllerComponents             = app.injector.instanceOf[ControllerComponents]
-  implicit val authUser: Option[Authority] = Some(Authority(Nino("CS700100A"), Some("someId")))
+  implicit val authUser:             Option[Authority]                = Some(Authority(Nino("CS700100A"), Some("someId")))
 
   val shuttered =
     Shuttering(shuttered = true, Some("Shuttered"), Some("Messages are currently not available"))
