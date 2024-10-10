@@ -26,9 +26,10 @@ import org.apache.commons.codec.binary.Base64
 import play.api.Configuration
 import play.api.libs.crypto.CookieSigner
 import play.twirl.api.Html
-import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps, _}
 import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageHeadersResponse, UpstreamMessageResponse}
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageCountResponse, MessageHeader, MessageId, UnreadMessage}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -41,7 +42,7 @@ class MessageConnector @Inject() (
   @Named("two-way-message") val twoWayMessageBaseUrl:                 String,
   configuration:                                                      Configuration,
   val cookieSigner:                                                   CookieSigner,
-  val http:                                                           CoreGet with CorePost)
+  val http:                                                           HttpClientV2)
     extends SessionCookieEncryptionSupport
     with HttpErrorFunctions {
 
@@ -61,13 +62,18 @@ class MessageConnector @Inject() (
   )(implicit hc: HeaderCarrier,
     ec:          ExecutionContext
   ): Future[Seq[MessageHeader]] =
-    http.GET[UpstreamMessageHeadersResponse](s"$messageBaseUrl/secure-messaging/messages").map(_.items)
+    http
+      .get(url"$messageBaseUrl/secure-messaging/messages")
+      .execute[UpstreamMessageHeadersResponse]
+      .map(_.items)
 
   def messageCount(
   )(implicit hc: HeaderCarrier,
     ec:          ExecutionContext
   ): Future[MessageCountResponse] =
-    http.GET[MessageCountResponse](s"$messageBaseUrl/secure-messaging/messages/count")
+    http
+      .get(url"$messageBaseUrl/secure-messaging/messages/count")
+      .execute[MessageCountResponse]
 
   def getMessageBy(
     id:          MessageId
@@ -75,9 +81,8 @@ class MessageConnector @Inject() (
     ec:          ExecutionContext
   ): Future[Message] =
     http
-      .GET[UpstreamMessageResponse](
-        s"$messageBaseUrl/secure-messaging/messages/${Base64.encodeBase64String(id.value.getBytes)}"
-      )
+      .get(url"$messageBaseUrl/secure-messaging/messages/${Base64.encodeBase64String(id.value.getBytes)}")
+      .execute[UpstreamMessageResponse]
       .map(_.toMessageUsing(servicesToUrl))
 
   def render(
@@ -93,7 +98,10 @@ class MessageConnector @Inject() (
     val session:            (String, String) = withSession(keys: _*)
     implicit val updatedHc: HeaderCarrier    = hc.withExtraHeaders(session)
 
-    http.GET[HttpResponse](message.renderUrl).map(response => Html(response.body))
+    http
+      .get(url"${message.renderUrl}")
+      .execute[HttpResponse]
+      .map(response => Html(response.body))
   }
 
   def markAsRead(
@@ -101,5 +109,8 @@ class MessageConnector @Inject() (
   )(implicit hc: HeaderCarrier,
     ec:          ExecutionContext
   ): Future[HttpResponse] =
-    http.POSTEmpty[HttpResponse](message.markAsReadUrl)
+    http
+      .post(url"${message.markAsReadUrl}")
+      .execute[HttpResponse]
+
 }

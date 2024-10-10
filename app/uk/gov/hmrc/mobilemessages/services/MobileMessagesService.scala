@@ -33,7 +33,7 @@ class MobileMessagesService @Inject() (
   val messageConnector:          MessageConnector,
   val auditConnector:            AuditConnector,
   val appNameConfiguration:      Configuration,
-  auditService: AuditService) {
+  auditService:                  AuditService) {
 
   def readAndUnreadMessages(
   )(implicit hc: HeaderCarrier,

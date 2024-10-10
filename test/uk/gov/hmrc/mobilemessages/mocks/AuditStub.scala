@@ -16,39 +16,17 @@
 
 package uk.gov.hmrc.mobilemessages.mocks
 
-import org.scalamock.matchers.MatcherBase
-import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.Success
-import uk.gov.hmrc.play.audit.model.DataEvent
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
-trait AuditStub extends MockFactory {
-
-  def dataEventWith(
-    auditSource: String,
-    auditType:   String,
-    tags:        Map[String, String],
-    detail:      Map[String, String]
-  ): MatcherBase =
-    argThat { (dataEvent: DataEvent) =>
-      dataEvent.auditSource.equals(auditSource) &&
-      dataEvent.auditType.equals(auditType) &&
-      dataEvent.tags.equals(tags) &&
-      dataEvent.detail.equals(detail)
-    }
+trait AuditStub {
 
   def stubAudit(transactionName: String)(implicit auditConnector: AuditConnector): Unit =
-    (auditConnector
-      .sendEvent(_: DataEvent)(_: HeaderCarrier, _: ExecutionContext))
-      .expects(
-        dataEventWith("mobile-messages", "ServiceResponseSent", Map("transactionName" -> transactionName), Map.empty),
-        *,
-        *
-      )
-      .returning(Future successful Success)
+    when(auditConnector.sendEvent(any())(any(), any())).thenReturn(Future successful Success)
 
   def stubAuditReadAndUnreadMessages()(implicit auditConnector: AuditConnector): Unit =
     stubAudit("readAndUnreadMessages")

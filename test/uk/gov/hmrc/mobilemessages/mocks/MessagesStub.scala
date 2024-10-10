@@ -16,93 +16,30 @@
 
 package uk.gov.hmrc.mobilemessages.mocks
 
-import org.scalamock.scalatest.MockFactory
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
+import org.scalatestplus.mockito.MockitoSugar
+import play.api.libs.json.JsValue
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.mobilemessages.config.WSHttpImpl
-import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageHeadersResponse, UpstreamMessageResponse}
-import uk.gov.hmrc.mobilemessages.domain.MessageCountResponse
+import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import scala.concurrent.{ExecutionContext, Future}
+import java.net.URL
+import scala.concurrent.ExecutionContext
 
-trait MessagesStub extends MockFactory {
+trait MessagesStub extends MockitoSugar {
+  val mockHttpClient:     HttpClientV2   = mock[HttpClientV2]
+  val mockServicesConfig: ServicesConfig = mock[ServicesConfig]
 
-  def messagesGetSuccess(response: UpstreamMessageHeadersResponse)(implicit http: WSHttpImpl): Unit =
-    (http
-      .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(_: HttpReads[UpstreamMessageHeadersResponse],
-                                                                          _: HeaderCarrier,
-                                                                          _: ExecutionContext))
-      .expects(*, *, *, *, *, *)
-      .returns(Future successful response)
+  val requestBuilder: RequestBuilder = mock[RequestBuilder]
+  when(mockHttpClient.get(any[URL])(any[HeaderCarrier])).thenReturn(requestBuilder)
+  when(mockHttpClient.post(any[URL])(any[HeaderCarrier])).thenReturn(requestBuilder)
+  when(mockHttpClient.delete(any[URL])(any[HeaderCarrier])).thenReturn(requestBuilder)
+  when(mockHttpClient.put(any[URL])(any[HeaderCarrier])).thenReturn(requestBuilder)
+  when(requestBuilder.transform(any())).thenReturn(requestBuilder)
+  when(requestBuilder.withBody(any[JsValue])(any(), any(), any())).thenReturn(requestBuilder)
+  when(mockServicesConfig.baseUrl(any[String])).thenReturn("http://example.com")
 
-  def messagesGetFailure(response: Exception)(implicit http: WSHttpImpl): Unit =
-    (http
-      .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(_: HttpReads[UpstreamMessageHeadersResponse],
-                                                                          _: HeaderCarrier,
-                                                                          _: ExecutionContext))
-      .expects(*, *, *, *, *, *)
-      .returns(Future failed response)
+  def requestBuilderExecute[A] = requestBuilder.execute[A](any[HttpReads[A]], any[ExecutionContext])
 
-  def messageByGetSuccess(response: UpstreamMessageResponse)(implicit http: WSHttpImpl): Unit =
-    (http
-      .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(_: HttpReads[UpstreamMessageResponse],
-                                                                          _: HeaderCarrier,
-                                                                          _: ExecutionContext))
-      .expects(*, *, *, *, *, *)
-      .returns(Future successful response)
-
-  def messageByGetFailure(response: Exception)(implicit http: WSHttpImpl): Unit =
-    (http
-      .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(_: HttpReads[UpstreamMessageResponse],
-                                                                          _: HeaderCarrier,
-                                                                          _: ExecutionContext))
-      .expects(*, *, *, *, *, *)
-      .returns(Future failed response)
-
-  def renderGetSuccess(response: Future[HttpResponse])(implicit http: WSHttpImpl): Unit =
-    (http
-      .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(_: HttpReads[HttpResponse],
-                                                                          _: HeaderCarrier,
-                                                                          _: ExecutionContext))
-      .expects(*, *, *, *, *, *)
-      .returns(response)
-
-  def renderGetFailure(response: Exception)(implicit http: WSHttpImpl): Unit =
-    (http
-      .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(_: HttpReads[HttpResponse],
-                                                                          _: HeaderCarrier,
-                                                                          _: ExecutionContext))
-      .expects(*, *, *, *, *, *)
-      .returns(Future failed response)
-
-  def markAsReadPostSuccess(response: Future[HttpResponse])(implicit http: WSHttpImpl): Unit =
-    (http
-      .POSTEmpty(_: String, _: Seq[(String, String)])(_: HttpReads[HttpResponse],
-                                                      _: HeaderCarrier,
-                                                      _: ExecutionContext))
-      .expects(*, *, *, *, *)
-      .returns(response)
-
-  def markAsReadPostFailure(response: Exception)(implicit http: WSHttpImpl): Unit =
-    (http
-      .POSTEmpty(_: String, _: Seq[(String, String)])(_: HttpReads[HttpResponse],
-                                                      _: HeaderCarrier,
-                                                      _: ExecutionContext))
-      .expects(*, *, *, *, *)
-      .returns(Future failed response)
-
-  def messageCountGetSuccess(response: MessageCountResponse)(implicit http: WSHttpImpl): Unit =
-    (http
-      .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(_: HttpReads[MessageCountResponse],
-                                                                          _: HeaderCarrier,
-                                                                          _: ExecutionContext))
-      .expects(*, *, *, *, *, *)
-      .returns(Future successful response)
-
-  def messageCountGetFailure(response: Exception)(implicit http: WSHttpImpl): Unit =
-    (http
-      .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(_: HttpReads[MessageCountResponse],
-                                                                          _: HeaderCarrier,
-                                                                          _: ExecutionContext))
-      .expects(*, *, *, *, *, *)
-      .returns(Future failed response)
 }

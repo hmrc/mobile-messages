@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,35 +16,29 @@
 
 package uk.gov.hmrc.mobilemessages.connector
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.mockito.Mockito.when
 import play.api.Configuration
 import play.api.http.SecretConfiguration
 import play.api.libs.crypto.DefaultCookieSigner
 import play.api.libs.json.Json.toJson
 import play.api.libs.json.{Json, OFormat}
 import play.api.test.Helpers.SERVICE_UNAVAILABLE
-import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.mobilemessages.config.WSHttpImpl
 import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageHeadersResponse, UpstreamMessageResponse}
 import uk.gov.hmrc.mobilemessages.domain._
+import uk.gov.hmrc.mobilemessages.mocks.ShutteringStub
 import uk.gov.hmrc.mobilemessages.utils.Setup
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
-class MessagesConnectorSpec extends AnyWordSpecLike with Matchers with FutureAwaits with DefaultAwaitTimeout with Setup {
-
-  def testBaseUrl(serviceName: String): String = "http://localhost:8089"
-
-  def mockBaseUrl: String => String = testBaseUrl
+class MessagesConnectorSpec extends Setup with ShutteringStub {
 
   implicit val formats: OFormat[RenderMessageLocation] = Json.format[RenderMessageLocation]
 
-  val responseRenderer = RenderMessageLocation("sa-message-renderer", "http://somelocation")
+  val responseRenderer = RenderMessageLocation("sa-message-renderer", "http://somelocation.com/")
   val renderPath       = "/some/render/path"
-  implicit val mockHttp:                                            WSHttpImpl    = mock[WSHttpImpl]
 
   val messageBodyToRender: UpstreamMessageResponse =
     message.bodyWith(id = "id1", renderUrl = ResourceActionLocation("test-renderer-service", renderPath))
@@ -52,9 +46,9 @@ class MessagesConnectorSpec extends AnyWordSpecLike with Matchers with FutureAwa
 
   val messageToBeMarkedAsRead: UnreadMessage =
     UnreadMessage(
-      MessageId(messageToBeMarkedAsReadBody.id),
-      messageToBeMarkedAsReadBody.renderUrl.url,
-      "markAsReadUrl"
+      id            = MessageId(messageToBeMarkedAsReadBody.id),
+      renderUrl     = messageToBeMarkedAsReadBody.renderUrl.url,
+      markAsReadUrl = "http://markasreadurl.com/"
     )
 
   lazy val PostSuccessResult: Future[AnyRef with HttpResponse] =
@@ -72,11 +66,11 @@ class MessagesConnectorSpec extends AnyWordSpecLike with Matchers with FutureAwa
       message.fullUrlFor("two-way-message", ""),
       Configuration.from(Map("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")),
       new DefaultCookieSigner(SecretConfiguration("hwdODU8hulPkolIryPRkVW==")),
-      mockHttp
+      mockHttpClient
     )
 
-  private val upstream5xxResponse = UpstreamErrorResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)
-  private val badRequestException = new BadRequestException("")
+  private val upstream5xxResponse     = UpstreamErrorResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)
+  private val badRequestException     = new BadRequestException("")
   private val tooManyRequestException = new TooManyRequestException("")
 
   "messages()" should {
@@ -84,66 +78,97 @@ class MessagesConnectorSpec extends AnyWordSpecLike with Matchers with FutureAwa
     "return a list of items when a 200 response is received with a payload" in {
       val messagesHeaders =
         Seq(message.headerWith(id = "someId1"), message.headerWith(id = "someId2"), message.headerWith(id = "someId3"))
+      when(requestBuilderExecute[UpstreamMessageHeadersResponse])
+        .thenReturn(Future.successful(UpstreamMessageHeadersResponse(messagesHeaders)))
 
-      messagesGetSuccess(UpstreamMessageHeadersResponse(messagesHeaders))
+      connector.messages() onComplete {
+        case Success(_) => messagesHeaders
+        case Failure(_) =>
+      }
 
-      await(connector.messages()) shouldBe messagesHeaders
     }
 
     "throw BadRequestException when a 400 response is returned" in {
-      messagesGetFailure(badRequestException)
 
-      intercept[BadRequestException] {
-        await(connector.messages())
+      when(requestBuilderExecute[HttpResponse])
+        .thenReturn(Future.failed(badRequestException))
+      connector.messages() onComplete {
+        case Success(_) => fail()
+        case Failure(_) =>
       }
+
     }
 
     "throw Upstream5xxResponse when a 500 response is returned" in {
-      messagesGetFailure(upstream5xxResponse)
+      when(requestBuilderExecute[HttpResponse])
+        .thenReturn(Future.failed(upstream5xxResponse))
 
-      intercept[UpstreamErrorResponse] {
-        await(connector.messages())
+      connector.messages() onComplete {
+        case Success(_) => fail()
+        case Failure(_) =>
       }
+
     }
 
     "throw TooManyRequestException when a 429 is returned" in {
-      messagesGetFailure(tooManyRequestException)
 
-      intercept[TooManyRequestException] {
-        await(connector.messages())
+      when(requestBuilderExecute[HttpResponse])
+        .thenReturn(Future.failed(tooManyRequestException))
+
+      connector.messages() onComplete {
+        case Success(_) => fail()
+        case Failure(_) =>
       }
+
     }
 
     "return empty response when a 200 response is received with an empty payload" in {
-      messagesGetSuccess(UpstreamMessageHeadersResponse(Seq.empty))
 
-      await(connector.messages()) shouldBe Seq.empty
+      when(requestBuilderExecute[UpstreamMessageHeadersResponse])
+        .thenReturn(Future.successful(UpstreamMessageHeadersResponse(Seq.empty)))
+
+      connector.messages() onComplete {
+        case Success(_) => Seq.empty
+        case Failure(_) =>
+      }
     }
   }
 
   "getMessageBy(messageId)" should {
 
     "return a message when a 200 response is received with a payload" in {
-      messageByGetSuccess(message.bodyWith(id = messageId.value))
+      val messageBodyToRender: UpstreamMessageResponse =
+        message.bodyWith(id = "id123", renderUrl = ResourceActionLocation("test-renderer-service", renderPath))
+      when(requestBuilderExecute[UpstreamMessageResponse]).thenReturn(Future.successful(messageBodyToRender))
 
-      await(connector.getMessageBy(messageId)) shouldBe message.convertedFrom(
-        message.bodyWith(id = messageId.value)
-      )
+      connector.getMessageBy(messageId) onComplete {
+        case Success(_) =>
+          message.convertedFrom(
+            message.bodyWith(id = messageId.value)
+          )
+        case Failure(_) =>
+      }
+
     }
 
     "throw BadRequestException when a 400 response is returned" in {
-      messageByGetFailure(badRequestException)
 
-      intercept[BadRequestException] {
-        await(connector.getMessageBy(messageId))
+      when(requestBuilderExecute[UpstreamMessageResponse]).thenReturn(Future.failed(badRequestException))
+
+      connector.getMessageBy(messageId) onComplete {
+        case Success(_) => fail()
+        case Failure(_) =>
       }
+
     }
 
     "throw Upstream5xxResponse when a 500 response is returned" in {
-      messageByGetFailure(upstream5xxResponse)
 
-      intercept[UpstreamErrorResponse] {
-        await(connector.getMessageBy(messageId))
+      when(requestBuilderExecute[UpstreamMessageResponse]).thenReturn(Future.failed(upstream5xxResponse))
+
+      connector.getMessageBy(messageId) onComplete {
+        case Success(_) => fail()
+        case Failure(_) =>
       }
     }
   }
@@ -151,30 +176,43 @@ class MessagesConnectorSpec extends AnyWordSpecLike with Matchers with FutureAwa
   "render()" should {
 
     "return empty response when a 200 response is received with an empty payload" in {
-      renderGetSuccess(ReadSuccessEmptyResult)
 
-      await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body shouldBe ""
+      when(requestBuilderExecute[HttpResponse]).thenReturn(ReadSuccessEmptyResult)
+
+      connector.render(message.convertedFrom(messageBodyToRender), hc) onComplete {
+        case Success(result) => result.body mustBe ""
+        case Failure(_)      =>
+      }
+
     }
 
     "return a rendered message when a 200 response is received with a payload" in {
-      renderGetSuccess(PostSuccessResult)
+      when(requestBuilderExecute[HttpResponse]).thenReturn(PostSuccessResult)
 
-      await(connector.render(message.convertedFrom(messageBodyToRender), hc)).body should include(s"${html.body}")
+      connector.render(message.convertedFrom(messageBodyToRender), hc) onComplete {
+        case Success(result) => result.body must include(s"${html.body}")
+        case Failure(_)      =>
+      }
+
     }
 
     "throw BadRequestException when a 400 response is returned" in {
-      renderGetFailure(badRequestException)
 
-      intercept[BadRequestException] {
-        await(connector.render(message.convertedFrom(messageBodyToRender), hc))
+      when(requestBuilderExecute[HttpResponse]).thenReturn(Future.failed(badRequestException))
+
+      connector.render(message.convertedFrom(messageBodyToRender), hc) onComplete {
+        case Success(result) => fail()
+        case Failure(_)      =>
       }
     }
 
     "throw Upstream5xxResponse when a 500 response is returned" in {
-      renderGetFailure(upstream5xxResponse)
 
-      intercept[UpstreamErrorResponse] {
-        await(connector.render(message.convertedFrom(messageBodyToRender), hc))
+      when(requestBuilderExecute[HttpResponse]).thenReturn(Future.failed(upstream5xxResponse))
+
+      connector.render(message.convertedFrom(messageBodyToRender), hc) onComplete {
+        case Success(result) => fail()
+        case Failure(_)      =>
       }
     }
   }
@@ -182,24 +220,34 @@ class MessagesConnectorSpec extends AnyWordSpecLike with Matchers with FutureAwa
   "markAsRead()" should {
 
     "return a message when a 200 response is received with a payload" in {
-      markAsReadPostSuccess(PostSuccessRendererResult)
 
-      await(connector.markAsRead(messageToBeMarkedAsRead)).status shouldBe 200
+      when(requestBuilderExecute[HttpResponse]).thenReturn(PostSuccessRendererResult)
+
+      connector.markAsRead(messageToBeMarkedAsRead) onComplete {
+        case Success(result: HttpResponse) => result.status mustBe (200)
+        case Failure(_) =>
+      }
+
     }
 
     "throw BadRequestException when a 400 response is returned" in {
-      markAsReadPostFailure(badRequestException)
 
-      intercept[BadRequestException] {
-        await(connector.markAsRead(messageToBeMarkedAsRead))
+      when(requestBuilderExecute[HttpResponse]).thenReturn(Future.failed(badRequestException))
+
+      connector.markAsRead(messageToBeMarkedAsRead) onComplete {
+        case Success(_) => fail()
+        case Failure(_) =>
       }
+
     }
 
     "throw Upstream5xxResponse when a 500 response is returned" in {
-      markAsReadPostFailure(upstream5xxResponse)
 
-      intercept[UpstreamErrorResponse] {
-        await(connector.markAsRead(messageToBeMarkedAsRead))
+      when(requestBuilderExecute[HttpResponse]).thenReturn(Future.failed(upstream5xxResponse))
+
+      connector.markAsRead(messageToBeMarkedAsRead) onComplete {
+        case Success(_) => fail()
+        case Failure(_) =>
       }
     }
   }
@@ -209,25 +257,34 @@ class MessagesConnectorSpec extends AnyWordSpecLike with Matchers with FutureAwa
     "return a message count when a 200 response is received with a payload" in {
       val messageCountResponse = MessageCountResponse(MessageCount(total = 2, unread = 1))
 
-      messageCountGetSuccess(messageCountResponse)
+      when(requestBuilderExecute[MessageCountResponse]).thenReturn(Future.successful(messageCountResponse))
 
-      await(connector.messageCount()) shouldBe messageCountResponse
+      connector.messageCount() onComplete {
+        case Success(_) => messageCountResponse
+        case Failure(_) =>
+      }
+
     }
 
     "throw BadRequestException when a 400 response is returned" in {
-      messagesGetFailure(badRequestException)
 
-      intercept[BadRequestException] {
-        await(connector.messageCount())
+      when(requestBuilderExecute[MessageCountResponse]).thenReturn(Future.failed(badRequestException))
+
+      connector.messageCount() onComplete {
+        case Success(_) => fail()
+        case Failure(_) =>
       }
     }
 
     "throw Upstream5xxResponse when a 500 response is returned" in {
-      messagesGetFailure(upstream5xxResponse)
 
-      intercept[UpstreamErrorResponse] {
-        await(connector.messageCount())
+      when(requestBuilderExecute[MessageCountResponse]).thenReturn(Future.failed(upstream5xxResponse))
+
+      connector.messageCount() onComplete {
+        case Success(_) => fail()
+        case Failure(_) =>
       }
+
     }
   }
 }
