@@ -26,23 +26,23 @@ import org.apache.commons.codec.binary.Base64
 import play.api.Configuration
 import play.api.libs.crypto.CookieSigner
 import play.twirl.api.Html
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps, _}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps, *}
 import uk.gov.hmrc.mobilemessages.connector.model.{UpstreamMessageHeadersResponse, UpstreamMessageResponse}
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageCountResponse, MessageHeader, MessageId, UnreadMessage}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class MessageConnector @Inject() (
-  @Named("secure-message") val messageBaseUrl:                        String,
-  @Named("sa-message-renderer") val saMessageRendererBaseUrl:         String,
-  @Named("ats-message-renderer") val atsMessageRendererBaseUrl:       String,
-  @Named("secure-message-renderer") val secureMessageRendererBaseUrl: String,
-  @Named("two-way-message") val twoWayMessageBaseUrl:                 String,
-  configuration:                                                      Configuration,
-  val cookieSigner:                                                   CookieSigner,
-  val http:                                                           HttpClientV2)
+class MessageConnector @Inject() (@Named("secure-message") val messageBaseUrl: String,
+                                  @Named("sa-message-renderer") val saMessageRendererBaseUrl: String,
+                                  @Named("ats-message-renderer") val atsMessageRendererBaseUrl: String,
+                                  @Named("secure-message-renderer") val secureMessageRendererBaseUrl: String,
+                                  @Named("two-way-message") val twoWayMessageBaseUrl: String,
+                                  configuration: Configuration,
+                                  val cookieSigner: CookieSigner,
+                                  val http: HttpClientV2
+                                 )
     extends SessionCookieEncryptionSupport
     with HttpErrorFunctions {
 
@@ -59,44 +59,37 @@ class MessageConnector @Inject() (
   )
 
   def messages(
-  )(implicit hc: HeaderCarrier,
-    ec:          ExecutionContext
-  ): Future[Seq[MessageHeader]] =
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
     http
       .get(url"$messageBaseUrl/secure-messaging/messages")
       .execute[UpstreamMessageHeadersResponse]
       .map(_.items)
 
   def messageCount(
-  )(implicit hc: HeaderCarrier,
-    ec:          ExecutionContext
-  ): Future[MessageCountResponse] =
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[MessageCountResponse] =
     http
       .get(url"$messageBaseUrl/secure-messaging/messages/count")
       .execute[MessageCountResponse]
 
   def getMessageBy(
-    id:          MessageId
-  )(implicit hc: HeaderCarrier,
-    ec:          ExecutionContext
-  ): Future[Message] =
+    id: MessageId
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Message] =
     http
       .get(url"$messageBaseUrl/secure-messaging/messages/${Base64.encodeBase64String(id.value.getBytes)}")
       .execute[UpstreamMessageResponse]
       .map(_.toMessageUsing(servicesToUrl))
 
   def render(
-    message:     Message,
-    hc:          HeaderCarrier
-  )(implicit ec: ExecutionContext
-  ): Future[Html] = {
+    message: Message,
+    hc: HeaderCarrier
+  )(implicit ec: ExecutionContext): Future[Html] = {
     val authToken: Authorization =
       hc.authorization.getOrElse(throw new IllegalArgumentException("Failed to find auth header!"))
 
     val keys = Seq(SessionKeys.authToken -> encode(authToken.value, UTF_8))
 
-    val session:            (String, String) = withSession(keys: _*)
-    implicit val updatedHc: HeaderCarrier    = hc.withExtraHeaders(session)
+    val session: (String, String) = withSession(keys*)
+    implicit val updatedHc: HeaderCarrier = hc.withExtraHeaders(session)
 
     http
       .get(url"${message.renderUrl}")
@@ -105,10 +98,8 @@ class MessageConnector @Inject() (
   }
 
   def markAsRead(
-    message:     UnreadMessage
-  )(implicit hc: HeaderCarrier,
-    ec:          ExecutionContext
-  ): Future[HttpResponse] =
+    message: UnreadMessage
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] =
     http
       .post(url"${message.markAsReadUrl}")
       .execute[HttpResponse]

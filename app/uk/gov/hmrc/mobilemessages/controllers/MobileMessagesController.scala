@@ -19,11 +19,10 @@ package uk.gov.hmrc.mobilemessages.controllers
 import com.google.inject.Singleton
 
 import javax.inject.Inject
-import play.api.libs.crypto.CookieSigner
-import play.api.libs.json._
-import play.api.mvc._
+import play.api.libs.json.*
+import play.api.mvc.*
 import play.api.{Configuration, Logger}
-import uk.gov.hmrc.api.controllers._
+import uk.gov.hmrc.api.controllers.*
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.crypto.SymmetricCryptoFactory.aesCryptoFromConfig
 import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
@@ -34,7 +33,7 @@ import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, 
 import uk.gov.hmrc.mobilemessages.domain.{MessageCount, MessageCountResponse, MessageHeader}
 import uk.gov.hmrc.mobilemessages.domain.types.JourneyId
 import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator.{nextSaUtr, readMessageHeader, unreadMessageHeader}
-import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
+import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs.*
 import uk.gov.hmrc.mobilemessages.services.MobileMessagesService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 
@@ -42,12 +41,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class MobileMessagesController @Inject() (
-  val service:                   MobileMessagesService,
-  override val authConnector:    AuthConnector,
-  configuration:                 Configuration,
-  val controllerComponents:      ControllerComponents,
-  cookieSigner:                  CookieSigner,
-  shutteringConnector:           ShutteringConnector
+  val service: MobileMessagesService,
+  override val authConnector: AuthConnector,
+  configuration: Configuration,
+  val controllerComponents: ControllerComponents,
+  shutteringConnector: ShutteringConnector
 )(implicit val executionContext: ExecutionContext)
     extends BackendBaseController
     with HeaderValidator
@@ -59,7 +57,7 @@ class MobileMessagesController @Inject() (
 
   override def parser: BodyParser[AnyContent] = controllerComponents.parsers.anyContent
 
-  val crypto: Encrypter with Decrypter =
+  val crypto: Encrypter & Decrypter =
     aesCryptoFromConfig(baseConfigKey = "cookie.encryption", configuration.underlying)
 
   def getMessages(journeyId: JourneyId): Action[AnyContent] =
@@ -69,9 +67,7 @@ class MobileMessagesController @Inject() (
           errorWrapper(
             service
               .readAndUnreadMessages()
-              .map((messageHeaders: Seq[MessageHeader]) =>
-                Ok(Json.toJson(MessageHeaderResponseBody.fromAll(messageHeaders)(crypto)))
-              )
+              .map((messageHeaders: Seq[MessageHeader]) => Ok(Json.toJson(MessageHeaderResponseBody.fromAll(messageHeaders)(crypto))))
           )
         }
       }
@@ -91,40 +87,39 @@ class MobileMessagesController @Inject() (
     }
 
   def read(journeyId: JourneyId): Action[JsValue] =
-    validateAcceptWithAuth(acceptHeaderValidationRules).async(controllerComponents.parsers.json) {
-      implicit authenticated =>
-        shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
-          withShuttering(shuttered) {
-            authenticated.request.body
-              .validate[RenderMessageRequest]
-              .fold(
-                errors => {
-                  logger.warn("Received JSON error with read endpoint: " + errors)
-                  Future.successful(BadRequest(Json.toJson[ErrorResponse](ErrorGenericBadRequest())))
-                },
-                renderMessageRequest =>
-                  errorWrapper {
-                    service
-                      .readMessageContent(renderMessageRequest.toMessageIdUsing(crypto))
-                      .map(message => Ok(message.html))
-                  }
-              )
-          }
+    validateAcceptWithAuth(acceptHeaderValidationRules).async(controllerComponents.parsers.json) { implicit authenticated =>
+      shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
+        withShuttering(shuttered) {
+          authenticated.request.body
+            .validate[RenderMessageRequest]
+            .fold(
+              errors => {
+                logger.warn("Received JSON error with read endpoint: " + errors)
+                Future.successful(BadRequest(Json.toJson[ErrorResponse](ErrorGenericBadRequest())))
+              },
+              renderMessageRequest =>
+                errorWrapper {
+                  service
+                    .readMessageContent(renderMessageRequest.toMessageIdUsing(crypto))
+                    .map(message => Ok(message.html))
+                }
+            )
         }
+      }
     }
 }
 
 @Singleton
 class SandboxMobileMessagesController @Inject() (
-  config:                        Configuration,
-  val controllerComponents:      ControllerComponents
+  config: Configuration,
+  val controllerComponents: ControllerComponents
 )(implicit val executionContext: ExecutionContext)
     extends BackendBaseController
     with HeaderValidator {
 
   override def parser: BodyParser[AnyContent] = controllerComponents.parsers.anyContent
 
-  val crypto: Encrypter with Decrypter = aesCryptoFromConfig(baseConfigKey = "cookie.encryption", config.underlying)
+  val crypto: Encrypter & Decrypter = aesCryptoFromConfig(baseConfigKey = "cookie.encryption", config.underlying)
 
   val saUtr: SaUtr = nextSaUtr
 

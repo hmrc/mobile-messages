@@ -5,22 +5,23 @@ import play.api.libs.json.Json.toJson
 import play.api.libs.ws.{WSRequest, WSResponse}
 import uk.gov.hmrc.mobilemessages.controllers.model.RenderMessageRequest
 import uk.gov.hmrc.mobilemessages.domain.{MessageCountResponse, Shuttering}
-import uk.gov.hmrc.mobilemessages.mocks.AuthMock._
-import uk.gov.hmrc.mobilemessages.mocks.MessageMock._
-import uk.gov.hmrc.mobilemessages.mocks.ShutteringMock._
+import uk.gov.hmrc.mobilemessages.mocks.AuthMock.*
+import uk.gov.hmrc.mobilemessages.mocks.MessageMock.*
+import uk.gov.hmrc.mobilemessages.mocks.ShutteringMock.*
 import uk.gov.hmrc.mobilemessages.support.BaseISpec
+import play.api.libs.ws.writeableOf_JsValue
 
 class MobileMessagesControllerISpec extends BaseISpec {
   val authorisationJsonHeader: (String, String) = "AUTHORIZATION" -> "Bearer 123"
 
   def request(
-    url:       String,
+    url: String,
     journeyId: String
   ): WSRequest =
     wsUrl(s"$url?journeyId=$journeyId").addHttpHeaders(acceptJsonHeader)
 
   def requestWithoutAcceptHeader(
-    url:       String,
+    url: String,
     journeyId: String
   ): WSRequest = wsUrl(s"$url?journeyId=$journeyId")
 
@@ -197,7 +198,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
   }
 
   "POST /messages/read" should {
-    val url        = "/messages/read"
+    val url = "/messages/read"
     val messageUrl = RenderMessageRequest("L2U5NkwzTCtUdmQvSS9VVyt0MGh6UT09")
     val authHeader = ("Authorization", "auth1")
 
@@ -218,7 +219,7 @@ class MobileMessagesControllerISpec extends BaseISpec {
       messageIsRenderedSuccessfully()
       stubForShutteringDisabled
 
-      val result:  WSResponse               = await(request(url, journeyId).addHttpHeaders(authHeader).post(toJson(messageUrl)))
+      val result: WSResponse = await(request(url, journeyId).addHttpHeaders(authHeader).post(toJson(messageUrl)))
       val headers: Map[String, collection.Seq[String]] = result.headers
 
       result.status                    shouldBe 200

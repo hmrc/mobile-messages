@@ -21,16 +21,16 @@ import org.mockito.Mockito.when
 import play.api.Configuration
 import play.api.http.SecretConfiguration
 import play.api.libs.crypto.{CookieSigner, DefaultCookieSigner}
-import play.api.libs.json._
-import play.api.test.Helpers._
+import play.api.libs.json.*
+import play.api.test.Helpers.*
 import play.api.test.FakeRequest
 import play.twirl.api.Html
-import uk.gov.hmrc.auth.core.syntax.retrieved._
+import uk.gov.hmrc.auth.core.syntax.retrieved.*
 import uk.gov.hmrc.mobilemessages.connector.ShutteringConnector
 import uk.gov.hmrc.mobilemessages.controllers.model.MessageHeaderResponseBody
-import uk.gov.hmrc.mobilemessages.domain._
+import uk.gov.hmrc.mobilemessages.domain.*
 import uk.gov.hmrc.mobilemessages.mocks.{MessagesStub, ShutteringStub}
-import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
+import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs.*
 import uk.gov.hmrc.mobilemessages.services.RenderedMessage
 import uk.gov.hmrc.mobilemessages.utils.Setup
 
@@ -62,7 +62,6 @@ class MobileMessagesControllerSpec extends Setup with ShutteringStub {
       mockAuthConnector,
       Configuration.from(Map("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")),
       stubControllerComponents(),
-      cookieSigner,
       shutteringConnectorMock
     )
 
@@ -76,7 +75,7 @@ class MobileMessagesControllerSpec extends Setup with ShutteringStub {
       val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
 
       status(result) mustBe 200
-      contentAsJson(result).as[Seq[MessageHeaderResponseBody]] mustBe Seq.empty[MessageHeaderResponseBody]
+      contentAsJson(result).as[Seq[MessageHeaderResponseBody]] mustBe (Seq.empty[MessageHeaderResponseBody])
     }
 
     "return an empty list of messages successfully when journeyId is supplied" in {
@@ -87,7 +86,7 @@ class MobileMessagesControllerSpec extends Setup with ShutteringStub {
       val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
 
       status(result) mustBe 200
-      contentAsJson(result).as[Seq[MessageHeaderResponseBody]] mustBe Seq.empty[MessageHeaderResponseBody]
+      contentAsJson(result).as[Seq[MessageHeaderResponseBody]] mustBe (Seq.empty[MessageHeaderResponseBody])
     }
 
     "return a list of messages successfully" in {
@@ -266,7 +265,7 @@ class MobileMessagesControllerSpec extends Setup with ShutteringStub {
       status(result) mustBe 200
 
       val jsonResponse: JsValue = contentAsJson(result)
-      val restTime:     Long    = (jsonResponse \ 0 \ "readTime").as[Long]
+      val restTime: Long = (jsonResponse \ 0 \ "readTime").as[Long]
       jsonResponse mustBe Json.parse(messages(restTime))
     }
   }

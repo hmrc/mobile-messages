@@ -19,33 +19,27 @@ package uk.gov.hmrc.mobilemessages.connector
 import com.google.inject.name.Named
 import com.google.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.mobilemessages.domain.Shuttering
 import uk.gov.hmrc.mobilemessages.domain.types.JourneyId
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ShutteringConnector @Inject() (
-  http:                                   HttpClientV2,
-  @Named("mobile-shuttering") serviceUrl: String) {
+class ShutteringConnector @Inject() (http: HttpClientV2, @Named("mobile-shuttering") serviceUrl: String) {
 
   val logger: Logger = Logger(this.getClass)
 
   def getShutteringStatus(
-    journeyId:              JourneyId
-  )(implicit headerCarrier: HeaderCarrier,
-    ex:                     ExecutionContext
-  ): Future[Shuttering] =
+    journeyId: JourneyId
+  )(implicit headerCarrier: HeaderCarrier, ex: ExecutionContext): Future[Shuttering] =
     http
-      .get(url"$serviceUrl/mobile-shuttering/service/mobile-messages/shuttered-status?journeyId=$journeyId")
+      .get(url"$serviceUrl/mobile-shuttering/service/mobile-messages/shuttered-status?journeyId=${journeyId.value}")
       .execute[Shuttering]
-      .recover {
-        case e =>
-          logger.warn(s"Call to mobile-shuttering failed:\n $e \nAssuming unshuttered.")
-          Shuttering.shutteringDisabled
+      .recover { case e =>
+        logger.warn(s"Call to mobile-shuttering failed:\n $e \nAssuming unshuttered.")
+        Shuttering.shutteringDisabled
       }
 }
