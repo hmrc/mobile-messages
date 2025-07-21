@@ -32,7 +32,7 @@ import uk.gov.hmrc.mobilemessages.connector.ShutteringConnector
 import uk.gov.hmrc.mobilemessages.controllers.auth.AccessControl
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
 import uk.gov.hmrc.mobilemessages.domain.{MessageCount, MessageCountResponse, MessageHeader}
-import uk.gov.hmrc.mobilemessages.domain.types.ModelTypes.JourneyId
+import uk.gov.hmrc.mobilemessages.domain.types.JourneyId
 import uk.gov.hmrc.mobilemessages.sandbox.DomainGenerator.{nextSaUtr, readMessageHeader, unreadMessageHeader}
 import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
 import uk.gov.hmrc.mobilemessages.services.MobileMessagesService

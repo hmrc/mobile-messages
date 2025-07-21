@@ -34,7 +34,7 @@ import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.mobilemessages.connector.MessageConnector
 import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
-import uk.gov.hmrc.mobilemessages.domain.types.ModelTypes.JourneyId
+import uk.gov.hmrc.mobilemessages.domain.types.JourneyId
 import uk.gov.hmrc.mobilemessages.domain.{MessageCount, MessageCountResponse, MessageHeader, MessageId, Shuttering}
 import uk.gov.hmrc.mobilemessages.mocks.{AuditStub, AuthorisationStub, MessagesStub, ShutteringStub, StubApplicationConfiguration}
 import uk.gov.hmrc.mobilemessages.services.MobileMessagesService
