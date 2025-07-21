@@ -5,7 +5,7 @@ val appName: String = "mobile-messages"
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(
-    Seq(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtDistributablesPlugin, ScoverageSbtPlugin): _*
+    Seq(play.sbt.PlayScala, SbtDistributablesPlugin, ScoverageSbtPlugin): _*
   )
   .disablePlugins(JUnitXmlReportPlugin)
   .configs(IntegrationTest)
