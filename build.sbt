@@ -5,7 +5,7 @@ val appName: String = "mobile-messages"
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(
-    Seq(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtDistributablesPlugin, ScoverageSbtPlugin): _*
+    Seq(play.sbt.PlayScala, SbtDistributablesPlugin, ScoverageSbtPlugin): _*
   )
   .disablePlugins(JUnitXmlReportPlugin)
   .configs(IntegrationTest)
@@ -15,20 +15,19 @@ lazy val microservice = Project(appName, file("."))
       "uk.gov.hmrc.domain._",
       "uk.gov.hmrc.mobilemessages.binder.Binders._",
       "uk.gov.hmrc.mobilemessages.domain.types._",
-      "uk.gov.hmrc.mobilemessages.domain.types.ModelTypes._"
+      "uk.gov.hmrc.mobilemessages.domain.types.JourneyId._"
     )
   )
   .settings(
     majorVersion := 1,
-    scalaVersion := "2.13.12",
+    scalaVersion := "3.6.4",
     playDefaultPort := 8234,
     libraryDependencies ++= AppDependencies(),
     update / evictionWarningOptions := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
-    resolvers += Resolver.jcenterRepo,
     Compile / unmanagedResourceDirectories += baseDirectory.value / "resources",
     IntegrationTest / unmanagedSourceDirectories := (IntegrationTest / baseDirectory)(base => Seq(base / "it")).value,
     coverageMinimumStmtTotal := 90,
     coverageFailOnMinimum := true,
     coverageHighlighting := true,
-    coverageExcludedPackages := "<empty>;.*Routes.*;app.*;.*prod;.*definition;.*testOnlyDoNotUseInAppConf;.*com.kenshoo.*;.*javascript.*;.*BuildInfo;.*Reverse.*;.*binder.*"
+    coverageExcludedPackages := "<empty>;.*Routes.*;app.*;.*prod;.*definition;.*testOnlyDoNotUseInAppConf;.*com.kenshoo.*;.*javascript.*;.*BuildInfo;.*Reverse.*;.*binder.*;.*mobilemessages.domain.*"
   )

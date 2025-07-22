@@ -3,21 +3,23 @@ package uk.gov.hmrc.mobilemessages.controllers
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSRequest, WSResponse}
 import uk.gov.hmrc.mobilemessages.controllers.model.RenderMessageRequest
-import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs._
+import uk.gov.hmrc.mobilemessages.sandbox.MessageContentPartialStubs.*
 import uk.gov.hmrc.mobilemessages.support.BaseISpec
+import play.api.libs.ws.WSBodyWritables.writeableOf_JsValue
+import play.api.libs.ws.WSBodyReadables.readableAsString
 
 class SandboxMobileMessagesControllerISpec extends BaseISpec {
 
   def request(
-    url:            String,
-    journeyId:      String,
+    url: String,
+    journeyId: String,
     sandboxControl: String = "NEW-TAX-STATEMENT"
   ): WSRequest =
     wsUrl(s"$url?journeyId=$journeyId")
       .addHttpHeaders(acceptJsonHeader, "SANDBOX-CONTROL" -> s"$sandboxControl", "X-MOBILE-USER-ID" -> "208606423740")
 
   def requestWithoutAcceptHeader(
-    url:       String,
+    url: String,
     journeyId: String
   ): WSRequest = wsUrl(s"$url?journeyId=$journeyId")
 
@@ -55,15 +57,15 @@ class SandboxMobileMessagesControllerISpec extends BaseISpec {
   }
 
   "POST /sandbox/messages/read" should {
-    val url        = "/messages/read"
+    val url = "/messages/read"
     val messageUrl = RenderMessageRequest("L2U5NkwzTCtUdmQvSS9VVyt0MGh6UT09")
 
     "return a valid response with a journeyId with empty render payload" in {
       val response =
         await(request(url, journeyId).addHttpHeaders(("Authorization", "auth1")).post(Json.toJson(messageUrl)))
 
-      response.status shouldBe 200
-      response.body shouldEqual newTaxStatement.toString()
+      response.status          shouldBe 200
+      response.body[String] shouldEqual newTaxStatement.toString()
     }
 
     "return a 400 without a journeyId" in {
@@ -84,8 +86,8 @@ class SandboxMobileMessagesControllerISpec extends BaseISpec {
           .post(Json.toJson(messageUrl))
       )
 
-      response.status shouldBe 200
-      response.body shouldEqual newTaxStatement.toString()
+      response.status          shouldBe 200
+      response.body[String] shouldEqual newTaxStatement.toString()
     }
 
     "return a valid response for ANNUAL-TAX-SUMMARY" in {
@@ -95,8 +97,8 @@ class SandboxMobileMessagesControllerISpec extends BaseISpec {
           .post(Json.toJson(messageUrl))
       )
 
-      response.status shouldBe 200
-      response.body shouldEqual annualTaxSummary.toString()
+      response.status          shouldBe 200
+      response.body[String] shouldEqual annualTaxSummary.toString()
     }
 
     "return a valid response for STOPPING-SA" in {
@@ -104,8 +106,8 @@ class SandboxMobileMessagesControllerISpec extends BaseISpec {
         request(url, journeyId, "STOPPING-SA").addHttpHeaders(("Authorization", "auth1")).post(Json.toJson(messageUrl))
       )
 
-      response.status shouldBe 200
-      response.body shouldEqual stoppingSA.toString()
+      response.status          shouldBe 200
+      response.body[String] shouldEqual stoppingSA.toString()
     }
 
     "return a valid response for OVERDUE-PAYMENT" in {
@@ -115,8 +117,8 @@ class SandboxMobileMessagesControllerISpec extends BaseISpec {
           .post(Json.toJson(messageUrl))
       )
 
-      response.status shouldBe 200
-      response.body shouldEqual overduePayment.toString()
+      response.status          shouldBe 200
+      response.body[String] shouldEqual overduePayment.toString()
     }
 
     "return a valid response for ERROR-401" in {

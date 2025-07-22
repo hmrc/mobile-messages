@@ -19,16 +19,18 @@ package uk.gov.hmrc.mobilemessages.mocks
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
+import org.scalatest.concurrent.ScalaFutures
 import play.api.libs.json.JsValue
-import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.net.URL
 import scala.concurrent.ExecutionContext
 
-trait MessagesStub extends MockitoSugar {
-  val mockHttpClient:     HttpClientV2   = mock[HttpClientV2]
+trait MessagesStub extends MockitoSugar with ScalaFutures {
+
+  val mockHttpClient: HttpClientV2 = mock[HttpClientV2]
   val mockServicesConfig: ServicesConfig = mock[ServicesConfig]
 
   val requestBuilder: RequestBuilder = mock[RequestBuilder]
@@ -37,9 +39,9 @@ trait MessagesStub extends MockitoSugar {
   when(mockHttpClient.delete(any[URL])(any[HeaderCarrier])).thenReturn(requestBuilder)
   when(mockHttpClient.put(any[URL])(any[HeaderCarrier])).thenReturn(requestBuilder)
   when(requestBuilder.transform(any())).thenReturn(requestBuilder)
-  when(requestBuilder.withBody(any[JsValue])(any(), any(), any())).thenReturn(requestBuilder)
+  when(requestBuilder.withBody(any)(using any, any, any)).thenReturn(requestBuilder)
   when(mockServicesConfig.baseUrl(any[String])).thenReturn("http://example.com")
 
-  def requestBuilderExecute[A] = requestBuilder.execute[A](any[HttpReads[A]], any[ExecutionContext])
+  def requestBuilderExecute[A] = requestBuilder.execute[A](using any[HttpReads[A]], any[ExecutionContext])
 
 }

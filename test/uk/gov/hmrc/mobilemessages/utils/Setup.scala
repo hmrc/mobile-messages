@@ -17,7 +17,7 @@
 package uk.gov.hmrc.mobilemessages.utils
 
 import java.time.LocalDateTime
-import eu.timepit.refined.auto._
+import eu.timepit.refined.auto.*
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
@@ -34,7 +34,7 @@ import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.mobilemessages.connector.MessageConnector
 import uk.gov.hmrc.mobilemessages.controllers.auth.Authority
 import uk.gov.hmrc.mobilemessages.controllers.model.{MessageHeaderResponseBody, RenderMessageRequest}
-import uk.gov.hmrc.mobilemessages.domain.types.ModelTypes.JourneyId
+import uk.gov.hmrc.mobilemessages.domain.types.JourneyId
 import uk.gov.hmrc.mobilemessages.domain.{MessageCount, MessageCountResponse, MessageHeader, MessageId, Shuttering}
 import uk.gov.hmrc.mobilemessages.mocks.{AuditStub, AuthorisationStub, MessagesStub, ShutteringStub, StubApplicationConfiguration}
 import uk.gov.hmrc.mobilemessages.services.MobileMessagesService
@@ -59,11 +59,11 @@ trait Setup extends PlaySpec with AuthorisationStub with StubApplicationConfigur
   lazy val ReadSuccessEmptyResult: Future[AnyRef with HttpResponse] =
     Future.successful(HttpResponse(200, ""))
 
-  implicit val reads:                Reads[MessageHeaderResponseBody] = Json.reads[MessageHeaderResponseBody]
-  implicit val hc:                   HeaderCarrier                    = HeaderCarrier(Some(Authorization("authToken")))
-  implicit val mockAuthConnector:    AuthConnector                    = mock[AuthConnector]
-  implicit val mockMessageConnector: MessageConnector                 = mock[MessageConnector]
-  implicit val authUser:             Option[Authority]                = Some(Authority(Nino("CS700100A"), Some("someId")))
+  implicit val reads: Reads[MessageHeaderResponseBody] = Json.reads[MessageHeaderResponseBody]
+  implicit val hc: HeaderCarrier = HeaderCarrier(Some(Authorization("authToken")))
+  implicit val mockAuthConnector: AuthConnector = mock[AuthConnector]
+  implicit val mockMessageConnector: MessageConnector = mock[MessageConnector]
+  implicit val authUser: Option[Authority] = Some(Authority(Nino("CS700100A"), Some("someId")))
 
   val shuttered =
     Shuttering(shuttered = true, Some("Shuttered"), Some("Messages are currently not available"))
@@ -71,10 +71,10 @@ trait Setup extends PlaySpec with AuthorisationStub with StubApplicationConfigur
 
   val configuration: Configuration = Configuration("cookie.encryption.key" -> "hwdODU8hulPkolIryPRkVW==")
 
-  val nino:         Nino                     = Nino("CS700100A")
-  val journeyId:    JourneyId                = "87144372-6bda-4cc9-87db-1d52fd96498f"
-  val acceptHeader: (String, String)         = "Accept" -> "application/vnd.hmrc.1.0+json"
-  val headers:      Map[String, Seq[String]] = Map("Accept" -> Seq("application/vnd.hmrc.1.0+json"))
+  val nino: Nino = Nino("CS700100A")
+  val journeyId: JourneyId = JourneyId.from("87144372-6bda-4cc9-87db-1d52fd96498f").toOption.get
+  val acceptHeader: (String, String) = "Accept" -> "application/vnd.hmrc.1.0+json"
+  val headers: Map[String, Seq[String]] = Map("Accept" -> Seq("application/vnd.hmrc.1.0+json"))
 
   val encrypter: Encrypter with Decrypter =
     SymmetricCryptoFactory.aesCryptoFromConfig(baseConfigKey = "cookie.encryption", configuration.underlying)
@@ -105,9 +105,9 @@ trait Setup extends PlaySpec with AuthorisationStub with StubApplicationConfigur
 
   def messages(readTime: Long): String =
     s"""[{"id":"$msgId1","subject":"You have a new tax statement","validFrom":"${timeNow
-         .minusDays(3)
-         .toLocalDate}","readTime":$readTime,"readTimeUrl":"${encrypted(msgId1)}","sentInError":false},
+        .minusDays(3)
+        .toLocalDate}","readTime":$readTime,"readTimeUrl":"${encrypted(msgId1)}","sentInError":false},
        |{"id":"$msgId2","subject":"Stopping Self Assessment","validFrom":"${timeNow.toLocalDate}","readTimeUrl":"${encrypted(
-         msgId2
-       )}","sentInError":false}]""".stripMargin
+        msgId2
+      )}","sentInError":false}]""".stripMargin
 }

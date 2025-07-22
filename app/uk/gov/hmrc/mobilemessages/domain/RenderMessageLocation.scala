@@ -19,13 +19,15 @@ package uk.gov.hmrc.mobilemessages.domain
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import play.api.Logger
-import play.api.libs.json.OFormat
+import play.api.libs.json.{Json, OFormat}
 
 import scala.language.implicitConversions
 
-final case class RenderMessageLocation(
-  service: String,
-  url:     String)
+final case class RenderMessageLocation(service: String, url: String)
+
+object RenderMessageLocation {
+  implicit val formats: OFormat[RenderMessageLocation] = Json.format[RenderMessageLocation]
+}
 
 class RenderMessageLocationImpl @Inject() (@Named("baseUrl") _baseUrl: String => String) {
 
@@ -39,5 +41,4 @@ class RenderMessageLocationImpl @Inject() (@Named("baseUrl") _baseUrl: String =>
     url
   }
 
-  implicit val formats: OFormat[RenderMessageLocation] = Json.format[RenderMessageLocation]
 }

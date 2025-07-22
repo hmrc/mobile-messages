@@ -25,13 +25,13 @@ import play.api.libs.crypto.CookieSigner
 import uk.gov.hmrc.crypto.{Crypted, Decrypter, Encrypter, PlainText, SymmetricCryptoFactory}
 
 trait SessionCookieEncryptionSupport {
-  val SignSeparator     = "-"
+  val SignSeparator = "-"
   val mtdpSessionCookie = "mdtp"
 
-  def config:       Config
+  def config: Config
   def cookieSigner: CookieSigner
 
-  lazy val cipher: Encrypter with Decrypter = SymmetricCryptoFactory.aesGcmCryptoFromConfig("cookie.encryption", config)
+  lazy val cipher: Encrypter & Decrypter = SymmetricCryptoFactory.aesGcmCryptoFromConfig("cookie.encryption", config)
 
   private def createPopulatedSessionCookie(payload: String): String = {
     val signedPayload = cookieSigner.sign(payload) + SignSeparator + payload
@@ -41,20 +41,20 @@ trait SessionCookieEncryptionSupport {
   }
 
   def sessionOf(session: String): Map[String, String] = {
-    val decrypted:    PlainText = cipher.decrypt(Crypted(session))
-    val hashAndValue: String    = URLDecoder.decode(decrypted.value, CharEncoding.UTF_8)
+    val decrypted: PlainText = cipher.decrypt(Crypted(session))
+    val hashAndValue: String = URLDecoder.decode(decrypted.value, CharEncoding.UTF_8)
     val justTheValue = StringUtils.substringAfter(hashAndValue, "-")
     val pairs = justTheValue.split("&") map { keyValuePair =>
-        val pair = keyValuePair.split("=")
-        (pair(0), pair(1))
-      }
+      val pair = keyValuePair.split("=")
+      (pair(0), pair(1))
+    }
     pairs.toMap
   }
 
   def withSession(pair: (String, String)*): (String, String) = {
     val payload = pair.toSeq
-      .map {
-        case (k, v) => s"$k=$v"
+      .map { case (k, v) =>
+        s"$k=$v"
       }
       .mkString("&")
     (HeaderNames.COOKIE, createPopulatedSessionCookie(payload))
