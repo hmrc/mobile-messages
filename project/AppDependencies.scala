@@ -6,7 +6,7 @@ private object AppDependencies {
   private val playHmrcApiVersion = "8.2.0"
   private val domainVersion = "12.1.0"
 
-  private val scalaMockVersion = "7.3.2"
+  private val scalaMockVersion = "7.4.0"
   private val refinedVersion = "0.11.3"
   private val commonsCodecVersion = "1.17.0"
 

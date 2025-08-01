@@ -35,7 +35,7 @@ class MobileMessagesServiceSpec extends Setup {
   def mockAuditAndConnector(response: Seq[MessageHeader]) = {
     when(auditConnector.sendEvent(any())(any(), any()))
       .thenReturn(Future.successful(Success))
-    when(mockMessageConnector.messages()(any(), any())).thenReturn(Future.successful(response))
+    when(mockMessageConnector.messages(any())(any(), any())).thenReturn(Future.successful(response))
   }
 
   val auditConnector: AuditConnector = mock[AuditConnector]
@@ -51,44 +51,44 @@ class MobileMessagesServiceSpec extends Setup {
     "return an empty seq of messages" in {
 
       mockAuditAndConnector(Seq.empty)
-      await(service.readAndUnreadMessages()) mustBe Seq.empty
+      await(service.readAndUnreadMessages(Some("en"))) mustBe Seq.empty
     }
 
     "return a populated seq of messages" in {
 
       mockAuditAndConnector(messageServiceHeadersResponse)
-      await(service.readAndUnreadMessages()) mustBe messageServiceHeadersResponse
-    }
-  }
-
-  "readMessageContent(messageId: MessageId)" should {
-
-    val updatedMessage = message.convertedFrom(
-      message.bodyWith(id = messageId.value, markAsReadUrl = Some(ResourceActionLocation("sa-message-renderer", "url")))
-    )
-
-    def mockAuditAndConnector(response1: Message) = {
-      stubAuditReadMessageContent()(auditConnector)
-      when(mockMessageConnector.getMessageBy(any())(any(), any())).thenReturn(Future.successful(response1))
-      when(mockMessageConnector.render(any(), any())(any())).thenReturn(Future.successful(html))
-    }
-    "return an html page with headers and mark an unread message as read" in {
-
-      mockAuditAndConnector(updatedMessage)
-      when(mockMessageConnector.markAsRead(any())(any(), any())).thenReturn(ReadSuccessEmptyResult)
-      await(service.readMessageContent(messageId)) mustBe RenderedMessage(html)
+      await(service.readAndUnreadMessages(Some("en"))) mustBe messageServiceHeadersResponse
     }
 
-    "return an html page with headers when receiving read messages" in {
+    "readMessageContent(messageId: MessageId)" should {
 
-      val updatedMessage = message.convertedFrom(message.bodyWith(id = messageId.value))
-
-      mockAuditAndConnector(updatedMessage)
-      await(service.readMessageContent(messageId)) mustBe RenderedMessage(
-        html
+      val updatedMessage = message.convertedFrom(
+        message.bodyWith(id = messageId.value, markAsReadUrl = Some(ResourceActionLocation("sa-message-renderer", "url")))
       )
+
+      def mockAuditAndConnector(response1: Message) = {
+        stubAuditReadMessageContent()(auditConnector)
+        when(mockMessageConnector.getMessageBy(any(), any())(any(), any())).thenReturn(Future.successful(response1))
+        when(mockMessageConnector.render(any(), any(), any())(any())).thenReturn(Future.successful(html))
+      }
+
+      "return an html page with headers and mark an unread message as read" in {
+
+        mockAuditAndConnector(updatedMessage)
+        when(mockMessageConnector.markAsRead(any())(any(), any())).thenReturn(ReadSuccessEmptyResult)
+        await(service.readMessageContent(messageId, Some("en"))) mustBe RenderedMessage(html)
+      }
+
+          "return an html page with headers when receiving read messages" in {
+
+            val updatedMessage = message.convertedFrom(message.bodyWith(id = messageId.value))
+
+            mockAuditAndConnector(updatedMessage)
+            await(service.readMessageContent(messageId, Some("en"))) mustBe RenderedMessage(
+              html
+            )
+          }
+
     }
-
   }
-
 }

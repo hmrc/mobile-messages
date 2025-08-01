@@ -16,16 +16,18 @@
 
 package uk.gov.hmrc.mobilemessages.connector
 
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import play.api.Configuration
 import play.api.http.SecretConfiguration
+import play.api.i18n.Lang.logger
 import play.api.libs.crypto.DefaultCookieSigner
 import play.api.libs.json.Json.toJson
 import play.api.libs.json.{Json, OFormat}
 import play.api.test.Helpers.SERVICE_UNAVAILABLE
-import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.*
 import uk.gov.hmrc.mobilemessages.connector.model.{ResourceActionLocation, UpstreamMessageHeadersResponse, UpstreamMessageResponse}
-import uk.gov.hmrc.mobilemessages.domain._
+import uk.gov.hmrc.mobilemessages.domain.*
 import uk.gov.hmrc.mobilemessages.mocks.ShutteringStub
 import uk.gov.hmrc.mobilemessages.utils.Setup
 
@@ -54,6 +56,9 @@ class MessagesConnectorSpec extends Setup with ShutteringStub {
   lazy val PostSuccessResult: Future[AnyRef with HttpResponse] =
     Future.successful(HttpResponse(200, toJson(html.body), headers))
 
+  lazy val PostSuccessResultCy: Future[AnyRef with HttpResponse] =
+    Future.successful(HttpResponse(200, toJson(htmlCy.body), headers))
+
   lazy val PostSuccessRendererResult: Future[AnyRef with HttpResponse] =
     Future.successful(HttpResponse(200, toJson(responseRenderer), headers))
 
@@ -81,7 +86,7 @@ class MessagesConnectorSpec extends Setup with ShutteringStub {
       when(requestBuilderExecute[UpstreamMessageHeadersResponse])
         .thenReturn(Future.successful(UpstreamMessageHeadersResponse(messagesHeaders)))
 
-      connector.messages() onComplete {
+      connector.messages(Some("en")) onComplete {
         case Success(_) => messagesHeaders
         case Failure(_) =>
       }
@@ -92,7 +97,7 @@ class MessagesConnectorSpec extends Setup with ShutteringStub {
 
       when(requestBuilderExecute[HttpResponse])
         .thenReturn(Future.failed(badRequestException))
-      connector.messages() onComplete {
+      connector.messages(Some("en")) onComplete {
         case Success(_) => fail()
         case Failure(_) =>
       }
@@ -103,7 +108,7 @@ class MessagesConnectorSpec extends Setup with ShutteringStub {
       when(requestBuilderExecute[HttpResponse])
         .thenReturn(Future.failed(upstream5xxResponse))
 
-      connector.messages() onComplete {
+      connector.messages(Some("en")) onComplete {
         case Success(_) => fail()
         case Failure(_) =>
       }
@@ -115,7 +120,7 @@ class MessagesConnectorSpec extends Setup with ShutteringStub {
       when(requestBuilderExecute[HttpResponse])
         .thenReturn(Future.failed(tooManyRequestException))
 
-      connector.messages() onComplete {
+      connector.messages(Some("en")) onComplete {
         case Success(_) => fail()
         case Failure(_) =>
       }
@@ -127,7 +132,7 @@ class MessagesConnectorSpec extends Setup with ShutteringStub {
       when(requestBuilderExecute[UpstreamMessageHeadersResponse])
         .thenReturn(Future.successful(UpstreamMessageHeadersResponse(Seq.empty)))
 
-      connector.messages() onComplete {
+      connector.messages(Some("en")) onComplete {
         case Success(_) => Seq.empty
         case Failure(_) =>
       }
@@ -141,7 +146,7 @@ class MessagesConnectorSpec extends Setup with ShutteringStub {
         message.bodyWith(id = "id123", renderUrl = ResourceActionLocation("test-renderer-service", renderPath))
       when(requestBuilderExecute[UpstreamMessageResponse]).thenReturn(Future.successful(messageBodyToRender))
 
-      connector.getMessageBy(messageId) onComplete {
+      connector.getMessageBy(messageId, Some("en")) onComplete {
         case Success(_) =>
           message.convertedFrom(
             message.bodyWith(id = messageId.value)
@@ -155,7 +160,7 @@ class MessagesConnectorSpec extends Setup with ShutteringStub {
 
       when(requestBuilderExecute[UpstreamMessageResponse]).thenReturn(Future.failed(badRequestException))
 
-      connector.getMessageBy(messageId) onComplete {
+      connector.getMessageBy(messageId, Some("en")) onComplete {
         case Success(_) => fail()
         case Failure(_) =>
       }
@@ -166,7 +171,7 @@ class MessagesConnectorSpec extends Setup with ShutteringStub {
 
       when(requestBuilderExecute[UpstreamMessageResponse]).thenReturn(Future.failed(upstream5xxResponse))
 
-      connector.getMessageBy(messageId) onComplete {
+      connector.getMessageBy(messageId, Some("en")) onComplete {
         case Success(_) => fail()
         case Failure(_) =>
       }
@@ -179,9 +184,14 @@ class MessagesConnectorSpec extends Setup with ShutteringStub {
 
       when(requestBuilderExecute[HttpResponse]).thenReturn(ReadSuccessEmptyResult)
 
-      connector.render(message.convertedFrom(messageBodyToRender), hc) onComplete {
+      connector.render(message.convertedFrom(messageBodyToRender), Some("en"), hc) onComplete {
         case Success(result) => result.body mustBe ""
         case Failure(_)      =>
+      }
+
+      connector.render(message.convertedFrom(messageBodyToRender), Some("cy"), hc) onComplete {
+        case Success(result) => result.body mustBe ""
+        case Failure(_) =>
       }
 
     }
@@ -189,18 +199,26 @@ class MessagesConnectorSpec extends Setup with ShutteringStub {
     "return a rendered message when a 200 response is received with a payload" in {
       when(requestBuilderExecute[HttpResponse]).thenReturn(PostSuccessResult)
 
-      connector.render(message.convertedFrom(messageBodyToRender), hc) onComplete {
+      connector.render(message.convertedFrom(messageBodyToRender), Some("en"), hc) onComplete {
         case Success(result) => result.body must include(s"${html.body}")
         case Failure(_)      =>
       }
+    }
 
+    "return a rendered message when a 200 response is received with a payload with welsh language" in {
+      when(requestBuilderExecute[HttpResponse]).thenReturn(PostSuccessResult)
+
+      connector.render(message.convertedFrom(messageBodyToRender), Some("cy"), hc) onComplete {
+        case Success(result) => result.body must include(s"${htmlCy.body}")
+        case Failure(_) =>
+      }
     }
 
     "throw BadRequestException when a 400 response is returned" in {
 
       when(requestBuilderExecute[HttpResponse]).thenReturn(Future.failed(badRequestException))
 
-      connector.render(message.convertedFrom(messageBodyToRender), hc) onComplete {
+      connector.render(message.convertedFrom(messageBodyToRender), Some("en"), hc) onComplete {
         case Success(result) => fail()
         case Failure(_)      =>
       }
@@ -210,7 +228,7 @@ class MessagesConnectorSpec extends Setup with ShutteringStub {
 
       when(requestBuilderExecute[HttpResponse]).thenReturn(Future.failed(upstream5xxResponse))
 
-      connector.render(message.convertedFrom(messageBodyToRender), hc) onComplete {
+      connector.render(message.convertedFrom(messageBodyToRender), Some("en"), hc) onComplete {
         case Success(result) => fail()
         case Failure(_)      =>
       }

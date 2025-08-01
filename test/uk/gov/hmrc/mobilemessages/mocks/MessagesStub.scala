@@ -40,6 +40,7 @@ trait MessagesStub extends MockitoSugar with ScalaFutures {
   when(mockHttpClient.put(any[URL])(any[HeaderCarrier])).thenReturn(requestBuilder)
   when(requestBuilder.transform(any())).thenReturn(requestBuilder)
   when(requestBuilder.withBody(any)(using any, any, any)).thenReturn(requestBuilder)
+  when(requestBuilder.setHeader(any[(String, String)])).thenReturn(requestBuilder)
   when(mockServicesConfig.baseUrl(any[String])).thenReturn("http://example.com")
 
   def requestBuilderExecute[A] = requestBuilder.execute[A](using any[HttpReads[A]], any[ExecutionContext])

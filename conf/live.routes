@@ -1,7 +1,7 @@
 # microservice specific routes
 
-GET         /messages                        @uk.gov.hmrc.mobilemessages.controllers.MobileMessagesController.getMessages(journeyId: uk.gov.hmrc.mobilemessages.domain.types.JourneyId)
+GET         /messages                        @uk.gov.hmrc.mobilemessages.controllers.MobileMessagesController.getMessages(journeyId: uk.gov.hmrc.mobilemessages.domain.types.JourneyId, lang: Option[String])
 
 GET         /messages/count                  @uk.gov.hmrc.mobilemessages.controllers.MobileMessagesController.getMessageCount(journeyId: uk.gov.hmrc.mobilemessages.domain.types.JourneyId)
 
-POST        /messages/read                   @uk.gov.hmrc.mobilemessages.controllers.MobileMessagesController.read(journeyId: uk.gov.hmrc.mobilemessages.domain.types.JourneyId)
+POST        /messages/read                   @uk.gov.hmrc.mobilemessages.controllers.MobileMessagesController.read(journeyId: uk.gov.hmrc.mobilemessages.domain.types.JourneyId, lang: Option[String])

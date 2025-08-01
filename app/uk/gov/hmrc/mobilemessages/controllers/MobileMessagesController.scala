@@ -60,13 +60,13 @@ class MobileMessagesController @Inject() (
   val crypto: Encrypter & Decrypter =
     aesCryptoFromConfig(baseConfigKey = "cookie.encryption", configuration.underlying)
 
-  def getMessages(journeyId: JourneyId): Action[AnyContent] =
+  def getMessages(journeyId: JourneyId, lang: Option[String]): Action[AnyContent] =
     validateAcceptWithAuth(acceptHeaderValidationRules).async { implicit authenticated =>
       shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
         withShuttering(shuttered) {
           errorWrapper(
             service
-              .readAndUnreadMessages()
+              .readAndUnreadMessages(lang)
               .map((messageHeaders: Seq[MessageHeader]) => Ok(Json.toJson(MessageHeaderResponseBody.fromAll(messageHeaders)(crypto))))
           )
         }
@@ -86,7 +86,7 @@ class MobileMessagesController @Inject() (
       }
     }
 
-  def read(journeyId: JourneyId): Action[JsValue] =
+  def read(journeyId: JourneyId, lang:Option[String]): Action[JsValue] =
     validateAcceptWithAuth(acceptHeaderValidationRules).async(controllerComponents.parsers.json) { implicit authenticated =>
       shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
         withShuttering(shuttered) {
@@ -100,7 +100,7 @@ class MobileMessagesController @Inject() (
               renderMessageRequest =>
                 errorWrapper {
                   service
-                    .readMessageContent(renderMessageRequest.toMessageIdUsing(crypto))
+                    .readMessageContent(renderMessageRequest.toMessageIdUsing(crypto), lang)
                     .map(message => Ok(message.html))
                 }
             )
