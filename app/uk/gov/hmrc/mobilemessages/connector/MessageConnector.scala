@@ -61,7 +61,7 @@ class MessageConnector @Inject() (@Named("secure-message") val messageBaseUrl: S
   def messages(lang: Option[String]
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[MessageHeader]] =
     http
-      .get(url"$messageBaseUrl/secure-messaging/messages?lang=$lang")
+      .get(url"$messageBaseUrl/secure-messaging/messages?lang=${lang.getOrElse("en")}")
       .execute[UpstreamMessageHeadersResponse]
       .map(_.items)
 
@@ -76,7 +76,7 @@ class MessageConnector @Inject() (@Named("secure-message") val messageBaseUrl: S
     lang: Option[String]
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Message] =
     http
-      .get(url"$messageBaseUrl/secure-messaging/messages/${Base64.encodeBase64String(id.value.getBytes)}?lang=$lang")
+      .get(url"$messageBaseUrl/secure-messaging/messages/${Base64.encodeBase64String(id.value.getBytes)}?lang=${lang.getOrElse("en")}")
       .execute[UpstreamMessageResponse]
       .map(_.toMessageUsing(servicesToUrl))
 

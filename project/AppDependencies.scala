@@ -2,7 +2,7 @@ import sbt.*
 
 private object AppDependencies {
 
-  private val playBootstrapVersion = "9.16.0"
+  private val playBootstrapVersion = "9.18.0"
   private val playHmrcApiVersion = "8.2.0"
   private val domainVersion = "12.1.0"
 
