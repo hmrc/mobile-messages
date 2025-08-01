@@ -56,7 +56,6 @@ class MobileMessagesService @Inject() (
     ec:          ExecutionContext
   ): Future[RenderedMessage] =
     auditService.withAudit("readMessageContent", Map.empty) {
-      val jsonResponse: Future[Message] = messageConnector.getMessageBy(messageId, lang)
       messageConnector.getMessageBy(messageId, lang) flatMap { message =>
         messageConnector.render(message, lang, hc) map { renderedMessage =>
           markAsReadIfUnread.apply(message)
