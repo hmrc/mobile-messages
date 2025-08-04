@@ -45,13 +45,13 @@ class MobileMessagesControllerSpec extends Setup with ShutteringStub {
   val cookieSigner: CookieSigner = new DefaultCookieSigner(SecretConfiguration("hwdODU8hulPkolIryPRkVW=="))
 
   def readAndUnreadMessagesMock(response: Seq[MessageHeader]): Unit =
-    when(mockMobileMessagesService.readAndUnreadMessages()(any(), any())).thenReturn(Future successful response)
+    when(mockMobileMessagesService.readAndUnreadMessages(any())(any(), any())).thenReturn(Future successful response)
 
   def readMessageCountMock(response: MessageCountResponse): Unit =
     when(mockMobileMessagesService.countOnlyMessages()(any(), any())).thenReturn(Future successful response)
 
   def readMessageContentMock(response: Html): Unit =
-    when(mockMobileMessagesService.readMessageContent(any())(any(), any()))
+    when(mockMobileMessagesService.readMessageContent(any(), any())(any(), any()))
       .thenReturn(Future successful RenderedMessage(response))
 
   val userId: Option[String] = Some("userId123")
@@ -72,7 +72,7 @@ class MobileMessagesControllerSpec extends Setup with ShutteringStub {
       stubShutteringResponse(notShuttered)
       readAndUnreadMessagesMock(Seq.empty)
 
-      val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
+      val result = liveController.getMessages(journeyId, Some("en"))(emptyRequestWithAcceptHeader)
 
       status(result) mustBe 200
       contentAsJson(result).as[Seq[MessageHeaderResponseBody]] mustBe (Seq.empty[MessageHeaderResponseBody])
@@ -83,7 +83,7 @@ class MobileMessagesControllerSpec extends Setup with ShutteringStub {
       readAndUnreadMessagesMock(Seq.empty)
       stubShutteringResponse(notShuttered)
 
-      val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
+      val result = liveController.getMessages(journeyId, Some("en"))(emptyRequestWithAcceptHeader)
 
       status(result) mustBe 200
       contentAsJson(result).as[Seq[MessageHeaderResponseBody]] mustBe (Seq.empty[MessageHeaderResponseBody])
@@ -94,7 +94,7 @@ class MobileMessagesControllerSpec extends Setup with ShutteringStub {
       readAndUnreadMessagesMock(messageServiceHeadersResponse)
       stubShutteringResponse(notShuttered)
 
-      val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
+      val result = liveController.getMessages(journeyId, Some("en"))(emptyRequestWithAcceptHeader)
 
       status(result) mustBe 200
       contentAsJson(result).as[Seq[MessageHeaderResponseBody]] mustBe getMessageResponseItemList
@@ -103,7 +103,7 @@ class MobileMessagesControllerSpec extends Setup with ShutteringStub {
     "return forbidden when authority record does not contain a NINO" in {
       stubAuthorisationGrantAccess(None and userId)
 
-      val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
+      val result = liveController.getMessages(journeyId, Some("en"))(emptyRequestWithAcceptHeader)
 
       status(result) mustBe 403
     }
@@ -111,13 +111,13 @@ class MobileMessagesControllerSpec extends Setup with ShutteringStub {
     "return unauthorized when auth call fails" in {
       stubAuthorisationUnauthorised()
 
-      val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
+      val result = liveController.getMessages(journeyId, Some("en"))(emptyRequestWithAcceptHeader)
 
       status(result) mustBe 401
     }
 
     "return status code 406 when the headers are invalid" in {
-      val result = liveController.getMessages(journeyId)(FakeRequest())
+      val result = liveController.getMessages(journeyId, Some("en"))(FakeRequest())
 
       status(result) mustBe 406
     }
@@ -125,7 +125,7 @@ class MobileMessagesControllerSpec extends Setup with ShutteringStub {
     "return unauthorized when unable to retrieve authority record uri" in {
       stubAuthorisationGrantAccess(Some(nino.nino) and None)
 
-      val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
+      val result = liveController.getMessages(journeyId, Some("en"))(emptyRequestWithAcceptHeader)
 
       status(result) mustBe 401
     }
@@ -134,7 +134,7 @@ class MobileMessagesControllerSpec extends Setup with ShutteringStub {
       stubShutteringResponse(shuttered)
       stubAuthorisationGrantAccess(Some(nino.nino) and userId)
 
-      val result = liveController.getMessages(journeyId)(emptyRequestWithAcceptHeader)
+      val result = liveController.getMessages(journeyId, Some("en"))(emptyRequestWithAcceptHeader)
 
       status(result) mustBe 521
       val jsonBody = contentAsJson(result)
@@ -202,7 +202,7 @@ class MobileMessagesControllerSpec extends Setup with ShutteringStub {
       readMessageContentMock(html)
       stubShutteringResponse(notShuttered)
 
-      val result = liveController.read(journeyId)(readTimeRequest)
+      val result = liveController.read(journeyId, Some("en"))(readTimeRequest)
 
       status(result) mustBe 200
       contentAsString(result) mustBe html.toString()
@@ -211,7 +211,7 @@ class MobileMessagesControllerSpec extends Setup with ShutteringStub {
     "return forbidden when authority record does not contain a NINO" in {
       stubAuthorisationGrantAccess(None and userId)
 
-      val result = liveController.read(journeyId)(readTimeRequest)
+      val result = liveController.read(journeyId, Some("en"))(readTimeRequest)
 
       status(result) mustBe 403
     }
@@ -219,13 +219,13 @@ class MobileMessagesControllerSpec extends Setup with ShutteringStub {
     "return unauthorized when auth call fails" in {
       stubAuthorisationUnauthorised()
 
-      val result = liveController.read(journeyId)(readTimeRequest)
+      val result = liveController.read(journeyId, Some("en"))(readTimeRequest)
 
       status(result) mustBe 401
     }
 
     "return status code 406 when the headers are invalid" in {
-      val result = liveController.read(journeyId)(readTimeRequestNoAcceptHeader)
+      val result = liveController.read(journeyId, Some("en"))(readTimeRequestNoAcceptHeader)
 
       status(result) mustBe 406
     }
@@ -233,7 +233,7 @@ class MobileMessagesControllerSpec extends Setup with ShutteringStub {
     "return unauthorized when unable to retrieve authority record uri" in {
       stubAuthorisationGrantAccess(Some(nino.nino) and None)
 
-      val result = liveController.read(journeyId)(readTimeRequest)
+      val result = liveController.read(journeyId, Some("en"))(readTimeRequest)
 
       status(result) mustBe 401
     }
@@ -242,7 +242,7 @@ class MobileMessagesControllerSpec extends Setup with ShutteringStub {
       stubShutteringResponse(shuttered)
       stubAuthorisationGrantAccess(Some(nino.nino) and userId)
 
-      val result = liveController.read(journeyId)(readTimeRequest)
+      val result = liveController.read(journeyId, Some("en"))(readTimeRequest)
 
       status(result) mustBe 521
       val jsonBody = contentAsJson(result)

@@ -45,6 +45,7 @@ import scala.concurrent.Future
 trait Setup extends PlaySpec with AuthorisationStub with StubApplicationConfiguration with AuditStub with MockitoSugar {
 
   lazy val html = Html.apply("<div>some snippet</div>")
+  lazy val htmlCy = Html.apply("<div>some Welsh snippet</div>")
 
   lazy val emptyRequestWithAcceptHeader: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withHeaders(acceptHeader)
 

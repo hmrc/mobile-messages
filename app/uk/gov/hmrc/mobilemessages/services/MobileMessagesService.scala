@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.mobilemessages.services
 
-import com.google.inject._
+import com.google.inject.*
 
 import javax.inject.Named
 import play.api.Configuration
 import play.twirl.api.Html
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilemessages.connector._
+import uk.gov.hmrc.mobilemessages.connector.*
 import uk.gov.hmrc.mobilemessages.domain.{Message, MessageCountResponse, MessageHeader, MessageId, UnreadMessage}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,12 +35,12 @@ class MobileMessagesService @Inject() (
   val appNameConfiguration:      Configuration,
   auditService:                  AuditService) {
 
-  def readAndUnreadMessages(
+  def readAndUnreadMessages(lang: Option[String]
   )(implicit hc: HeaderCarrier,
     ec:          ExecutionContext
   ): Future[Seq[MessageHeader]] =
     auditService.withAudit("readAndUnreadMessages", Map.empty) {
-      messageConnector.messages()
+      messageConnector.messages(lang)
     }
 
   def countOnlyMessages(
@@ -50,13 +50,14 @@ class MobileMessagesService @Inject() (
     messageConnector.messageCount()
 
   def readMessageContent(
-    messageId:   MessageId
+    messageId:   MessageId,
+    lang: Option[String]
   )(implicit hc: HeaderCarrier,
     ec:          ExecutionContext
   ): Future[RenderedMessage] =
     auditService.withAudit("readMessageContent", Map.empty) {
-      messageConnector.getMessageBy(messageId) flatMap { message =>
-        messageConnector.render(message, hc) map { renderedMessage =>
+      messageConnector.getMessageBy(messageId, lang) flatMap { message =>
+        messageConnector.render(message, lang, hc) map { renderedMessage =>
           markAsReadIfUnread.apply(message)
           RenderedMessage(renderedMessage)
         }
