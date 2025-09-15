@@ -24,18 +24,12 @@ import scala.util.Random
 
 object DomainGenerator {
 
-  import uk.gov.hmrc.domain.Generator
-
   val dateTime: OffsetDateTime = OffsetDateTime.now
 
-  val generator      = new Generator()
   val saUtrGenerator = new SaUtrGenerator()
-
-  def nextNino: Nino = generator.nextNino
 
   def nextSaUtr: SaUtr = saUtrGenerator.nextSaUtr
 
-  val nino:          Nino      = nextNino
   val saUtr:         SaUtr     = nextSaUtr
   val readMessageId: MessageId = MessageId("543e8c6001000001003e4a9e")
 
