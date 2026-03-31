@@ -2,13 +2,13 @@ import sbt.*
 
 private object AppDependencies {
 
-  private val playBootstrapVersion = "10.5.0"
-  private val playHmrcApiVersion = "8.3.0"
+  private val playBootstrapVersion = "10.7.0"
+  private val playHmrcApiVersion = "9.0.0"
   private val domainVersion = "13.0.0"
 
-  private val scalaMockVersion = "7.5.0"
+  private val scalaMockVersion = "7.5.5"
   private val refinedVersion = "0.11.3"
-  private val commonsCodecVersion = "1.19.0"
+  private val commonsCodecVersion = "1.21.0"
 
   val compile = Seq(
     "uk.gov.hmrc"  %% "bootstrap-backend-play-30" % playBootstrapVersion,
@@ -29,8 +29,8 @@ private object AppDependencies {
       new TestDependencies {
 
         override lazy val test: Seq[ModuleID] = testCommon(scope) ++ Seq(
-          "org.scalamock" %% "scalamock" % scalaMockVersion % scope,
-          "uk.gov.hmrc" %% "domain-test-play-30" % domainVersion % scope
+          "org.scalamock" %% "scalamock"           % scalaMockVersion % scope,
+          "uk.gov.hmrc"   %% "domain-test-play-30" % domainVersion    % scope
         )
       }.test
   }
@@ -48,7 +48,7 @@ private object AppDependencies {
 
   private def testCommon(scope: String) = Seq(
     "uk.gov.hmrc" %% "bootstrap-test-play-30" % playBootstrapVersion % scope,
-    "uk.gov.hmrc" %% "domain-test-play-30" % domainVersion % scope
+    "uk.gov.hmrc" %% "domain-test-play-30"    % domainVersion        % scope
   )
 
   def apply(): Seq[ModuleID] = compile ++ Test() ++ IntegrationTest()
