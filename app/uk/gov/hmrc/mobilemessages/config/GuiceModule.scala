@@ -38,7 +38,7 @@ class GuiceModule(
 
     bind(classOf[AuthConnector]).to(classOf[DefaultAuthConnector])
 
-    bind(classOf[String]).toInstance("CONTROLLED")
+    bind(classOf[String]).toInstance("INTERNAL")
 
     bindConfigInt("controllers.confidenceLevel")
     bind(classOf[String])
